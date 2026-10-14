@@ -56,7 +56,7 @@ export async function join(kv, { code, name, pin }) {
     if (pin && String(pin) === String(hit[1].pin)) { const key = rid(16); hit[1].key = key; await touch(kv, code, [["HSET", K(code, "g"), hit[0], JSON.stringify(hit[1])]]); return { gid: hit[0], key, name: hit[1].name, pin: hit[1].pin, rejoined: true }; }
     fail("name_taken", "That name is taken. If it's your group, enter your group PIN to rejoin.");
   }
-  if (Object.keys(groups).length >= 15) fail("full", "This game is full.");
+  if (Object.keys(groups).length >= 40) fail("full", "This game is full (40 players).");
   if (s.phase === "final") fail("ended", "This game has ended.");
   const gid = rid(8), key = rid(16), p = pin3();
   await touch(kv, code, [["HSET", K(code, "g"), gid, JSON.stringify({ name, pin: p, key, t: Date.now() })]]);
@@ -94,6 +94,7 @@ export async function hostOp(kv, { code, hostKey, op, gid, picks, name }) {
   else if (op === "clear") { await save([["HDEL", K(code, "d" + s.r), gid]]); }
   else if (op === "add") { const n = clean(name); if (!n) fail("bad_name", "Name needed."); const id = rid(8); await save([["HSET", K(code, "g"), id, JSON.stringify({ name: n, pin: pin3(), key: rid(16), t: Date.now(), manual: true })]]); return { ok: true, gid: id }; }
   else if (op === "remove") { await save([["HDEL", K(code, "g"), gid], ...Array.from({ length: NROUNDS }, (_, r) => ["HDEL", K(code, "d" + r), gid])]); }
+  else if (op === "end") { await kv(allKeys(code).map(k => ["DEL", k])); return { ok: true, ended: true }; }
   else fail("bad_op", "Unknown action.");
   return { ok: true };
 }
@@ -123,6 +124,7 @@ export function memoryKV() {
       case "HSET": { const h = v || {}; h[a[0]] = a[1]; m.set(k, h); return 1; }
       case "HGET": return v && a[0] in v ? v[a[0]] : null;
       case "HDEL": if (v) delete v[a[0]]; return 1;
+      case "DEL": m.delete(k); exp.delete(k); return 1;
       case "HGETALL": return v ? Object.entries(v).flat() : [];
       default: throw new Error("memoryKV: " + cmd);
     } };

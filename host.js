@@ -69,8 +69,9 @@ async function op(name, extra = {}) {
 
 /* ---------- render router ---------- */
 function render() {
+  $("#endGame").style.display = sess ? "inline-block" : "none";
   const key = S.phase + ":" + S.r;
-  if (key !== ui.lastKey) { ui.lastKey = key; ui.why = {}; ui.tab = "what"; if (S.phase === "open") resetClock(); }
+  if (key !== ui.lastKey) { ui.lastKey = key; ui.tab = "what"; if (S.phase === "open") resetClock(); }
   if (S.phase === "lobby") renderLobby();
   else if (S.phase === "open") renderOpen();
   else if (S.phase === "reveal") renderReveal();
@@ -85,10 +86,10 @@ function renderLobby() {
     : `<div class="card dark"><div class="label">Join the desk</div>
       <div class="joinbox"><div class="qr">${qrSVG(joinUrl())}</div>
         <div><div class="url">Scan the code, or go to<br><b>${esc(location.host)}</b></div><div class="small" style="font-size:16px">Game code</div><div class="code">${sess.code}</div></div></div>
-      <div class="small" style="margin-top:12px;font-size:15px">One iPad per desk. Each desk gets a 3-digit PIN. If an iPad restarts, rejoin with the same name and PIN.</div></div>`}
-    <div class="card"><div class="label">Desks joined: ${S.groups.length}</div>
+      <div class="small" style="margin-top:12px;font-size:15px">Join with your first name. Each player gets a 3-digit PIN. If an iPad restarts, rejoin with the same name and PIN.</div></div>`}
+    <div class="card"><div class="label">Players joined: ${S.groups.length}</div>
       <div class="tiles" style="grid-template-columns:repeat(2,1fr)">${S.groups.map(g => `<div class="tile"><div><div class="nm">${esc(g.name)}</div><div class="st">PIN ${g.pin}${g.manual ? " · added by hand" : ""}</div></div><button class="x" data-g="${g.gid}" title="Remove">✕</button></div>`).join("") || `<div class="small">Waiting for desks to join...</div>`}</div>
-      <div style="display:flex;gap:8px;margin-top:12px"><input id="addName" maxlength="20" placeholder="Add a desk by hand" style="flex:1;font-size:17px;padding:8px 10px;border:1px solid var(--rule);border-radius:8px"><button class="btn dk sm" id="addBtn">Add</button></div>
+      <div style="display:flex;gap:8px;margin-top:12px"><input id="addName" maxlength="20" placeholder="Add a player by hand" style="flex:1;font-size:17px;padding:8px 10px;border:1px solid var(--rule);border-radius:8px"><button class="btn dk sm" id="addBtn">Add</button></div>
       <div class="actions"><button class="btn big" id="startBtn" ${S.groups.length ? "" : "disabled"}>Open Year 1</button></div>
       <div class="small" id="netErr">${esc(netErr)}</div></div></div>`;
   $$(".x").forEach(b => b.onclick = () => { if (confirm("Remove this desk?")) op("remove", { gid: b.dataset.g }); });
@@ -193,13 +194,13 @@ function renderReveal() {
              <tr><td>Secondary-market price: $100 → $${x.endPrice.toFixed(2)}</td><td class="r ${cls2(x.price)}">${sgnPct(x.price)}</td></tr>
              <tr><td class="sub">Rates ${d > 0 ? "rose" : d < 0 ? "fell" : "unchanged"}${d ? " " + Math.abs(d).toFixed(1) + "% × " + b.sens : ""}</td><td class="r sub ${cls2(x.rate)}">${sgnPct(x.rate)}</td></tr>
              <tr><td class="sub">${o.event ? esc(o.event.label) : "No rating change"}</td><td class="r sub ${cls2(x.credit)}">${sgnPct(x.credit)}</td></tr>`;
-        const why = ui.why[b.id] ? `<div class="why">${["Price check", "The clue", "Lesson"].map((h, i) => `<p><b>${h}</b>${esc(r.why[b.id][i])}</p>`).join("")}</div>`
-          : `<button class="btn ghost sm" data-why="${b.id}" style="margin-top:6px">Show the why</button>`;
+        const pc = G.priceCheck(r, b);
+        const why = `<div class="why"><p><b>Price check</b>${esc(pc.text)} → <span class="pill ${pc.verdict === "Overpriced" ? "r" : pc.verdict === "Good deal" ? "g" : "ig"}">${pc.verdict}</span></p><p><b>Why</b>${esc(G.reasonFor(r, b))}</p></div>`;
         return bondCard(b, `<div class="out"><div class="story">${o.event?.default ? "💥 " : ""}${esc(o.story)}</div>
           <table class="brk">${brk}<tr class="tot"><td>Return for the year</td><td class="r ${x.total < 0 ? "neg" : ""}">${sgnPct(x.total)}</td></tr></table>
           <div class="verdict"><span class="pill ${beat ? "g" : "r"}">${beat ? "Beat cash" : "Lost to cash"} (${r.t0.toFixed(1)}%)</span><span class="small">${buyers.length} of ${S.groups.length} desks bought</span></div>${why}</div>`, beat ? "win" : "lose", true);
       }).join("")}</div>
-      <div class="actions" style="justify-content:space-between;align-items:center"><button class="btn ghost" id="whyAll">Show every why</button><span class="small">iPads are waiting on the board. Their results appear when you open Standings.</span><button class="btn dk big" id="toStand">Standings →</button></div>`;
+      <div class="actions" style="justify-content:space-between;align-items:center"><span></span><span class="small">iPads are waiting on the board. Their results appear when you open Standings.</span><button class="btn dk big" id="toStand">Standings →</button></div>`;
   } else {
     const rows = standings(S.r), bench = G.runFund([], S.r);
     const best = Math.max(...rows.map(x => x.y.gain)), winners = rows.filter(x => x.y.gain === best);
@@ -212,8 +213,6 @@ function renderReveal() {
   }
   $("#view").innerHTML = topbar(tabs) + body + `<div class="small" id="netErr">${esc(netErr)}</div>`;
   $$(".tabs2 button").forEach(b => b.onclick = () => { ui.tab = b.dataset.t; if (ui.tab === "stand") toStandings(); else render(); });
-  $$("[data-why]").forEach(b => b.onclick = () => { ui.why[b.dataset.why] = true; render(); });
-  if ($("#whyAll")) $("#whyAll").onclick = () => { ui.why = { A: true, B: true, C: true }; render(); };
   if ($("#toStand")) $("#toStand").onclick = () => { ui.tab = "stand"; toStandings(); };
   if ($("#reopen")) $("#reopen").onclick = () => { if (confirm("Reopen this year so desks can change their choices?")) op("reopen"); };
   if ($("#nextBtn")) $("#nextBtn").onclick = () => op("next");
@@ -250,8 +249,19 @@ function renderFinal() {
         <div class="small" style="margin-top:6px">Interest is the steady part of a bond. Prices on the secondary market are where fortunes are made and lost.</div></div>
       <div class="card dark"><div class="label">Lessons from the desk</div><ul class="lessons" style="font-size:15px">${LESSONS.map(l => `<li>${esc(l)}</li>`).join("")}</ul></div></div>
     <div class="actions"><button class="btn ghost" id="again">New game</button></div>`;
-  $("#again").onclick = () => { if (!confirm("Start a brand-new game? This one will close.")) return; store.del("bd_host"); clearInterval(pollT); S = null; sess = null; ui.lastKey = ""; if (offline) { offline = false; api = call; $("#offlineTag").style.display = "none"; } renderStart(); };
+  $("#again").onclick = endAndRestart;
 }
+
+/* ---------- end the current game at any point ---------- */
+async function endAndRestart() {
+  if (!sess) return;
+  if (!confirm("End this game and start a new one?\n\nEvery desk's results will be erased, and student iPads will go back to the join screen.")) return;
+  try { await api("host", { code: sess.code, hostKey: sess.hostKey, op: "end" }); } catch (e) { /* already gone is fine */ }
+  store.del("bd_host"); clearInterval(pollT); clearInterval(tRun); tRun = null; S = null; sess = null; ui.lastKey = "";
+  if (offline) { offline = false; api = call; $("#offlineTag").style.display = "none"; }
+  $("#endGame").style.display = "none"; renderStart();
+}
+$("#endGame").onclick = endAndRestart;
 
 window.__bd = { get S() { return S; }, get sess() { return sess; } };
 boot();

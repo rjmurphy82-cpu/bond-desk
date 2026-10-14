@@ -36,7 +36,7 @@ export const ROUNDS = [
     B: { event: { label: "Downgraded AAA → AA", pct: -4 }, story: "Summit borrowed $6 billion to buy its rival. With far more debt, raters cut it from AAA to AA." },
     C: { event: null, story: "Record travel season. Every payment made, rating unchanged." } },
    why: {
-    A: ["Fair yield for AA = 4.0% + 0.8% = 4.8%. It offered 5.3%, so you were paid 0.5% extra.", "No warning signs in the news.", "A safe bond at a better-than-fair price in a quiet year is a solid buy."],
+    A: ["Fair yield for AA = 4.0% + 0.8% = 4.8%. It offered 5.3%, so you were paid 0.5% extra.", "No warning signs in the news and rates held steady, so the extra yield was pure profit.", "A safe bond at a better-than-fair price in a quiet year is a solid buy."],
     B: ["Fair yield for AAA = 4.0% + 0.5% = 4.5%. It offered only 4.3%: overpriced.", "The buyout headline was the warning. A big pile of new borrowing almost always means a lower rating.", "When a bond pays less than fair, you need a strong reason to buy it. There wasn't one."],
     C: ["Fair yield for BBB = 4.0% + 2.0% = 6.0%. It offered 6.4%: a good deal.", "Record travel bookings meant a strong year for hotels.", "A good price plus good news for the business = buy."] } },
 
@@ -101,7 +101,7 @@ export const ROUNDS = [
    why: {
     A: ["Fair yield for B = 4.5% + 5.5% = 10.0%. It offered only 9.0%: overpriced for its risk.", "Losing shelf space at its two biggest customers was the real news. The NBA deal was noise.", "A high yield is not a good deal if it is still below fair. Junk that is overpriced can wipe you out."],
     B: ["Fair yield for CCC = 4.5% + 10.0% = 14.5%. It offered 16.0%: a good deal.", "The 15-year lease removed the stadium's biggest risk: the team leaving.", "Risky bonds can be great buys when the price is right and the news removes the danger."],
-    C: ["Fair yield for AA = 4.5% + 0.8% = 5.3%. It offered 5.4%: fair.", "No warning signs and steady rates.", "Boring is fine. A fair price on a safe bond beats cash."] } },
+    C: ["Fair yield for AA = 4.5% + 0.8% = 5.3%. It offered 5.4%: fair.", "No warning signs and steady rates, so it simply paid its interest.", "Boring is fine. A fair price on a safe bond beats cash."] } },
 
  { year: 5, title: "The Recovery", t0: 4.5, t1: 4.0,
    news: [
@@ -234,6 +234,14 @@ export const ROUNDS = [
     C: ["Fair yield for BBB = 4.0% + 2.0% = 6.0%. It offered 6.3%: a good deal on paper.", "A big project a year late plus the finance chief quitting are classic signs of trouble. Cheaper solar panels were noise.", "A good price never outweighs a clear warning."] } }
 ];
 export const NROUNDS = ROUNDS.length;
+
+// Simple, always-on explanation for each bond: a price check plus the reason it happened
+export function priceCheck(round, b) {
+  const fair = fairYield(round.t0, b.rating), edge = +(b.yld - fair).toFixed(2);
+  const verdict = edge < 0 ? "Overpriced" : edge < 0.3 ? "Fair price" : "Good deal";
+  return { fair, edge, verdict, text: `Fair yield ${fair.toFixed(1)}% vs. offered ${b.yld.toFixed(1)}%` };
+}
+export const reasonFor = (round, b) => round.why[b.id][1];
 
 // Difficulty: hints fade as the game goes on
 export const LEVELS = [

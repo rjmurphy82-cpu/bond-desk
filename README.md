@@ -24,7 +24,7 @@ After that, any change pushed to GitHub goes live automatically.
 2. One iPad per desk: scan the QR code (or go to the site and type the code), then pick a desk name. Each desk gets a 3-digit PIN; have them write it down.
 3. Click **Open Year 1**. Use the timer (default 5:00). Locked desks turn dark; answers stay hidden. iPads show how many desks are still deciding.
 4. When every desk is locked, click **Everyone's in: reveal**. (If an iPad dies, use **Reveal anyway**.) The iPads switch to "Eyes on the board" and show only the desk's own picks.
-5. Walk through **What happened** (use **Show the why** on each bond). Each bond shows the interest it paid and its secondary-market price at year end.
+5. Walk through **What happened**. Each bond shows the interest it paid, its secondary-market price at year end, a price check (good deal, fair price, or overpriced), and a one-line reason.
 6. Click **Standings**. Only now do the iPads show each desk's results. Then open the next year.
 7. After Year 10, the final screen shows the podium, year-by-year results, where each desk's money came from (interest vs. secondary-market gains and losses), and the lessons.
 

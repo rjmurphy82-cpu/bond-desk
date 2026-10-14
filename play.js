@@ -14,8 +14,8 @@ function renderJoin(msg = "", showPin = false) {
   $("#view").innerHTML = `<div class="center card">
     <div class="label">Join the desk</div><h2 style="font-size:30px;color:var(--brown)">Your bond fund awaits.</h2>
     <label class="field"><span>Game code</span><input id="jCode" class="code" inputmode="numeric" pattern="[0-9]*" maxlength="5" autocomplete="off" value="${esc(code)}"></label>
-    <label class="field"><span>Desk name</span><input id="jName" maxlength="20" autocomplete="off" autocapitalize="words" placeholder="e.g. Bond Bros"></label>
-    <label class="field" id="pinField" style="display:${showPin ? "block" : "none"}"><span>Desk PIN (only if rejoining)</span><input id="jPin" class="code" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off"></label>
+    <label class="field"><span>Your first name</span><input id="jName" maxlength="20" autocomplete="off" autocapitalize="words" placeholder="e.g. Maya"></label>
+    <label class="field" id="pinField" style="display:${showPin ? "block" : "none"}"><span>Your PIN (only if rejoining)</span><input id="jPin" class="code" inputmode="numeric" pattern="[0-9]*" maxlength="3" autocomplete="off"></label>
     ${showPin ? "" : `<button class="link" id="showPin">Rejoining after your iPad restarted? Tap here.</button>`}
     <div class="actions" style="justify-content:stretch"><button class="btn big" id="jGo" style="width:100%">Join</button></div>
     ${msg ? `<div class="err">${esc(msg)}</div>` : ""}</div>`;
@@ -26,13 +26,13 @@ function renderJoin(msg = "", showPin = false) {
 async function doJoin() {
   const code = $("#jCode").value.trim(), name = $("#jName").value.trim(), pin = $("#jPin") ? $("#jPin").value.trim() : "";
   if (!/^\d{5}$/.test(code)) return renderJoinErr("The game code is 5 digits. Look at the board.");
-  if (!name) return renderJoinErr("Give your desk a name.");
+  if (!name) return renderJoinErr("Type your first name.");
   $("#jGo").disabled = true;
   try {
     const r = await call("join", { code, name, pin: pin || undefined });
     me = { code, gid: r.gid, key: r.key, name: r.name, pin: r.pin }; store.set("bd_play", me);
     history.replaceState(null, "", "/?c=" + code); S = null; lastKey = ""; await refresh(true); startPoll();
-  } catch (e) { renderJoinErr(e.code === "name_taken" ? "That name is taken. Pick another, or if it's your desk, tap the rejoin link and enter your PIN." : e.message, e.code === "name_taken"); }
+  } catch (e) { renderJoinErr(e.code === "name_taken" ? "That name is already in this game. Add your last initial (like Maya R.), or if it's you rejoining, tap the rejoin link and enter your PIN." : e.message, e.code === "name_taken"); }
 }
 function renderJoinErr(m, pin) { const c = $("#jCode").value, n = $("#jName").value, p = $("#jPin") ? $("#jPin").value : ""; renderJoin(m, pin || !!$("#jPin")); $("#jCode").value = c; $("#jName").value = n; if ($("#jPin")) $("#jPin").value = p; }
 
@@ -75,7 +75,7 @@ function render() {
 function renderLobby() {
   $("#barSlot").innerHTML = "";
   $("#view").innerHTML = `<div class="center card" style="text-align:center"><div class="label">You're in</div><div class="big" style="font-size:44px">${esc(me.name)}</div>
-    <div class="pinbox"><div class="small" style="color:#E8DCCB">Your desk PIN. Write it down in case your iPad restarts.</div><div class="v">${me.pin}</div></div>
+    <div class="pinbox"><div class="small" style="color:#E8DCCB">Your PIN. Write it down in case your iPad restarts.</div><div class="v">${me.pin}</div></div>
     <p style="font-size:19px;margin-top:18px">You start with <b>${G.money(G.START_FUND)}</b>. Waiting for Year 1 to open...</p><div class="status" id="conn">${esc(conn)}</div></div>`;
 }
 function bondHTML(b, sel, lockedView) {
@@ -139,8 +139,7 @@ function renderReveal() {
         <tr class="tot"><td colspan="4">Total for the year</td><td class="r ${y.gain < 0 ? "neg" : ""}">${G.signed(y.gain)}</td></tr></table>
         <div class="small" style="margin-top:6px"><b>Interest</b> is what the bond paid you. <b>Sold for</b> is its price per $100 on the secondary market at year end.</div></div></div>
       <div class="card"><div class="label">What happened</div><div class="story"><b>Rates:</b> ${esc(R.outcome.rateNote)}</div>
-        ${R.bonds.map(b => `<div class="story"><b>${b.id}. ${esc(b.issuer)}:</b> ${esc(R.outcome[b.id].story)}</div>`).join("")}
-        <div class="small" style="margin-top:8px">Look up at the board to see why.</div></div></div><div class="status" id="conn">${esc(conn)}</div>`;
+        ${R.bonds.map(b => { const pc = G.priceCheck(R, b); return `<div class="story"><b>${b.id}. ${esc(b.issuer)}:</b> ${esc(R.outcome[b.id].story)}<div class="small" style="margin-top:3px"><b style="color:var(--brown)">${pc.verdict}</b> (${esc(pc.text)}). ${esc(G.reasonFor(R, b))}</div></div>`; }).join("")}</div></div><div class="status" id="conn">${esc(conn)}</div>`;
 }
 function renderFinal() {
   $("#barSlot").innerHTML = "";
