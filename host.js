@@ -18,6 +18,7 @@ function standings(upto) {
   rows.forEach(r => r.place = rows.filter(o => o.f.value > r.f.value).length + 1);
   return rows;
 }
+const kk = v => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.round(Math.abs(v) / 1000) + "K";
 const sgnPct = v => v === 0 ? "0.0%" : G.pct(v);
 function showErr(m) { netErr = m; const el = $("#netErr"); if (el) el.textContent = m; }
 
@@ -32,7 +33,7 @@ async function boot() {
 }
 function renderStart(msg = "") {
   $("#view").innerHTML = `<div class="hero">
-    <div class="card dark"><div class="label">Run a bond fund for five years</div>
+    <div class="card dark"><div class="label">Run a bond fund for ten years</div>
       <h2 style="font-size:44px;line-height:1.05;margin:4px 0 10px">Buy, pass, or bet big.</h2>
       <div style="font-size:19px;line-height:1.5">Each desk starts with <b>$1,000,000</b>. Every year, three bonds hit the market. Desks read the news, check the price, and decide on their iPads. The market decides who was right.</div>
       <div class="actions" style="justify-content:flex-start"><button class="btn big" id="newGame">Start a new game</button></div>
@@ -97,15 +98,17 @@ function renderLobby() {
 }
 
 /* ---------- bond card ---------- */
-function bondCard(b, extra = "", cls = "") {
-  const junk = G.isJunk(b.rating);
+function bondCard(b, extra = "", cls = "", full = false) {
+  const junk = G.isJunk(b.rating), lv = G.levelFor(R().year);
   return `<div class="bond ${cls}"><span class="tag">${b.id}</span><h3>${esc(b.issuer)}</h3><div class="what">${esc(b.what)}</div>
     <div class="stats" style="grid-template-columns:repeat(3,1fr)"><div class="stat ${junk ? "j" : ""}"><div class="v">${b.rating}</div><div class="k">${junk ? "Rating · junk" : "Rating"}</div></div>
     <div class="stat"><div class="v">${b.yld.toFixed(1)}%</div><div class="k">Yield</div></div><div class="stat"><div class="v">${b.years} yr</div><div class="k">Matures</div></div></div>
-    <div class="sens">If rates rise 1%, its price falls about <b>${b.sens}%</b>.</div>${extra}</div>`;
+    ${lv.showFair && !full ? `<div class="fairline">Fair yield: <b>${G.fairYield(R().t0, b.rating).toFixed(1)}%</b> (${R().t0.toFixed(1)}% Treasury + ${G.SPREADS[b.rating].toFixed(1)}% for ${b.rating})</div>` : ""}
+    ${lv.showSens || full ? `<div class="sens">If rates rise 1%, its price falls about <b>${b.sens}%</b>.</div>` : ""}${extra}</div>`;
 }
 function topbar(extra = "") {
-  return `<div class="topbar"><div class="yr"><div class="sub">Year ${R().year} of ${G.NROUNDS}</div><h2>${esc(R().title)}</h2></div>
+  const lv = G.levelFor(R().year);
+  return `<div class="topbar"><div class="yr"><div class="sub">Year ${R().year} of ${G.NROUNDS} <span class="lvl" title="${esc(lv.note)}">Level <b>${esc(lv.name)}</b></span></div><h2>${esc(R().title)}</h2></div>
     <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${extra}
     <div class="tbill"><div class="v">${R().t0.toFixed(1)}%</div><div class="k">Treasury rate</div></div></div></div>`;
 }
@@ -119,7 +122,7 @@ function renderOpen() {
       <div class="grid" style="align-content:start">
         <div class="card"><div class="label">Market news</div><ul class="news">${R().news.map((n, i) => `<li><b>${i + 1}</b><span>${esc(n)}</span></li>`).join("")}</ul></div>
         <div class="card"><div class="label">Fair yield = Treasury rate + spread</div><div class="spreads">${G.LADDER.map(r => `<div class="${G.isJunk(r) ? "j" : ""}">${r}<small>+${G.SPREADS[r].toFixed(1)}%</small></div>`).join("")}</div>
-          <div class="small" style="margin-top:8px">Buy $100K or $200K of any bond, or pass. Money you don't invest earns the Treasury rate. Fund rule: no more than $200K in junk (BB and below) per year, or a $25,000 fine.</div></div>
+          <div class="small" style="margin-top:8px">Buy $100K or $200K of any bond, or pass. Money you don't invest earns the Treasury rate. At year end, every bond is sold on the secondary market at that day's price. Fund rule: no more than $200K in junk (BB and below) per year, or a $25,000 fine.</div></div>
       </div>
       <div class="grid" style="align-content:start">
         <div class="bonds">${R().bonds.map(b => bondCard(b)).join("")}</div>
@@ -127,10 +130,12 @@ function renderOpen() {
           <div class="tiles">${S.groups.map(g => `<button class="tile ${locked.has(g.gid) ? "done" : ""}" data-g="${g.gid}"><span class="nm">${esc(g.name)}</span><span class="st">${locked.has(g.gid) ? "🔒 Locked" : offline ? "Tap to enter" : "Deciding..."}</span></button>`).join("")}</div>
           <div class="small" style="margin-top:8px">${offline ? "Tap a desk to enter its choices." : "Tap a desk to enter or fix its choices for it."} Answers stay hidden until the reveal.</div>
           <div class="small" id="netErr">${esc(netErr)}</div>
-          <div class="actions"><button class="btn big" id="revealBtn" ${locked.size ? "" : "disabled"}>Close the market &amp; reveal</button></div></div>
+          <div class="actions" style="align-items:center">${locked.size && locked.size < S.groups.length ? `<button class="btn ghost sm" id="revealAnyway">Reveal anyway</button>` : ""}
+            <button class="btn big" id="revealBtn" ${S.groups.length && locked.size === S.groups.length ? "" : "disabled"}>${locked.size === S.groups.length && S.groups.length ? "Everyone's in: reveal" : `Waiting on ${S.groups.length - locked.size} desk${S.groups.length - locked.size === 1 ? "" : "s"}...`}</button></div></div>
       </div></div>`;
   $$(".tile[data-g]").forEach(b => b.onclick = () => openEnter(b.dataset.g));
   $("#revealBtn").onclick = doReveal;
+  if ($("#revealAnyway")) $("#revealAnyway").onclick = doReveal;
   $("#tMinus").onclick = () => { tLeft = Math.max(0, tLeft - 60); if (!tRun) tLen = Math.max(60, tLen - 60); tick(); };
   $("#tPlus").onclick = () => { tLeft += 60; if (!tRun) tLen = Math.min(900, tLen + 60); tick(); };
   $("#tGo").onclick = () => { clearInterval(tRun); tRun = setInterval(() => { if (tLeft > 0) { tLeft--; tick(); } else { clearInterval(tRun); tRun = null; } }, 1000); };
@@ -181,53 +186,69 @@ function renderReveal() {
       <div class="bonds">${r.bonds.map(b => {
         const o = r.outcome[b.id], x = G.bondReturn(r, b), beat = x.total > r.t0;
         const buyers = S.groups.filter(g => decs[g.gid] && decs[g.gid][b.id]);
+        const cls2 = v => v < 0 ? "neg" : v > 0 ? "pos" : "";
         const brk = x.isDefault
-          ? `<tr><td>Interest</td><td class="r">none paid</td></tr><tr><td>Default: get back 40¢ per $1</td><td class="r neg">−60.0%</td></tr>`
-          : `<tr><td>Interest earned</td><td class="r">${sgnPct(x.coupon)}</td></tr><tr><td>Rate move (${b.sens}% × ${d > 0 ? "+" : d < 0 ? "−" : ""}${Math.abs(d).toFixed(1)})</td><td class="r ${x.rate < 0 ? "neg" : x.rate > 0 ? "pos" : ""}">${sgnPct(x.rate)}</td></tr><tr><td>${o.event ? esc(o.event.label) : "No rating change"}</td><td class="r ${x.credit < 0 ? "neg" : x.credit > 0 ? "pos" : ""}">${sgnPct(x.credit)}</td></tr>`;
+          ? `<tr><td>Interest collected</td><td class="r">none paid</td></tr><tr><td>Secondary-market price: $100 → $40.00</td><td class="r neg">−60.0%</td></tr><tr><td class="sub">Default: buyers pay only 40¢ per $1</td><td></td></tr>`
+          : `<tr><td>Interest collected (coupon)</td><td class="r">${sgnPct(x.coupon)}</td></tr>
+             <tr><td>Secondary-market price: $100 → $${x.endPrice.toFixed(2)}</td><td class="r ${cls2(x.price)}">${sgnPct(x.price)}</td></tr>
+             <tr><td class="sub">Rates ${d > 0 ? "rose" : d < 0 ? "fell" : "unchanged"}${d ? " " + Math.abs(d).toFixed(1) + "% × " + b.sens : ""}</td><td class="r sub ${cls2(x.rate)}">${sgnPct(x.rate)}</td></tr>
+             <tr><td class="sub">${o.event ? esc(o.event.label) : "No rating change"}</td><td class="r sub ${cls2(x.credit)}">${sgnPct(x.credit)}</td></tr>`;
         const why = ui.why[b.id] ? `<div class="why">${["Price check", "The clue", "Lesson"].map((h, i) => `<p><b>${h}</b>${esc(r.why[b.id][i])}</p>`).join("")}</div>`
           : `<button class="btn ghost sm" data-why="${b.id}" style="margin-top:6px">Show the why</button>`;
         return bondCard(b, `<div class="out"><div class="story">${o.event?.default ? "💥 " : ""}${esc(o.story)}</div>
           <table class="brk">${brk}<tr class="tot"><td>Return for the year</td><td class="r ${x.total < 0 ? "neg" : ""}">${sgnPct(x.total)}</td></tr></table>
-          <div class="verdict"><span class="pill ${beat ? "g" : "r"}">${beat ? "Beat cash" : "Lost to cash"} (${r.t0.toFixed(1)}%)</span><span class="small">${buyers.length} of ${S.groups.length} desks bought</span></div>${why}</div>`, beat ? "win" : "lose");
+          <div class="verdict"><span class="pill ${beat ? "g" : "r"}">${beat ? "Beat cash" : "Lost to cash"} (${r.t0.toFixed(1)}%)</span><span class="small">${buyers.length} of ${S.groups.length} desks bought</span></div>${why}</div>`, beat ? "win" : "lose", true);
       }).join("")}</div>
-      <div class="actions" style="justify-content:space-between"><button class="btn ghost" id="whyAll">Show every why</button><button class="btn dk big" id="toStand">Standings →</button></div>`;
+      <div class="actions" style="justify-content:space-between;align-items:center"><button class="btn ghost" id="whyAll">Show every why</button><span class="small">iPads are waiting on the board. Their results appear when you open Standings.</span><button class="btn dk big" id="toStand">Standings →</button></div>`;
   } else {
     const rows = standings(S.r), bench = G.runFund([], S.r);
     const best = Math.max(...rows.map(x => x.y.gain)), winners = rows.filter(x => x.y.gain === best);
     body = `${winners.length ? `<div class="winbar"><span class="t">🏆</span><div><div class="label" style="color:#FFE3CF">Desk of the Year</div><div class="who">${winners.map(w => esc(w.g.name)).join(" &amp; ")}</div><div style="font-size:18px">Made ${G.signed(best)} this year.</div></div></div>` : ""}
-      <div class="card"><table class="standings"><tr><th>Place</th><th>Desk</th><th>This year's picks</th><th class="r">This year</th><th class="r">Fund value</th></tr>
-      ${rows.map(x => `<tr class="${x.place === 1 ? "top" : ""}"><td class="pl">${x.place}</td><td class="nm">${esc(x.g.name)}</td><td class="picks">${picksTxt(decs[x.g.gid])}${x.y.fine ? ` <span class="pill r">Junk limit fine −$25K</span>` : ""}</td><td class="r ${x.y.gain < 0 ? "neg" : "pos"}">${G.signed(x.y.gain)}</td><td class="r val">${G.money(x.f.value)}</td></tr>`).join("")}
-      <tr class="bench"><td></td><td>Play-It-Safe Fund</td><td class="picks">all cash, every year</td><td class="r">${G.signed(bench.years[S.r].gain)}</td><td class="r val">${G.money(bench.value)}</td></tr></table>
-      <div class="small" style="margin-top:8px">Every desk started with ${G.money(G.START_FUND)}. The Play-It-Safe Fund never buys a bond, so it shows what doing nothing would have earned.</div></div>
+      <div class="card"><table class="standings"><tr><th>Place</th><th>Desk</th><th>This year's picks</th><th class="r">Interest</th><th class="r">Price change</th><th class="r">This year</th><th class="r">Fund value</th></tr>
+      ${rows.map(x => `<tr class="${x.place === 1 ? "top" : ""}"><td class="pl">${x.place}</td><td class="nm">${esc(x.g.name)}</td><td class="picks">${picksTxt(decs[x.g.gid])}${x.y.fine ? ` <span class="pill r">Junk limit fine −$25K</span>` : ""}</td><td class="r" style="font-size:17px">${G.signed(x.y.interest + x.y.cashGain)}</td><td class="r ${x.y.priceGain < 0 ? "neg" : ""}" style="font-size:17px">${x.y.priceGain ? G.signed(x.y.priceGain) : "$0"}</td><td class="r ${x.y.gain < 0 ? "neg" : "pos"}">${G.signed(x.y.gain)}</td><td class="r val">${G.money(x.f.value)}</td></tr>`).join("")}
+      <tr class="bench"><td></td><td>Play-It-Safe Fund</td><td class="picks">all cash, every year</td><td class="r" style="font-size:17px">${G.signed(bench.years[S.r].cashGain)}</td><td class="r" style="font-size:17px">$0</td><td class="r">${G.signed(bench.years[S.r].gain)}</td><td class="r val">${G.money(bench.value)}</td></tr></table>
+      <div class="small" style="margin-top:8px"><b>Interest</b> = coupons collected plus Treasury interest on cash. <b>Price change</b> = what the bonds gained or lost when sold on the secondary market. The Play-It-Safe Fund never buys a bond.</div></div>
       <div class="actions"><button class="btn ghost" id="reopen">Reopen this year</button><button class="btn big" id="nextBtn">${last ? "Final results →" : `Open Year ${R().year + 1} →`}</button></div>`;
   }
   $("#view").innerHTML = topbar(tabs) + body + `<div class="small" id="netErr">${esc(netErr)}</div>`;
-  $$(".tabs2 button").forEach(b => b.onclick = () => { ui.tab = b.dataset.t; render(); });
+  $$(".tabs2 button").forEach(b => b.onclick = () => { ui.tab = b.dataset.t; if (ui.tab === "stand") toStandings(); else render(); });
   $$("[data-why]").forEach(b => b.onclick = () => { ui.why[b.dataset.why] = true; render(); });
   if ($("#whyAll")) $("#whyAll").onclick = () => { ui.why = { A: true, B: true, C: true }; render(); };
-  if ($("#toStand")) $("#toStand").onclick = () => { ui.tab = "stand"; render(); };
+  if ($("#toStand")) $("#toStand").onclick = () => { ui.tab = "stand"; toStandings(); };
   if ($("#reopen")) $("#reopen").onclick = () => { if (confirm("Reopen this year so desks can change their choices?")) op("reopen"); };
   if ($("#nextBtn")) $("#nextBtn").onclick = () => op("next");
 }
 
+function toStandings() { render(); if (S.step !== "stand") op("stand"); }
+
 /* ---------- final ---------- */
 const LESSONS = [
   "Year 1: Compare the yield to the fair yield. Summit was overpriced, then got downgraded.",
-  "Year 2: Watch the economy. Hotels looked cheap until the recession hit, while a safe long bond soared as rates fell.",
-  "Year 3: Rising rates crush long bonds, even from good companies. The short bond with good news won.",
+  "Year 2: Watch the economy. Hotels looked cheap until the recession hit; a safe long bond soared as rates fell.",
+  "Year 3: Rising rates crush long bonds, even from good companies.",
   "Year 4: A high yield is not a good deal if it's below fair. Blaze defaulted; the stadium paid off.",
-  "Year 5: Believe the warning signs. Northgate defaulted, Midwest recovered, and the long bond won as rates fell."];
+  "Year 5: Believe the warning signs. Northgate defaulted; Midwest recovered.",
+  "Year 6: Governments get downgraded too. Lakewood's pension hole mattered more than its new park.",
+  "Year 7: Sometimes cash is the best trade. When big rate hikes are coming, every bond can lose.",
+  "Year 8: In a recession, safe and long wins. A company running out of cash is a pass at any price.",
+  "Year 9: Buy the comeback when the news removes the risk. A one-product company is a coin flip.",
+  "Year 10: Companies repeat their habits. Match the bond's length to where rates are headed."];
 function renderFinal() {
   const last = G.NROUNDS - 1, rows = standings(last), bench = G.runFund([], last), top = rows.slice(0, 3);
   const pod = i => top[i] ? `<div class="pod ${i === 0 ? "first" : ""}"><div class="p">${["1st", "2nd", "3rd"][i]}</div><div class="n">${esc(top[i].g.name)}</div><div class="v">${G.money(top[i].f.value)}</div></div>` : "<div></div>";
-  $("#view").innerHTML = `<div class="topbar"><div class="yr"><div class="sub">Five years on the desk</div><h2>Final results</h2></div></div>
+  $("#view").innerHTML = `<div class="topbar"><div class="yr"><div class="sub">${G.NROUNDS} years on the desk</div><h2>Final results</h2></div></div>
     <div class="podium">${pod(1)}${pod(0)}${pod(2)}</div>
-    <div class="grid" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);align-items:start">
-      <div class="card"><table class="standings"><tr><th>Place</th><th>Desk</th>${G.ROUNDS.map(r => `<th class="r">Yr ${r.year}</th>`).join("")}<th class="r">Final value</th></tr>
-        ${rows.map(x => `<tr class="${x.place === 1 ? "top" : ""}"><td class="pl">${x.place}</td><td class="nm">${esc(x.g.name)}</td>${x.f.years.map(y => `<td class="r ${y.gain < 0 ? "neg" : ""}" style="font-size:16px">${G.signed(y.gain)}</td>`).join("")}<td class="r val">${G.money(x.f.value)}</td></tr>`).join("")}
-        <tr class="bench"><td></td><td>Play-It-Safe Fund</td>${bench.years.map(y => `<td class="r" style="font-size:16px">${G.signed(y.gain)}</td>`).join("")}<td class="r val">${G.money(bench.value)}</td></tr></table>
-        <div class="small" style="margin-top:8px">${rows.filter(x => x.f.value > bench.value).length} of ${rows.length} desks beat the Play-It-Safe Fund.</div></div>
-      <div class="card dark"><div class="label">Lessons from the desk</div><ul class="lessons">${LESSONS.map(l => `<li>${esc(l)}</li>`).join("")}</ul></div></div>
+    <div class="grid" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr);align-items:start">
+      <div class="card"><table class="standings"><tr><th>Place</th><th>Desk</th>${G.ROUNDS.map(r => `<th class="r" style="padding:7px 4px">Y${r.year}</th>`).join("")}<th class="r">Final value</th></tr>
+        ${rows.map(x => `<tr class="${x.place === 1 ? "top" : ""}"><td class="pl">${x.place}</td><td class="nm">${esc(x.g.name)}</td>${x.f.years.map(y => `<td class="r ${y.gain < 0 ? "neg" : ""}" style="font-size:14px;padding:6px 4px">${kk(y.gain)}</td>`).join("")}<td class="r val">${G.money(x.f.value)}</td></tr>`).join("")}
+        <tr class="bench"><td></td><td>Play-It-Safe Fund</td>${bench.years.map(y => `<td class="r" style="font-size:14px;padding:6px 4px">${kk(y.gain)}</td>`).join("")}<td class="r val">${G.money(bench.value)}</td></tr></table>
+        <div class="small" style="margin-top:8px">${rows.filter(x => x.f.value > bench.value).length} of ${rows.length} desks beat the Play-It-Safe Fund.</div>
+        <div class="label" style="margin-top:16px">Where the money came from</div>
+        <table class="standings"><tr><th>Desk</th><th class="r">Interest collected</th><th class="r">Secondary-market gains / losses</th><th class="r">Fines</th><th class="r">Total gain</th></tr>
+        ${rows.map(x => { const t = k2 => x.f.years.reduce((a, y) => a + y[k2], 0); const int = t("interest") + t("cashGain"), pr = t("priceGain"), fn = t("fine");
+          return `<tr><td class="nm" style="font-size:18px">${esc(x.g.name)}</td><td class="r">${G.signed(int)}</td><td class="r ${pr < 0 ? "neg" : ""}">${pr ? G.signed(pr) : "$0"}</td><td class="r ${fn ? "neg" : ""}" style="white-space:nowrap">${fn ? "−" + G.money(fn) : "–"}</td><td class="r val">${G.signed(x.f.value - G.START_FUND)}</td></tr>`; }).join("")}</table>
+        <div class="small" style="margin-top:6px">Interest is the steady part of a bond. Prices on the secondary market are where fortunes are made and lost.</div></div>
+      <div class="card dark"><div class="label">Lessons from the desk</div><ul class="lessons" style="font-size:15px">${LESSONS.map(l => `<li>${esc(l)}</li>`).join("")}</ul></div></div>
     <div class="actions"><button class="btn ghost" id="again">New game</button></div>`;
   $("#again").onclick = () => { if (!confirm("Start a brand-new game? This one will close.")) return; store.del("bd_host"); clearInterval(pollT); S = null; sess = null; ui.lastKey = ""; if (offline) { offline = false; api = call; $("#offlineTag").style.display = "none"; } renderStart(); };
 }

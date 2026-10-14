@@ -39,6 +39,10 @@ td.r,th.r{text-align:right}
 .stat .v{font-family:Oswald,Arial,sans-serif;font-size:24px;font-weight:600;line-height:1.1}
 .stat .k{font-size:11.5px;color:#E8DCCB;text-transform:uppercase;letter-spacing:.03em}
 .sens{font-size:14px;color:var(--brown2);background:var(--sand);border-radius:6px;padding:5px 8px}
+.lvl{display:inline-flex;gap:8px;align-items:center;background:var(--sand);border:2px solid var(--rule);border-radius:20px;padding:4px 12px;font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:14px;color:var(--brown)}
+.lvl b{color:var(--orange);font-weight:600}
+.fairline{font-size:14px;color:var(--green);background:var(--greenbg);border-radius:6px;padding:5px 8px}
+.brk td.sub{padding-left:14px;color:var(--muted);font-size:14px}
 .news{list-style:none;margin:0;padding:0}
 .news li{display:flex;gap:10px;font-size:18px;line-height:1.35;padding:9px 0;border-bottom:1px solid var(--rule)}
 .news li:last-child{border-bottom:0}

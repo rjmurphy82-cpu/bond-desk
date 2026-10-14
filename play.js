@@ -79,23 +79,25 @@ function renderLobby() {
     <p style="font-size:19px;margin-top:18px">You start with <b>${G.money(G.START_FUND)}</b>. Waiting for Year 1 to open...</p><div class="status" id="conn">${esc(conn)}</div></div>`;
 }
 function bondHTML(b, sel, lockedView) {
-  const junk = G.isJunk(b.rating);
+  const junk = G.isJunk(b.rating), R = G.ROUNDS[S.r], lv = G.levelFor(R.year);
   return `<div class="bond ${sel ? "picked" : ""}"><span class="tag">${b.id}</span><h3>${esc(b.issuer)}</h3><div class="what">${esc(b.what)}</div>
     <div class="stats" style="grid-template-columns:repeat(3,1fr)"><div class="stat ${junk ? "j" : ""}"><div class="v">${b.rating}</div><div class="k">${junk ? "Rating · junk" : "Rating"}</div></div>
     <div class="stat"><div class="v">${b.yld.toFixed(1)}%</div><div class="k">Yield</div></div><div class="stat"><div class="v">${b.years} yr</div><div class="k">Matures</div></div></div>
-    <div class="sens">If rates rise 1%, its price falls about <b>${b.sens}%</b>.</div>
+    ${lv.showFair ? `<div class="fairline">Fair yield: <b>${G.fairYield(R.t0, b.rating).toFixed(1)}%</b> (${R.t0.toFixed(1)}% + ${G.SPREADS[b.rating].toFixed(1)}% for ${b.rating})</div>` : ""}
+    ${lv.showSens ? `<div class="sens">If rates rise 1%, its price falls about <b>${b.sens}%</b>.</div>` : ""}
     ${lockedView ? "" : `<div class="seg" data-b="${b.id}">${G.AMOUNTS.map(a => `<button data-a="${a}" class="${draft[b.id] === a ? "on" : ""} ${a ? "" : "pass"}">${a ? "Buy " + k(a) : "Pass"}</button>`).join("")}</div>`}</div>`;
 }
 function renderOpen() {
   const R = G.ROUNDS[S.r], mine = (S.decisions[S.r] || {})[me.gid], sv = startValue();
-  const head = `<div class="yrhead"><div><div class="sub">Year ${R.year} of ${G.NROUNDS} · Fund ${G.money(sv)}</div><h2>${esc(R.title)}</h2></div><div class="chip"><div class="v">${R.t0.toFixed(1)}%</div><div class="k">Treasury rate</div></div></div>`;
+  const lv = G.levelFor(R.year);
+  const head = `<div class="yrhead"><div><div class="sub">Year ${R.year} of ${G.NROUNDS} · Fund ${G.money(sv)}</div><h2>${esc(R.title)}</h2><div style="margin-top:6px"><span class="lvl">Level <b>${esc(lv.name)}</b></span> <span class="small">${esc(lv.note)}</span></div></div><div class="chip"><div class="v">${R.t0.toFixed(1)}%</div><div class="k">Treasury rate</div></div></div>`;
   const side = `<div class="grid" style="align-content:start">
       <div class="card"><div class="label">Market news</div><ul class="news">${R.news.map((n, i) => `<li><b>${i + 1}</b><span>${esc(n)}</span></li>`).join("")}</ul></div>
       <div class="card"><div class="label">Fair yield = ${R.t0.toFixed(1)}% + spread</div><div class="spreads">${G.LADDER.map(r => `<div class="${G.isJunk(r) ? "j" : ""}">${r}<small>+${G.SPREADS[r].toFixed(1)}%</small></div>`).join("")}</div>
-        <div class="small" style="margin-top:8px">Money you don't invest earns ${R.t0.toFixed(1)}% in Treasuries. Fund rule: no more than $200K in junk (BB and below) this year, or a $25,000 fine.</div></div></div>`;
+        <div class="small" style="margin-top:8px">Money you don't invest earns ${R.t0.toFixed(1)}% in Treasuries. At year end you sell every bond on the secondary market at that day's price. Fund rule: no more than $200K in junk (BB and below) this year, or a $25,000 fine.</div></div></div>`;
   if (mine) {
     $("#barSlot").innerHTML = "";
-    $("#view").innerHTML = head + `<div class="lockedcard"><div class="label">Locked in 🔒</div><h2>Waiting for the market to close</h2>
+    $("#view").innerHTML = head + `<div class="lockedcard"><div class="label">Locked in 🔒</div><h2>Waiting for the market to close</h2><div style="font-size:18px;margin-top:6px;color:#F2D9C6">${S.locked.length} of ${S.groups.length} desks locked. When everyone's in, Mr. Murphy reveals the year.</div>
       <table style="margin-top:10px">${R.bonds.map(b => `<tr><td>${b.id}. ${esc(b.issuer)}</td><td class="r">${mine[b.id] ? "Buy " + k(mine[b.id]) : "Pass"}</td></tr>`).join("")}</table>
       <div class="actions" style="justify-content:flex-start"><button class="btn ghost" id="change" style="color:#fff;border-color:#fff">Change our choices</button></div></div>
       <div class="cols" style="margin-top:14px">${side}<div class="grid">${R.bonds.map(b => bondHTML(b, mine[b.id], true)).join("")}</div></div><div class="status" id="conn">${esc(conn)}</div>`;
@@ -116,16 +118,26 @@ function renderOpen() {
 }
 function renderReveal() {
   $("#barSlot").innerHTML = "";
+  if (S.step !== "stand") {
+    const R0 = G.ROUNDS[S.r], mine = (S.decisions[S.r] || {})[me.gid];
+    $("#view").innerHTML = `<div class="center card" style="text-align:center"><div class="label">Year ${R0.year}: ${esc(R0.title)}</div><div class="big" style="font-size:52px">👀 Eyes on the board</div>
+      <p style="font-size:19px">The market is closed. Watch the reveal up front. Your results show up here when Mr. Murphy opens the standings.</p>
+      <div class="lockedcard" style="text-align:left;margin-top:10px"><div class="label">Your picks this year</div><table>${R0.bonds.map(b => `<tr><td>${b.id}. ${esc(b.issuer)}</td><td class="r">${mine && mine[b.id] ? "Buy " + k(mine[b.id]) : "Pass"}</td></tr>`).join("")}</table>
+      ${mine ? "" : `<div class="small" style="color:#E8DCCB;margin-top:6px">No answer this year, so all your money stayed in cash.</div>`}</div><div class="status" id="conn">${esc(conn)}</div></div>`;
+    return;
+  }
   const R = G.ROUNDS[S.r], f = G.runFund(myDecs(S.r), S.r), y = f.years[S.r], rk = rankings(S.r), answered = !!(S.decisions[S.r] || {})[me.gid];
   $("#view").innerHTML = `<div class="yrhead"><div><div class="sub">Year ${R.year} results</div><h2>${esc(R.title)}</h2></div><div class="chip"><div class="v">${R.t0.toFixed(1)}% → ${R.t1.toFixed(1)}%</div><div class="k">Treasury rate</div></div></div>
     <div class="cols"><div class="grid" style="align-content:start">
       <div class="card"><div class="rank"><div class="p">${rk.place}<span style="font-size:24px">/${rk.of}</span></div><div><div class="label">Your desk this year</div><div class="big" style="font-size:40px" >${G.signed(y.gain)}</div><div style="font-size:18px">Fund value: <b>${G.money(f.value)}</b></div></div></div>
         ${answered ? "" : `<div class="small" style="margin-top:8px">No answer this year, so all your money stayed in cash.</div>`}</div>
-      <div class="card"><table class="res"><tr><th>Bond</th><th class="r">You put in</th><th class="r">Return</th><th class="r">Gain</th></tr>
-        ${y.lines.map(l => { const b = R.bonds.find(x => x.id === l.id); return `<tr><td>${b.id}. ${esc(b.issuer)}</td><td class="r">${l.amt ? k(l.amt) : "Pass"}</td><td class="r ${l.ret.total < 0 ? "neg" : ""}">${G.pct(l.ret.total)}</td><td class="r ${l.gain < 0 ? "neg" : ""}">${l.amt ? G.signed(l.gain) : "–"}</td></tr>`; }).join("")}
-        <tr><td>Cash in Treasuries</td><td class="r">${G.money(y.cash)}</td><td class="r">${G.pct(R.t0)}</td><td class="r">${G.signed(y.cashGain)}</td></tr>
-        ${y.fine ? `<tr><td colspan="3">Junk limit fine (more than $200K in junk)</td><td class="r neg">−$25,000</td></tr>` : ""}
-        <tr class="tot"><td colspan="3">Total for the year</td><td class="r ${y.gain < 0 ? "neg" : ""}">${G.signed(y.gain)}</td></tr></table></div></div>
+      <div class="card"><table class="res"><tr><th>Bond</th><th class="r">Put in</th><th class="r">Interest</th><th class="r">Sold for</th><th class="r">Total</th></tr>
+        ${y.lines.map(l => { const b = R.bonds.find(x => x.id === l.id); return l.amt ? `<tr><td>${b.id}. ${esc(b.issuer)}</td><td class="r">${k(l.amt)}</td><td class="r">${G.signed(l.interest)}</td><td class="r ${l.priceGain < 0 ? "neg" : ""}">$${l.ret.endPrice.toFixed(2)}<br><span class="small ${l.priceGain < 0 ? "neg" : ""}">${l.priceGain ? G.signed(l.priceGain) : "$0"}</span></td><td class="r ${l.gain < 0 ? "neg" : ""}">${G.signed(l.gain)}</td></tr>`
+          : `<tr><td>${b.id}. ${esc(b.issuer)}</td><td class="r">Pass</td><td class="r">–</td><td class="r small">$${l.ret.endPrice.toFixed(2)}</td><td class="r">–</td></tr>`; }).join("")}
+        <tr><td>Cash in Treasuries</td><td class="r">${G.money(y.cash)}</td><td class="r">${G.signed(y.cashGain)}</td><td class="r">–</td><td class="r">${G.signed(y.cashGain)}</td></tr>
+        ${y.fine ? `<tr><td colspan="4">Junk limit fine (more than $200K in junk)</td><td class="r neg">−$25,000</td></tr>` : ""}
+        <tr class="tot"><td colspan="4">Total for the year</td><td class="r ${y.gain < 0 ? "neg" : ""}">${G.signed(y.gain)}</td></tr></table>
+        <div class="small" style="margin-top:6px"><b>Interest</b> is what the bond paid you. <b>Sold for</b> is its price per $100 on the secondary market at year end.</div></div></div>
       <div class="card"><div class="label">What happened</div><div class="story"><b>Rates:</b> ${esc(R.outcome.rateNote)}</div>
         ${R.bonds.map(b => `<div class="story"><b>${b.id}. ${esc(b.issuer)}:</b> ${esc(R.outcome[b.id].story)}</div>`).join("")}
         <div class="small" style="margin-top:8px">Look up at the board to see why.</div></div></div><div class="status" id="conn">${esc(conn)}</div>`;
@@ -133,7 +145,7 @@ function renderReveal() {
 function renderFinal() {
   $("#barSlot").innerHTML = "";
   const last = G.NROUNDS - 1, f = G.runFund(myDecs(last), last), rk = rankings(last), bench = G.runFund([], last).value;
-  $("#view").innerHTML = `<div class="center card" style="text-align:center"><div class="label">Five years on the desk</div><div class="big" style="font-size:40px">${esc(me.name)}</div>
+  $("#view").innerHTML = `<div class="center card" style="text-align:center"><div class="label">${G.NROUNDS} years on the desk</div><div class="big" style="font-size:40px">${esc(me.name)}</div>
     <div class="rank" style="justify-content:center;margin:16px 0"><div class="p">${rk.place}<span style="font-size:24px">/${rk.of}</span></div><div style="text-align:left"><div class="small">Final fund value</div><div class="big" style="font-size:44px">${G.money(f.value)}</div></div></div>
     <p style="font-size:18px">${f.value > bench ? "You beat" : "You fell short of"} the Play-It-Safe Fund (all cash), which finished at <b>${G.money(bench)}</b>.</p>
     <table class="res" style="margin-top:10px">${f.years.map((yy, i) => `<tr><td>Year ${i + 1}</td><td class="r ${yy.gain < 0 ? "neg" : ""}">${G.signed(yy.gain)}</td></tr>`).join("")}</table>

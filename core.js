@@ -35,7 +35,7 @@ export async function getState(kv, { code, gid, key, hostKey, since }) {
   const s = json(res[0]); if (!s) fail("no_game", "That game has ended.");
   const groups = hobj(res[1]), host = isHost(s, hostKey);
   const me = gid && groups[gid] && groups[gid].key === key ? gid : null;
-  const out = { v: +v, phase: s.phase, r: s.r, host,
+  const out = { v: +v, phase: s.phase, r: s.r, step: s.step || null, host,
     groups: Object.entries(groups).sort((a, b) => (a[1].t || 0) - (b[1].t || 0)).map(([id, g]) => ({ gid: id, name: g.name, ...(host ? { pin: g.pin, manual: !!g.manual } : {}) })),
     me: me ? { gid: me, name: groups[me].name, pin: groups[me].pin } : null, decisions: [], locked: [] };
   for (let r = 0; r < NROUNDS; r++) {
@@ -86,9 +86,10 @@ export async function hostOp(kv, { code, hostKey, op, gid, picks, name }) {
   const s = await loadState(kv, code); if (!isHost(s, hostKey)) fail("not_host", "Only the host screen can do that.");
   const save = (extra = []) => touch(kv, code, [["SET", K(code, "state"), JSON.stringify(s), "EX", TTL], ...extra]);
   if (op === "start") { if (s.phase !== "lobby") fail("bad_op", "Already started."); s.phase = "open"; s.r = 0; await save(); }
-  else if (op === "reveal") { if (s.phase !== "open") fail("bad_op", "Not open."); s.phase = "reveal"; await save(); }
-  else if (op === "reopen") { if (s.phase !== "reveal") fail("bad_op", "Nothing to reopen."); s.phase = "open"; await save(); }
-  else if (op === "next") { if (s.phase !== "reveal") fail("bad_op", "Reveal first."); if (s.r >= NROUNDS - 1) s.phase = "final"; else { s.r++; s.phase = "open"; } await save(); }
+  else if (op === "reveal") { if (s.phase !== "open") fail("bad_op", "Not open."); s.phase = "reveal"; s.step = "what"; await save(); }
+  else if (op === "stand") { if (s.phase !== "reveal") fail("bad_op", "Not revealed."); if (s.step !== "stand") { s.step = "stand"; await save(); } }
+  else if (op === "reopen") { if (s.phase !== "reveal") fail("bad_op", "Nothing to reopen."); s.phase = "open"; delete s.step; await save(); }
+  else if (op === "next") { if (s.phase !== "reveal") fail("bad_op", "Reveal first."); delete s.step; if (s.r >= NROUNDS - 1) s.phase = "final"; else { s.r++; s.phase = "open"; } await save(); }
   else if (op === "enter") { if (s.phase !== "open") fail("bad_op", "This year is closed."); const p = checkPicks(picks); await save([["HSET", K(code, "d" + s.r), gid, JSON.stringify({ ...p, t: Date.now(), byHost: true })]]); }
   else if (op === "clear") { await save([["HDEL", K(code, "d" + s.r), gid]]); }
   else if (op === "add") { const n = clean(name); if (!n) fail("bad_name", "Name needed."); const id = rid(8); await save([["HSET", K(code, "g"), id, JSON.stringify({ name: n, pin: pin3(), key: rid(16), t: Date.now(), manual: true })]]); return { ok: true, gid: id }; }
