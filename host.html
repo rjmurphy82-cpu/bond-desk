@@ -16,7 +16,7 @@
 .code{font-family:Oswald,Arial,sans-serif;font-size:96px;font-weight:700;color:#fff;letter-spacing:.06em;line-height:1}
 .url{font-size:24px;color:#FBF3E6;margin-bottom:6px}.url b{color:var(--light)}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
-#endGame{display:none;background:transparent;border:2px solid #E8DCCB;color:#E8DCCB;border-radius:8px;padding:5px 12px;font-size:14px}
+#menuBtn{display:none;background:transparent;border:2px solid #E8DCCB;color:#E8DCCB;border-radius:8px;padding:5px 12px;font-size:14px}
 .tile{background:var(--card);border:2px solid var(--rule);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;text-transform:none;color:var(--brown)}
 .tile .nm{font-family:Oswald,Arial,sans-serif;font-size:22px;text-transform:uppercase;line-height:1.1;overflow:hidden;text-overflow:ellipsis}
 .tile .st{font-family:Oswald,Arial,sans-serif;font-size:14px;text-transform:uppercase;color:var(--muted);white-space:nowrap}
@@ -75,7 +75,7 @@
 <body>
 <header>
   <div><div class="kicker">Hersey | Finance &amp; Investing | Unit 3: Bonds</div><h1>The Bond Desk</h1></div>
-  <div style="display:flex;gap:12px;align-items:center"><span id="offlineTag">Offline mode</span><button id="endGame" title="End this game and start over">New game</button><span class="kicker" style="color:#E8DCCB">Mr. Murphy | John Hersey High School</span></div>
+  <div style="display:flex;gap:12px;align-items:center"><span id="offlineTag">Offline mode</span><button id="menuBtn" title="Resume, start a new game, or play without iPads">☰ Menu</button><span class="kicker" style="color:#E8DCCB">Mr. Murphy | John Hersey High School</span></div>
 </header>
 <main id="view"></main>
 <div class="modal" id="enterModal"><div class="mbox" id="enterBox"></div></div>

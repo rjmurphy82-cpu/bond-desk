@@ -22,33 +22,58 @@ const kk = v => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.round(Math.abs(v) / 10
 const sgnPct = v => v === 0 ? "0.0%" : G.pct(v);
 function showErr(m) { netErr = m; const el = $("#netErr"); if (el) el.textContent = m; }
 
-/* ---------- start / session ---------- */
+/* ---------- host menu (start screen + in-game menu) ---------- */
+ui.menu = false;
 async function boot() {
   sess = store.get("bd_host");
   if (sess) {
-    try { S = await api("state", { code: sess.code, hostKey: sess.hostKey }); if (!S.host) throw 0; startPoll(); return render(); }
-    catch { store.del("bd_host"); sess = null; }
+    try { S = await api("state", { code: sess.code, hostKey: sess.hostKey }); if (!S.host) throw 0; startPoll(); }
+    catch { store.del("bd_host"); sess = null; S = null; }
   }
-  renderStart();
+  renderMenu();
 }
-function renderStart(msg = "") {
+function gameSummary() {
+  if (!S) return "";
+  const where = S.phase === "lobby" ? "Waiting in the lobby" : S.phase === "final" ? "Finished: final results" : `Year ${S.r + 1} of ${G.NROUNDS}${S.phase === "reveal" ? " (revealed)" : ""}`;
+  return `${where} · ${S.groups.length} ${S.groups.length === 1 ? "player" : "players"}`;
+}
+function renderMenu(msg = "") {
+  ui.menu = true; $("#menuBtn").style.display = "none";
+  const live = !!(sess && S);
   $("#view").innerHTML = `<div class="hero">
-    <div class="card dark"><div class="label">Run a bond fund for ten years</div>
-      <h2 style="font-size:44px;line-height:1.05;margin:4px 0 10px">Buy, pass, or bet big.</h2>
-      <div style="font-size:19px;line-height:1.5">Each desk starts with <b>$1,000,000</b>. Every year, three bonds hit the market. Desks read the news, check the price, and decide on their iPads. The market decides who was right.</div>
-      <div class="actions" style="justify-content:flex-start"><button class="btn big" id="newGame">Start a new game</button></div>
+    ${live ? `<div class="card dark" style="grid-column:1/-1"><div class="label">Game in progress</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+        <div><div style="font-family:Oswald,Arial;font-size:44px;line-height:1">${offline ? "Offline game" : "Game " + esc(sess.code)}</div><div style="font-size:19px;margin-top:4px">${esc(gameSummary())}</div></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn big" id="mResume">Resume</button></div></div></div>` : ""}
+    <div class="card ${live ? "" : "dark"}"><div class="label">Run a bond fund for ten years</div>
+      <h2 style="font-size:${live ? 30 : 44}px;line-height:1.05;margin:4px 0 10px">Buy, pass, or bet big.</h2>
+      <div style="font-size:18px;line-height:1.5">Each player starts with <b>$1,000,000</b>. Every year, three bonds hit the market. Players read the news, check the price, and decide on their iPads.</div>
+      <div class="actions" style="justify-content:flex-start"><button class="btn ${live ? "dk" : "big"}" id="newGame">${live ? "End it &amp; start a new game" : "Start a new game"}</button></div>
       ${msg ? `<div class="err">${esc(msg)}</div>` : ""}
     </div>
     <div class="card"><div class="label">No Wi-Fi or iPads today?</div>
-      <div style="font-size:17px;line-height:1.5">Run the game on this screen only. You add the desks by hand and tap in each desk's choices.</div>
-      <div class="actions" style="justify-content:flex-start"><button class="btn ghost" id="offGame">Play without iPads</button></div>
+      <div style="font-size:17px;line-height:1.5">Run the game on this screen only. You add players by hand and tap in each one's choices.</div>
+      <div class="actions" style="justify-content:flex-start"><button class="btn ghost" id="offGame">${live ? "End it &amp; play without iPads" : "Play without iPads"}</button></div>
     </div></div>`;
+  if ($("#mResume")) $("#mResume").onclick = () => { ui.menu = false; ui.lastKey = ""; render(); };
   $("#newGame").onclick = async () => {
-    $("#newGame").disabled = true;
-    try { const r = await api("create"); sess = { code: r.code, hostKey: r.hostKey }; store.set("bd_host", sess); await refresh(true); startPoll(); }
-    catch (e) { renderStart(e.code === "db_not_configured" ? "The game database isn't connected yet (see the README setup steps). You can still play without iPads." : e.message + " You can still play without iPads."); }
+    if (live && !confirm("End this game and start a new one?\n\nEveryone's results will be erased, and student iPads will go back to the join screen.")) return;
+    $("#newGame").disabled = true; await endCurrent();
+    try { const r = await api("create"); sess = { code: r.code, hostKey: r.hostKey }; store.set("bd_host", sess); ui.menu = false; await refresh(true); startPoll(); }
+    catch (e) { renderMenu(e.code === "db_not_configured" ? "The game database isn't connected yet (see the README setup steps). You can still play without iPads." : e.message + " You can still play without iPads."); }
   };
-  $("#offGame").onclick = async () => { offline = true; api = offlineCaller(); $("#offlineTag").style.display = "inline-block"; const r = await api("create"); sess = { code: r.code, hostKey: r.hostKey }; await refresh(true); };
+  $("#offGame").onclick = async () => {
+    if (live && !confirm("End this game and play without iPads?\n\nEveryone's results will be erased.")) return;
+    await endCurrent();
+    offline = true; api = offlineCaller(); $("#offlineTag").style.display = "inline-block";
+    const r = await api("create"); sess = { code: r.code, hostKey: r.hostKey }; ui.menu = false; await refresh(true);
+  };
+}
+// End whatever game is running (online or offline) and clear local state
+async function endCurrent() {
+  if (sess) { try { await api("host", { code: sess.code, hostKey: sess.hostKey, op: "end" }); } catch (e) { /* already gone */ } }
+  store.del("bd_host"); clearInterval(pollT); clearInterval(tRun); tRun = null; S = null; sess = null; ui.lastKey = "";
+  if (offline) { offline = false; api = call; $("#offlineTag").style.display = "none"; }
 }
 function startPoll() { clearInterval(pollT); if (offline) return; pollT = setInterval(() => refresh(false), 1500); }
 async function refresh(force) {
@@ -58,7 +83,7 @@ async function refresh(force) {
     if (r.same) return;
     S = r; render();
   } catch (e) {
-    if (e.code === "no_game") { store.del("bd_host"); clearInterval(pollT); S = null; return renderStart("That game has expired. Start a new one."); }
+    if (e.code === "no_game") { store.del("bd_host"); clearInterval(pollT); S = null; return renderMenu("That game has expired. Start a new one."); }
     showErr("Connection hiccup. Retrying...");
   }
 }
@@ -69,7 +94,8 @@ async function op(name, extra = {}) {
 
 /* ---------- render router ---------- */
 function render() {
-  $("#endGame").style.display = sess ? "inline-block" : "none";
+  if (ui.menu) return;
+  $("#menuBtn").style.display = sess ? "inline-block" : "none";
   const key = S.phase + ":" + S.r;
   if (key !== ui.lastKey) { ui.lastKey = key; ui.tab = "what"; if (S.phase === "open") resetClock(); }
   if (S.phase === "lobby") renderLobby();
@@ -86,10 +112,10 @@ function renderLobby() {
     : `<div class="card dark"><div class="label">Join the desk</div>
       <div class="joinbox"><div class="qr">${qrSVG(joinUrl())}</div>
         <div><div class="url">Scan the code, or go to<br><b>${esc(location.host)}</b></div><div class="small" style="font-size:16px">Game code</div><div class="code">${sess.code}</div></div></div>
-      <div class="small" style="margin-top:12px;font-size:15px">Join with your first name. Each player gets a 3-digit PIN. If an iPad restarts, rejoin with the same name and PIN.</div></div>`}
+      <div class="small" style="margin-top:12px;font-size:15px">Join with your first name(s), like "Maya, Jake & Ava." Each group gets a 3-digit PIN. If an iPad restarts, rejoin with the same name and PIN.</div></div>`}
     <div class="card"><div class="label">Players joined: ${S.groups.length}</div>
       <div class="tiles" style="grid-template-columns:repeat(2,1fr)">${S.groups.map(g => `<div class="tile"><div><div class="nm">${esc(g.name)}</div><div class="st">PIN ${g.pin}${g.manual ? " · added by hand" : ""}</div></div><button class="x" data-g="${g.gid}" title="Remove">✕</button></div>`).join("") || `<div class="small">Waiting for desks to join...</div>`}</div>
-      <div style="display:flex;gap:8px;margin-top:12px"><input id="addName" maxlength="20" placeholder="Add a player by hand" style="flex:1;font-size:17px;padding:8px 10px;border:1px solid var(--rule);border-radius:8px"><button class="btn dk sm" id="addBtn">Add</button></div>
+      <div style="display:flex;gap:8px;margin-top:12px"><input id="addName" maxlength="30" placeholder="Add a player by hand" style="flex:1;font-size:17px;padding:8px 10px;border:1px solid var(--rule);border-radius:8px"><button class="btn dk sm" id="addBtn">Add</button></div>
       <div class="actions"><button class="btn big" id="startBtn" ${S.groups.length ? "" : "disabled"}>Open Year 1</button></div>
       <div class="small" id="netErr">${esc(netErr)}</div></div></div>`;
   $$(".x").forEach(b => b.onclick = () => { if (confirm("Remove this desk?")) op("remove", { gid: b.dataset.g }); });
@@ -248,20 +274,11 @@ function renderFinal() {
           return `<tr><td class="nm" style="font-size:18px">${esc(x.g.name)}</td><td class="r">${G.signed(int)}</td><td class="r ${pr < 0 ? "neg" : ""}">${pr ? G.signed(pr) : "$0"}</td><td class="r ${fn ? "neg" : ""}" style="white-space:nowrap">${fn ? "−" + G.money(fn) : "–"}</td><td class="r val">${G.signed(x.f.value - G.START_FUND)}</td></tr>`; }).join("")}</table>
         <div class="small" style="margin-top:6px">Interest is the steady part of a bond. Prices on the secondary market are where fortunes are made and lost.</div></div>
       <div class="card dark"><div class="label">Lessons from the desk</div><ul class="lessons" style="font-size:15px">${LESSONS.map(l => `<li>${esc(l)}</li>`).join("")}</ul></div></div>
-    <div class="actions"><button class="btn ghost" id="again">New game</button></div>`;
-  $("#again").onclick = endAndRestart;
+    <div class="actions"><button class="btn ghost" id="again">Menu</button></div>`;
+  $("#again").onclick = () => renderMenu();
 }
 
-/* ---------- end the current game at any point ---------- */
-async function endAndRestart() {
-  if (!sess) return;
-  if (!confirm("End this game and start a new one?\n\nEvery desk's results will be erased, and student iPads will go back to the join screen.")) return;
-  try { await api("host", { code: sess.code, hostKey: sess.hostKey, op: "end" }); } catch (e) { /* already gone is fine */ }
-  store.del("bd_host"); clearInterval(pollT); clearInterval(tRun); tRun = null; S = null; sess = null; ui.lastKey = "";
-  if (offline) { offline = false; api = call; $("#offlineTag").style.display = "none"; }
-  $("#endGame").style.display = "none"; renderStart();
-}
-$("#endGame").onclick = endAndRestart;
+$("#menuBtn").onclick = () => renderMenu();
 
 window.__bd = { get S() { return S; }, get sess() { return sess; } };
 boot();
