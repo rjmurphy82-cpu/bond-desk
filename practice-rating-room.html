@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rating Room Practice | District 214 Finance &amp; Investing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<style>
+/* Layout: title, mode tabs, numbered case strip, then one case panel: case file on the left, scorecard on the right */
+.strip{display:flex;gap:6px;flex-wrap:wrap;padding:2px 0 12px}
+.strip button{min-width:42px;height:42px;border-radius:8px;border:2px solid var(--line);background:var(--paper);font-family:var(--display);font-weight:600;font-size:16px;padding:0 10px}
+.strip button.done{border-color:var(--good);color:var(--good)}
+.strip button.miss{border-color:var(--red);color:var(--redtext)}
+.strip button[aria-current="true"]{background:var(--red);border-color:var(--red);color:#fff}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:20px;align-items:start}
+@media (max-width:1100px){.cols{grid-template-columns:1fr}}
+.what{margin:0 0 12px}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+@media (max-width:560px){.facts{grid-template-columns:1fr 1fr}}
+.fact{background:var(--black);color:var(--onblack);border-radius:8px;padding:8px 10px}
+.fact .v{font-family:var(--display);font-weight:600;font-size:24px;line-height:1.1}
+.fact .k{font-size:12.5px;opacity:.8;line-height:1.2}
+.notes{list-style:none;margin:12px 0 0;padding:0}
+.notes li{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);line-height:1.35}
+.notes li:last-child{border-bottom:0}
+.notes li b{flex:none;width:24px;height:24px;border-radius:50%;background:var(--black);color:#fff;display:grid;place-items:center;font:600 13px var(--display);margin-top:1px}
+.tiny{font-size:13.5px;color:var(--muted);margin-top:8px}
+.frow{border:2px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--paper)}
+.frow.good{border-color:var(--good);background:var(--goodsoft)}
+.frow.bad{border-color:var(--red);background:color-mix(in srgb,var(--redsoft) 60%,var(--paper))}
+.fhead{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline}
+.fname{font-family:var(--display);font-weight:600;font-size:19px;text-transform:uppercase;letter-spacing:.02em}
+.fq{font-size:14px;color:var(--muted)}
+.math{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:6px;font-size:15px;font-weight:600;color:var(--redtext)}
+.math input{width:96px;font:600 16px var(--body);padding:4px 8px;border:2px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink)}
+.levels{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:8px}
+@media (max-width:640px){.levels{grid-template-columns:1fr}}
+.lv{text-align:left;background:var(--bg);border:2px solid var(--line);border-radius:8px;padding:5px 7px;font-size:12.5px;line-height:1.2;min-height:48px}
+.lv b{display:block;font-family:var(--display);font-size:18px;color:var(--redtext);line-height:1.1}
+.lv:hover:not(:disabled){border-color:var(--ink)}
+.lv.on{border-color:var(--red);background:var(--redsoft)}
+.lv.off{box-shadow:inset 0 0 0 3px var(--good);border-color:var(--good)}
+.lv:disabled{cursor:default}
+.verdict{margin-top:8px;font-size:15px;line-height:1.4}
+.verdict .m{font-variant-numeric:tabular-nums;font-weight:700}
+.totals{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 8px}
+.tbox{flex:1;min-width:130px;background:var(--black);color:#fff;border-radius:10px;padding:8px 14px}
+.tbox .k{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.8}
+.tbox .v{font-family:var(--display);font-weight:700;font-size:36px;line-height:1.05}
+.rpick{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.rpick button{border:2px solid var(--line);background:var(--paper);border-radius:8px;padding:8px 0;font-family:var(--display);font-weight:600;font-size:19px;line-height:1.05}
+.rpick button small{display:block;font:600 11px var(--body);color:var(--muted)}
+.rpick button.j{background:color-mix(in srgb,var(--redsoft) 45%,var(--paper))}
+.rpick button.on{background:var(--red);border-color:var(--red);color:#fff}.rpick button.on small{color:#fff}
+.rpick button.off{box-shadow:inset 0 0 0 3px var(--good);border-color:var(--good)}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+.left{color:var(--muted);font-size:15px;font-weight:600}
+.result{margin-top:14px;display:grid;gap:10px}
+.why{display:grid;gap:8px}
+.why p{margin:0}
+.sumrow{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.sumrow .big{font-family:var(--display);font-weight:700;font-size:58px;line-height:1;color:var(--redtext)}
+.guide{margin-top:20px}
+.guide summary{cursor:pointer;font-family:var(--display);font-weight:600;font-size:20px}
+.guide table td{font-size:14.5px}
+/* quiz */
+.qtext{font-family:var(--display);font-weight:600;font-size:clamp(22px,3vw,30px);line-height:1.2;margin:4px 0 16px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:640px){.opts{grid-template-columns:1fr}}
+.opt{display:flex;gap:12px;align-items:center;text-align:left;background:var(--bg);border:2px solid var(--line);border-radius:10px;padding:10px 14px;font:600 18px/1.25 var(--body);min-height:58px}
+.opt:hover:not(:disabled){border-color:var(--ink)}
+.opt .k{flex:none;width:32px;height:32px;border-radius:7px;background:var(--black);color:#fff;display:grid;place-items:center;font-family:var(--display);font-size:17px}
+.opt.right{background:var(--good);border-color:var(--good);color:#fff}
+.opt.wrong{border-color:var(--red);color:var(--redtext);text-decoration:line-through;background:transparent}
+.opt.dim{opacity:.45}
+.opt:disabled{cursor:default}
+</style>
+</head>
+<body data-page="practice-rating-room">
+<div class="shell">
+  <main class="main"><div class="inner">
+    <div class="crumb"><a href="/#practices">Practice On Your Own</a> / Unit 3: Bonds</div>
+    <h1>Rating Room Practice</h1>
+    <p class="lede">Score each factor on the six-factor scorecard, add up the points, then pick the rating. Check your work to see the official score and the math behind every line.</p>
+    <div class="tabs" role="group" aria-label="Practice mode">
+      <button data-mode="cases" aria-pressed="true">Case files</button>
+      <button data-mode="random" aria-pressed="false">Random issuers</button>
+      <button data-mode="quiz" aria-pressed="false">Quick quiz</button>
+    </div>
+    <div id="view"></div>
+    <details class="guide panel"><summary class="pbody" style="display:block">The scorecard (0 to 4 points per factor)</summary>
+      <div class="pbody" style="padding-top:0"><table id="guideTable"></table>
+      <div class="tiny" id="scaleLine"></div>
+      <div class="tiny"><b>Earnings</b> = money left after operating costs, before interest. For a city, school district, or authority, it is the <b>surplus</b>. Use the most recent year (2026). <b>Revenue change</b> = (2026 revenue − 2022 revenue) ÷ 2022 revenue. All issuers are made up; real rating agencies use many more factors and their own judgment.</div></div>
+    </details>
+  </div></main>
+</div>
+<script src="/rating-data.js"></script>
+<script>
+(function(){
+const DATA = window.RATING_DATA, F = DATA.factors, LADDER = DATA.ladder, SCALE = DATA.scale;
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const money = v => (v<0?"−":"") + "$" + Math.abs(v).toLocaleString("en-US") + "M";
+function rating(t){ for (const [lo,r] of SCALE) if (t>=lo) return r; }
+function bandText(r){ const i=SCALE.findIndex(s=>s[1]===r); const lo=SCALE[i][0], hi=i===0?24:SCALE[i-1][0]-1; return lo+"–"+hi; }
+const isIG = r => LADDER.indexOf(r) <= 3;
+const store = { get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} } };
+
+/* ---------- shared scoring rules (same as the case files) ---------- */
+const sDebt=(x,e)=> e<=0?0 : x<1.5?4 : x<3?3 : x<4.5?2 : x<6?1 : 0;
+const sCov=x=> x>=8?4 : x>=5?3 : x>=3?2 : x>=1.5?1 : 0;
+const sCash=x=> x>=2?4 : x>=1?3 : x>=0.5?2 : x>=0.25?1 : 0;
+function sStab(rev,earn){ const P=earn.filter(v=>v>0).length, R=(rev[4]-rev[0])/rev[0]*100, rising=rev.every((v,i)=>i===0||v>rev[i-1]);
+  if(P===0)return 0; if(P===5&&rising)return 4; if(P===5&&R>0)return 3; if((P===5&&R>=-10)||(P===4&&R>=-10))return 2; return 1; }
+function solve(c){ const e=c.earn[4]; const d=e>0?c.debt/e:null, cov=e/c.interest, cs=c.cash/c.due;
+  const P=c.earn.filter(v=>v>0).length, R=(c.rev[4]-c.rev[0])/c.rev[0]*100;
+  c.ratios={debt:d,coverage:cov,cash:cs,P,R}; c.scores={history:c.history,stability:sStab(c.rev,c.earn),debt:sDebt(d===null?99:d,e),coverage:sCov(cov),cash:sCash(cs),backing:c.backing};
+  c.total=Object.values(c.scores).reduce((a,b)=>a+b,0); c.rating=rating(c.total); return c; }
+
+/* ---------- ROUND 3: practice generator ---------- */
+let seed = Date.now() % 2147483647;
+const rnd=()=>{ seed=(seed*16807)%2147483647; return (seed-1)/2147483646; };
+const rint=(a,b)=>a+Math.floor(rnd()*(b-a+1)), rr=(a,b)=>a+rnd()*(b-a), pickA=a=>a[Math.floor(rnd()*a.length)];
+const HIST = {4:["Has borrowed for %y years. Never missed or been late on a payment."],3:["First borrowed %s years ago. Never missed a payment."],2:["Paid one interest payment 2 weeks late six years ago, then caught up."],1:["Missed an interest payment two years ago and paid it 4 months late."],0:["Missed its last two interest payments and has not paid them yet."]};
+const KIND = {
+  4:[{t:"Municipal general obligation bond",w:"A suburban city selling bonds for new roads and a library.",b:"Repaid with property and sales taxes. Bondholders are backed by the city's full power to tax.",m:true,n:["City of Oak Bluff","Village of Cedar Hollow","Lakeview Township","Brookfield Park District"]},
+      {t:"Utility revenue bond",w:"Supplies water and sewer service to 300,000 people.",b:"Repaid from monthly water bills, an essential service people pay even in a recession.",m:true,n:["Clearwater Utility District","Stonebrook Water Authority","Bluff County Water"]}],
+  3:[{t:"Corporate bond",w:"Makes medical equipment sold to hospitals nationwide.",b:"A top company in a stable, growing industry. Hospitals sign long contracts.",n:["Northstar Medical","Bellwood Health Devices","Granite Peak Labs"]},
+      {t:"Corporate bond",w:"Runs a payment-processing network for stores.",b:"A leader in a stable, growing industry.",n:["Ridgeline Payments","Copperleaf Data"]}],
+  2:[{t:"Corporate bond",w:"Builds trucks and farm equipment.",b:"Solid company, but sales rise and fall with the economy.",n:["Prairie Iron Works","Sawgrass Machinery"]},
+      {t:"Corporate bond",w:"Runs an airline with 200 planes.",b:"Travel booms in good times and drops in bad times.",n:["Kestrel Air","Bluewing Airlines"]}],
+  1:[{t:"Corporate bond",w:"Prints and sells newspapers and magazines.",b:"Readers keep moving online. A shrinking industry.",n:["Daily Ledger Media","Morning Post Group"]},
+      {t:"Corporate bond",w:"Runs a chain of video game stores.",b:"Heavy competition from online stores. Sales keep shrinking.",n:["Pixel Planet Stores","GameVault Retail"]}],
+  0:[{t:"Revenue bond",w:"Built a water park repaid from ticket sales.",b:"Repayment depends only on ticket sales at one water park. If a bad summer keeps people away, the money is not there.",m:true,n:["Splash Valley Authority","Sunset Bay Park District"]},
+      {t:"Corporate bond",w:"Mining company with a single copper mine.",b:"Repayment depends on one mine and the price of copper, which swings wildly.",n:["Red Mesa Mining","Crooked Creek Minerals"]}],
+};
+function series(level, small){ // returns {rev, earn}
+  const base=small?rint(2,40)*10:rint(3,60)*100, m=rr(0.12,0.24);
+  let rev=[base], earn;
+  const grow=()=>{ for(let i=1;i<5;i++) rev.push(Math.round(rev[i-1]*(1+rr(0.03,0.09)))); };
+  if(level===4){ grow(); }
+  else if(level===3){ grow(); const d=rint(1,3); rev[d]=Math.round(rev[d-1]*rr(0.9,0.97)); for(let i=d+1;i<5;i++) rev[i]=Math.round(rev[i-1]*(1+rr(0.05,0.1))); if(rev[4]<=rev[0]) rev[4]=Math.round(rev[0]*1.08); }
+  else if(level===2){ if(rnd()<0.5){ const R=rr(-0.08,-0.02); for(let i=1;i<5;i++) rev.push(Math.round(base*(1+R*i/4+rr(-0.03,0.03)))); rev[4]=Math.round(base*(1+R)); }
+                      else { for(let i=1;i<5;i++) rev.push(Math.round(rev[i-1]*(1+rr(0.0,0.03)))); } }
+  else if(level===1){ const R=rr(-0.3,-0.14); for(let i=1;i<5;i++) rev.push(Math.round(base*(1+R*i/4))); }
+  else { for(let i=1;i<5;i++) rev.push(Math.round(rev[i-1]*(1+rr(0.2,0.6)))); }
+  earn = rev.map(v=>Math.round(v*m*rr(0.85,1.1)));
+  if(level===2 && rev[4]>=rev[0]){ earn[rint(1,3)] = -Math.round(rev[0]*rr(0.02,0.06)); } // 4 of 5 profitable
+  if(level===0) earn = rev.map(v=>-Math.round(v*rr(0.05,0.2)));
+  return {rev, earn};
+}
+function buildIssuer(){
+  // pick a target rating, then factor levels that land in its band
+  const target = pickA(LADDER), lo = SCALE.find(s=>s[1]===target)[0], hi = target==="AAA"?24:SCALE[SCALE.findIndex(s=>s[1]===target)-1][0]-1;
+  let lv; for(let k=0;k<500;k++){ lv=F.map(()=>rint(0,4)); const t=lv.reduce((a,b)=>a+b,0); if(t>=lo&&t<=hi && !(lv[1]===0&&(lv[2]||lv[3]))) break; }
+  const [h,st,dl,cv,ch,bk] = lv;
+  const kind = pickA(KIND[bk]);
+  const {rev, earn} = series(st===0?0:st, !!kind.m);
+  const e = earn[4];
+  const dR = [[6.5,9],[4.7,5.8],[3.2,4.3],[1.7,2.8],[0.3,1.3]][dl], cR=[[0.5,1.3],[1.7,2.8],[3.2,4.7],[5.3,7.6],[9,20]][cv], kR=[[0.06,0.2],[0.28,0.45],[0.55,0.9],[1.1,1.8],[2.2,4]][ch];
+  const E = Math.max(e, 1), debt = Math.max(5, Math.round(Math.abs(E)*rr(...dR))), interest = Math.max(1, Math.round((e>0?e:Math.abs(e)+E)/rr(...cR)));
+  const due = Math.max(2, Math.round(debt*rr(0.06,0.14))), cash = Math.max(1, Math.round(due*rr(...kR)));
+  const c = { name: pickA(kind.n), type: kind.t + ", " + pickA([5,7,10,15,20]) + " years", what: kind.w, munis: !!kind.m, rev, earn, debt, interest, cash, due,
+    history: h, historyText: pickA(HIST[h]).replace("%y", rint(22,60)).replace("%s", rint(3,15)), backing: bk, backingText: kind.b };
+  return solve(c);  // official scores come from the actual numbers, same rules as the case files
+}
+
+
+DATA.cases.forEach(solve);
+// Class cases first (in the order they're played in class), then the bonus case files
+const classIdx = DATA.rounds.map(r => r.case), bonusIdx = DATA.cases.map((_,i)=>i).filter(i => !classIdx.includes(i));
+const CASES = [...classIdx.map(i => ({ c: DATA.cases[i], tag: "Class case" })), ...bonusIdx.map(i => ({ c: DATA.cases[i], tag: "Bonus case" }))];
+
+/* ---------- scorecard guide ---------- */
+$("#guideTable").innerHTML = `<tr><th>Factor</th><th>What to look at</th><th>4 points</th><th>0 points</th></tr>` +
+  F.map(f => `<tr><td><b>${f.name}</b></td><td>${f.q}${f.formula ? `<br><b style="color:var(--redtext)">${f.formula}</b>` : ""}</td><td>${f.levels[4]}</td><td>${f.levels[0]}</td></tr>`).join("");
+$("#scaleLine").innerHTML = "Points to rating: " + LADDER.map(r => `<b>${r}</b> ${bandText(r)}`).join(" · ") + ". BBB and above is investment grade; BB and below is high-yield (junk).";
+
+/* ---------- state ---------- */
+let mode = "cases", ci = 0;
+const saved = store.get("d214-rr-practice") || {};
+const caseState = saved.cases || CASES.map(() => ({ s: {}, r: null, checked: false, right: null }));
+let RS = { c: null, s: {}, r: null, checked: false, n: 0, tally: saved.tally || { tried: 0, exact: 0 } };
+function persist(){ store.set("d214-rr-practice", { cases: caseState, tally: RS.tally }); }
+
+/* ---------- explanations ---------- */
+function mathLine(c, key){
+  const rv = c.ratios, e = c.earn[4], term = c.munis ? "surplus" : "earnings";
+  if (key === "debt") return rv.debt === null ? `No ${term} in 2026, so the debt load can't be covered` : `${money(c.debt)} ÷ ${money(e)} = ${rv.debt.toFixed(2)} years`;
+  if (key === "coverage") return `${money(e)} ÷ ${money(c.interest)} = ${rv.coverage.toFixed(2)}x`;
+  if (key === "cash") return `${money(c.cash)} ÷ ${money(c.due)} = ${rv.cash.toFixed(2)}`;
+  if (key === "stability") { const rising = c.rev.every((v,i)=>i===0||v>c.rev[i-1]);
+    return `${c.munis?"Surplus":"Profit"} in ${rv.P} of 5 years. Revenue ${money(c.rev[0])} → ${money(c.rev[4])} = ${rv.R>=0?"+":""}${rv.R.toFixed(1)}%${rv.P===5&&rv.R>0?(rising?", up every year":", with at least one dip"):""}`; }
+  if (key === "history") return "Clue: " + c.historyText;
+  return "Clue: " + c.backingText;
+}
+function whyFor(c, key){ return c.why && c.why.f && c.why.f[key] ? c.why.f[key] : [mathLine(c,key), F.find(f=>f.key===key).levels[c.scores[key]] + "."]; }
+const official = (c, key) => key === "debt" ? c.ratios.debt : key === "coverage" ? c.ratios.coverage : c.ratios.cash;
+function mathCheck(c, key, typed){
+  if (typed === undefined || String(typed).trim() === "") return "";
+  const v = parseFloat(String(typed).replace(/[^0-9.\-]/g,"")), o = official(c,key);
+  if (isNaN(v) || o === null) return "";
+  return Math.abs(v - o) <= Math.max(0.05, Math.abs(o) * 0.02) ? `<span class="pill g">Your math ✓</span> ` : `<span class="pill r">Your math: ${esc(typed)}</span> `;
+}
+
+/* ---------- case file (left) ---------- */
+function caseFile(c, tag){
+  const term = c.munis ? "Surplus" : "Earnings";
+  const notes = c.notes || [c.historyText, c.backingText];
+  return `<div class="panel"><div class="phead"><span class="t">${esc(c.name)}</span><span class="tag">${esc(tag)}</span><span class="r">${esc(c.type)}</span></div>
+    <div class="pbody"><p class="what">${esc(c.what)}</p>
+    <div class="facts">${[["Total debt",c.debt],["Yearly interest",c.interest],["Cash on hand",c.cash],["Debt due next 12 months",c.due]].map(([k,v])=>`<div class="fact"><div class="v">${money(v)}</div><div class="k">${k}</div></div>`).join("")}</div>
+    <table><tr><th>Year</th><th class="r">Revenue</th><th class="r">${term} (before interest)</th></tr>${DATA.years.map((y,i)=>`<tr><td>${y}</td><td class="r">${money(c.rev[i])}</td><td class="r ${c.earn[i]<0?"neg":""}">${money(c.earn[i])}</td></tr>`).join("")}</table>
+    <div class="lbl" style="margin-top:14px">Case notes</div><ul class="notes" style="margin-top:0">${notes.map((n,i)=>`<li><b>${i+1}</b><span>${esc(n)}</span></li>`).join("")}</ul>
+    ${c.notes ? `<div class="tiny">Not every note matters. Some are red herrings.</div>` : ""}
+    <div class="tiny">All dollar figures in millions. Made-up issuer.</div></div></div>`;
+}
+
+/* ---------- scorecard (right) ---------- */
+function scorecard(c, st, onDone){
+  const s = st.s, chk = st.checked;
+  const tot = F.reduce((a,f)=>a+(s[f.key]??0),0), all = F.every(f=>s[f.key]!==undefined);
+  const rows = F.map(f => {
+    const pick = s[f.key], o = c.scores[f.key];
+    const cls = chk ? (pick === o ? "good" : "bad") : "";
+    const math = f.kind === "ratio" ? `<div class="math">${f.formula} = <input data-k="${f.key}" inputmode="decimal" placeholder="?" value="${esc(s["m_"+f.key]??"")}" ${chk?"disabled":""} aria-label="${f.name} math"> ${f.unit==="years"?"years":f.unit==="x"?"x":""}</div>` : "";
+    let verdict = "";
+    if (chk) { const w = whyFor(c, f.key);
+      verdict = `<div class="verdict">${pick===o?'<span class="pill g">Correct: '+o+'</span>':'<span class="pill r">Official: '+o+'</span>'} ${f.kind==="ratio"?mathCheck(c,f.key,s["m_"+f.key]):""}<span class="m">${esc(w[0])}</span><br>${esc(w[1])}</div>`; }
+    return `<div class="frow ${cls}"><div class="fhead"><span class="fname">${f.name}</span><span class="fq">${f.q}</span></div>${math}
+      <div class="levels">${[4,3,2,1,0].map(l=>`<button class="lv ${pick===l?"on":""} ${chk&&o===l&&pick!==l?"off":""}" data-k="${f.key}" data-l="${l}" ${chk?"disabled":""}><b>${l}</b>${f.short[l]}</button>`).join("")}</div>${verdict}</div>`;
+  }).join("");
+  const rp = LADDER.map(L => `<button class="${isIG(L)?"":"j"} ${st.r===L?"on":""} ${chk&&L===c.rating&&st.r!==L?"off":""}" data-r="${L}" ${chk?"disabled":""}>${L}<small>${bandText(L)}</small></button>`).join("");
+  return `<div class="panel"><div class="phead"><span class="t">Your scorecard</span><span class="r">${chk ? "Checked" : "Pick 0 to 4 for each factor"}</span></div><div class="pbody">
+    ${rows}
+    <div class="totals"><div class="tbox"><div class="k">Your total</div><div class="v">${all?tot:"–"} <span style="font-size:18px">/ 24</span></div></div>
+      <div class="tbox" style="background:var(--red)"><div class="k">Your rating</div><div class="v">${st.r||"?"}</div></div></div>
+    <div class="lbl">Pick the rating your points earn</div><div class="rpick">${rp}</div>
+    <div class="controls">${chk
+      ? `<button class="btn ghost" id="again">Try this one again</button><button class="btn" id="next">${mode==="random"?"New issuer":"Next case"}</button>`
+      : `<button class="btn" id="check" ${all&&st.r?"":"disabled"}>Check my work</button><button class="btn ghost" id="clear">Clear</button><span class="left">${all&&st.r?"Ready to check.":`${F.filter(f=>s[f.key]!==undefined).length} of 6 factors scored${st.r?"":", rating not picked"}`}</span>`}</div>
+    ${chk ? resultHTML(c, st, tot) : ""}</div></div>`;
+}
+function resultHTML(c, st, tot){
+  const right = F.filter(f=>st.s[f.key]===c.scores[f.key]).length, exact = st.r === c.rating;
+  const steps = Math.abs(LADDER.indexOf(st.r) - LADDER.indexOf(c.rating));
+  const W = c.why;
+  return `<div class="result">
+    <div class="fb ${exact?"ok":"no"}"><div class="fh">${exact ? "Nailed it: " + c.rating : `Official rating: ${c.rating} (you picked ${st.r}, ${steps} step${steps>1?"s":""} off)`}</div>
+      <div class="sumrow"><span class="big">${c.rating}</span><span>${F.map(f=>c.scores[f.key]).join(" + ")} = <b>${c.total} points</b> · ${isIG(c.rating)?"Investment grade":"High-yield (junk)"}<br>You scored <b>${right} of 6</b> factors right and added up to <b>${tot}</b>${rating(tot)!==st.r?`, which is <b>${rating(tot)}</b> on the scale`:""}.</span></div></div>
+    ${W ? `<div class="fb" style="border-color:var(--ink);background:var(--bg)"><div class="fh">${esc(W.headline)}</div><div class="why"><p>${esc(W.body)}</p><p><b>The trap:</b> ${esc(W.trap)}</p><p><b>Red herrings:</b> ${esc(W.noise)}</p></div></div>` : ""}</div>`;
+}
+function wire(c, st, rerender, onCheck, onNext){
+  $$(".lv").forEach(b => b.onclick = () => { st.s[b.dataset.k] = +b.dataset.l; rerender(); });
+  $$(".rpick button").forEach(b => b.onclick = () => { st.r = b.dataset.r; rerender(); });
+  $$(".math input").forEach(i => i.oninput = () => { st.s["m_"+i.dataset.k] = i.value; persist(); });
+  const ck = $("#check"), cl = $("#clear"), ag = $("#again"), nx = $("#next");
+  if (ck) ck.onclick = () => { st.checked = true; onCheck(); rerender(); };
+  if (cl) cl.onclick = () => { st.s = {}; st.r = null; rerender(); };
+  if (ag) ag.onclick = () => { st.s = {}; st.r = null; st.checked = false; rerender(); };
+  if (nx) nx.onclick = onNext;
+}
+
+/* ---------- modes ---------- */
+function keepScroll(fn){ const y = scrollY; fn(); scrollTo(0, y); }
+function drawCases(){
+  const st = caseState[ci], { c, tag } = CASES[ci];
+  const strip = CASES.map((x,i)=>{ const s=caseState[i]; return `<button data-i="${i}" ${i===ci?'aria-current="true"':""} class="${s.checked?(s.right?"done":"miss"):""}" title="${esc(x.c.name)}">${i+1}${s.checked?(s.right?" ✓":""):""}</button>`; }).join("");
+  const done = caseState.filter(s=>s.checked).length, nailed = caseState.filter(s=>s.checked&&s.right).length;
+  $("#view").innerHTML = `<div class="strip" aria-label="Case files">${strip}<span class="left" style="align-self:center;margin-left:6px">Cases 1 to 5 are the class rounds. ${done ? `${nailed} of ${done} checked cases nailed.` : ""}</span></div>
+    <div class="cols">${caseFile(c, `${tag} ${ci+1} of ${CASES.length}`)}${scorecard(c, st)}</div>`;
+  $$(".strip button").forEach(b => b.onclick = () => { ci = +b.dataset.i; drawCases(); scrollTo(0, 0); });
+  wire(c, st, () => { persist(); keepScroll(drawCases); }, () => { st.right = st.r === c.rating; persist(); },
+    () => { ci = (ci + 1) % CASES.length; drawCases(); scrollTo(0, 0); });
+}
+function drawRandom(){
+  if (!RS.c) { RS.c = buildIssuer(); RS.n++; }
+  const t = RS.tally;
+  $("#view").innerHTML = `<div class="strip"><span class="left">Practice issuer #${RS.n}. Every issuer is built at random, so there is always another one.${t.tried?` You've nailed <b>${t.exact} of ${t.tried}</b>.`:""}</span></div>
+    <div class="cols">${caseFile(RS.c, "Random issuer")}${scorecard(RS.c, RS)}</div>`;
+  wire(RS.c, RS, () => keepScroll(drawRandom), () => { t.tried++; if (RS.r === RS.c.rating) t.exact++; persist(); },
+    () => { RS.c = null; RS.s = {}; RS.r = null; RS.checked = false; drawRandom(); scrollTo(0, 0); });
+}
+let qi = 0, qPick = null, qScore = 0, qDone = new Set();
+function drawQuiz(){
+  const Q = DATA.blitz, q = Q[qi];
+  if (qi >= Q.length) {
+    $("#view").innerHTML = `<div class="panel"><div class="phead"><span class="t">Quick quiz done</span></div><div class="pbody"><div class="sumrow"><span class="big">${qScore}/${Q.length}</span><span>${qScore===Q.length?"Perfect. You're ready for the Rating Room.":qScore>=9?"Strong. Review the ones you missed, then try a case file.":"Look over the scorecard below, then take it again."}</span></div>
+      <div class="controls"><button class="btn" id="qAgain">Take it again</button><button class="btn ghost" id="qCases">Go to the case files</button></div></div></div>`;
+    $("#qAgain").onclick = () => { qi = 0; qPick = null; qScore = 0; qDone.clear(); drawQuiz(); };
+    $("#qCases").onclick = () => setMode("cases");
+    return;
+  }
+  const ans = qPick !== null, text = q.q.replace(/^DOUBLE POINTS\.\s*/,"");
+  $("#view").innerHTML = `<div class="panel"><div class="phead"><span class="t">Question ${qi+1} of ${Q.length}</span><span class="r">Score ${qScore}</span></div><div class="pbody">
+    <div class="qtext">${esc(text)}</div>
+    <div class="opts">${q.o.map((o,i)=>`<button class="opt ${ans?(i===q.a?"right":i===qPick?"wrong":"dim"):""}" data-i="${i}" ${ans?"disabled":""}><span class="k">${"ABCD"[i]}</span><span>${esc(o)}</span></button>`).join("")}</div>
+    ${ans ? `<div class="fb ${qPick===q.a?"ok":"no"}" style="margin-top:14px"><div class="fh">${qPick===q.a?"Correct":"Not quite. The answer is "+"ABCD"[q.a]}</div><div>${esc(q.why)}</div></div>
+      <div class="controls"><button class="btn" id="qNext">${qi===Q.length-1?"See my score":"Next question"}</button></div>` : ""}</div></div>`;
+  $$(".opt").forEach(b => b.onclick = () => { qPick = +b.dataset.i; if (qPick === q.a && !qDone.has(qi)) qScore++; qDone.add(qi); drawQuiz(); });
+  if ($("#qNext")) $("#qNext").onclick = () => { qi++; qPick = null; drawQuiz(); };
+}
+function setMode(m){ mode = m; $$(".tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === m)); (m === "cases" ? drawCases : m === "random" ? drawRandom : drawQuiz)(); }
+$$(".tabs button").forEach(b => b.onclick = () => setMode(b.dataset.mode));
+setMode("cases");
+window.__prr = { CASES, caseState, buildIssuer, RS };
+})();
+</script>
+<script src="/site.js"></script>
+</body>
+</html>

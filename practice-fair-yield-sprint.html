@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fair Yield Sprint | District 214 Finance &amp; Investing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<style>
+/* Layout: mode tabs, scoreboard row, one bond ticket, three verdict buttons, feedback */
+.wrap{max-width:900px}
+.board{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.chip{background:var(--black);color:#fff;border-radius:10px;padding:6px 16px;text-align:center;min-width:110px}
+.chip.red{background:var(--red)}
+.chip .v{font-family:var(--display);font-weight:600;font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}
+.chip .k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+.chip.low .v{color:#FF8A99}
+.ticket{background:var(--paper);border:2px solid var(--line);border-radius:14px;padding:18px 20px}
+.ticket h2{font-family:var(--display);font-weight:600;font-size:28px;margin:0 0 10px;line-height:1.1}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--black);color:#fff;border-radius:10px;padding:8px 10px;text-align:center}
+.stat.j{background:var(--red)}
+.stat .v{font-family:var(--display);font-weight:600;font-size:clamp(28px,5vw,40px);line-height:1.05}
+.stat .k{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.85}
+.spreads{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;margin-top:12px}
+.spreads div{background:var(--gray);border-radius:6px;padding:4px 0;font-family:var(--display);font-weight:600;font-size:16px}
+.spreads div.j{background:var(--redsoft);color:var(--redtext)}
+.spreads div.me{outline:3px solid var(--ink)}
+.spreads small{display:block;font:600 12.5px var(--body);color:var(--muted)}
+.verdicts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+@media (max-width:560px){.verdicts{grid-template-columns:1fr}}
+.verdicts button{border:2px solid var(--line);background:var(--paper);border-radius:12px;padding:14px 8px;font-family:var(--display);font-weight:600;font-size:22px;text-transform:uppercase;line-height:1.1}
+.verdicts button small{display:block;font:600 13px var(--body);text-transform:none;color:var(--muted);margin-top:3px}
+.verdicts button:hover:not(:disabled){border-color:var(--ink)}
+.verdicts button.right{background:var(--good);border-color:var(--good);color:#fff}.verdicts button.right small{color:#fff}
+.verdicts button.wrong{border-color:var(--red);color:var(--redtext);text-decoration:line-through}
+.verdicts button:disabled{cursor:default}
+.rule{font-size:14.5px;color:var(--muted);margin-top:10px}
+.big{font-family:var(--display);font-weight:700;font-size:64px;line-height:1;color:var(--redtext)}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.left{color:var(--muted);font-size:15px;font-weight:600}
+kbd{font-family:var(--display);font-size:13px;border:1.5px solid var(--line);border-bottom-width:3px;border-radius:5px;padding:0 6px;background:var(--paper)}
+</style>
+</head>
+<body data-page="practice-fair-yield-sprint">
+<div class="shell">
+  <main class="main"><div class="inner"><div class="wrap">
+    <div class="crumb"><a href="/#practices">Practice On Your Own</a> / Unit 3: Bonds</div>
+    <h1>Fair Yield Sprint</h1>
+    <p class="lede">The first thing every Bond Desk analyst checks: is this bond paying enough for its risk? Find the fair yield, compare, and call it. Same rules as The Bond Desk.</p>
+    <div class="tabs" role="group" aria-label="Mode">
+      <button data-mode="sprint" aria-pressed="true">60-second sprint</button>
+      <button data-mode="practice" aria-pressed="false">Practice (no clock)</button>
+    </div>
+    <div id="view"></div>
+  </div></div></main>
+</div>
+<script type="module">
+import * as G from "/game-data.js";
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+// Issuers and descriptions from both games
+const ISSUERS = [
+  ["Elm Ridge School District", "AA"], ["Summit Software Inc.", "AAA"], ["Midwest Hotels Group", "BBB"], ["Northgate Malls", "BB"],
+  ["Riverside Water Authority", "AA"], ["Prairie State Power", "A"], ["Heartland Freight Rail", "BBB"], ["Blaze Energy Drinks", "B"],
+  ["Tri-County Stadium Authority", "CCC"], ["GreenGrid Solar", "BB"], ["City of Lakewood", "A"], ["Velocity Airlines", "BB"],
+  ["Harbor Point Hospital", "A"], ["Brightline Biotech", "CCC"]];
+const OFFSETS = [-1.5, -1.0, -0.5, -0.4, -0.2, -0.1, 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.8, 1.2];
+const VERDICTS = [["Overpriced", "Pays less than fair"], ["Fair price", "At fair, up to 0.2% above"], ["Good deal", "0.3% or more above fair"]];
+const BEST_KEY = "d214-fair-yield-best";
+let mode = "sprint", q = null, picked = null, score = 0, tried = 0, streak = 0, bestStreak = 0, t = 60, timer = null, running = false, misses = [];
+let best = 0; try { best = +localStorage.getItem(BEST_KEY) || 0; } catch (e) {}
+
+function newQ(){
+  const [issuer, rating] = pick(ISSUERS), t0 = pick([3.0, 3.5, 4.0, 4.5, 5.0, 5.5]);
+  const fair = G.fairYield(t0, rating), yld = +(fair + pick(OFFSETS)).toFixed(1);
+  const pc = G.priceCheck({ t0 }, { rating, yld });   // the game's own rule
+  q = { issuer, rating, t0, yld, fair, pc, years: pick([3, 5, 7, 10, 15, 20]), ans: VERDICTS.findIndex(v => v[0] === pc.verdict) };
+  picked = null;
+}
+function explain(){
+  const e = +(q.yld - q.fair).toFixed(1);
+  return `Fair yield = ${q.t0.toFixed(1)}% + ${G.SPREADS[q.rating].toFixed(1)}% (${q.rating}) = <b>${q.fair.toFixed(1)}%</b>. It offers ${q.yld.toFixed(1)}%, which is ${e === 0 ? "exactly fair" : Math.abs(e).toFixed(1) + "% " + (e > 0 ? "above" : "below") + " fair"}: <b>${q.pc.verdict.toLowerCase()}</b>.`;
+}
+function board(){
+  return `<div class="board">${mode === "sprint" ? `<div class="chip red ${t <= 10 ? "low" : ""}"><div class="v">0:${String(t).padStart(2, "0")}</div><div class="k">Clock</div></div>` : ""}
+    <div class="chip"><div class="v">${score}</div><div class="k">Correct</div></div><div class="chip"><div class="v">${tried}</div><div class="k">Tried</div></div>
+    <div class="chip"><div class="v">${streak}</div><div class="k">Streak</div></div>${mode === "sprint" ? `<div class="chip"><div class="v">${best}</div><div class="k">Your best</div></div>` : ""}</div>`;
+}
+function draw(){
+  if (mode === "sprint" && !running && tried === 0) return startScreen();
+  if (mode === "sprint" && !running) return endScreen();
+  const ans = picked !== null, junk = G.isJunk(q.rating);
+  $("#view").innerHTML = board() + `<div class="ticket"><h2>${esc(q.issuer)}</h2>
+      <div class="stats"><div class="stat"><div class="v">${q.t0.toFixed(1)}%</div><div class="k">Treasury rate</div></div><div class="stat ${junk ? "j" : ""}"><div class="v">${q.rating}</div><div class="k">${junk ? "Rating · junk" : "Rating"}</div></div><div class="stat"><div class="v">${q.yld.toFixed(1)}%</div><div class="k">Offered yield</div></div></div>
+      <div class="spreads">${G.LADDER.map(r => `<div class="${G.isJunk(r) ? "j" : ""} ${ans && r === q.rating ? "me" : ""}">${r}<small>+${G.SPREADS[r].toFixed(1)}%</small></div>`).join("")}</div>
+      <div class="verdicts">${VERDICTS.map(([v, h], i) => `<button data-i="${i}" class="${ans ? (i === q.ans ? "right" : i === picked ? "wrong" : "") : ""}" ${ans ? "disabled" : ""}>${v}<small>${h}</small></button>`).join("")}</div>
+      ${ans ? `<div class="fb ${picked === q.ans ? "ok" : "no"}" style="margin-top:14px"><div class="fh">${picked === q.ans ? "Correct" : "Not quite"}</div><div>${explain()}</div></div>
+        <div class="controls"><button class="btn" id="nextQ">Next bond</button><span class="left">or press <kbd>Enter</kbd></span></div>`
+        : `<div class="rule">Fair yield = Treasury rate + the spread for the rating. Keys: <kbd>1</kbd> overpriced, <kbd>2</kbd> fair, <kbd>3</kbd> good deal.</div>`}</div>`;
+  $$(".verdicts button").forEach(b => b.onclick = () => choose(+b.dataset.i));
+  if ($("#nextQ")) { $("#nextQ").onclick = next; $("#nextQ").focus(); }
+}
+function choose(i){
+  if (!q || picked !== null) return;
+  picked = i; tried++;
+  if (i === q.ans) { score++; streak++; bestStreak = Math.max(bestStreak, streak); } else { streak = 0; misses.push({ ...q, picked: i }); }
+  draw();
+}
+function next(){ newQ(); draw(); }
+function startScreen(){
+  $("#view").innerHTML = `<div class="panel"><div class="phead"><span class="t">60 seconds on the desk</span></div><div class="pbody">
+    <p style="margin-top:0">Call as many bonds as you can in one minute. Each one shows the Treasury rate, the rating and the offered yield. Add the spread to the Treasury rate, compare, and pick:</p>
+    <ul style="line-height:1.5"><li><b>Overpriced</b>: offers less than the fair yield</li><li><b>Fair price</b>: exactly fair, or up to 0.2% above it</li><li><b>Good deal</b>: 0.3% or more above fair</li></ul>
+    <div class="spreads" style="max-width:620px">${G.LADDER.map(r => `<div class="${G.isJunk(r) ? "j" : ""}">${r}<small>+${G.SPREADS[r].toFixed(1)}%</small></div>`).join("")}</div>
+    <div class="controls"><button class="btn" id="go">Start the clock</button>${best ? `<span class="left">Your best: ${best} correct</span>` : ""}</div></div></div>`;
+  $("#go").onclick = start;
+}
+function start(){
+  score = 0; tried = 0; streak = 0; bestStreak = 0; misses = []; t = 60; running = true; newQ(); draw();
+  clearInterval(timer);
+  timer = setInterval(() => { t--; if (t <= 0) { clearInterval(timer); running = false; if (score > best) { best = score; try { localStorage.setItem(BEST_KEY, best); } catch (e) {} } draw(); } else { const c = $(".chip.red"); if (c) { c.querySelector(".v").textContent = "0:" + String(t).padStart(2, "0"); c.classList.toggle("low", t <= 10); } } }, 1000);
+}
+function endScreen(){
+  const pct = tried ? Math.round(score / tried * 100) : 0;
+  $("#view").innerHTML = `<div class="panel"><div class="phead"><span class="t">Time!</span><span class="r">Best streak ${bestStreak}</span></div><div class="pbody">
+    <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap"><span class="big">${score}</span><span>correct out of ${tried} (${pct}%).${score >= best && score ? " A new personal best!" : ` Your best is ${best}.`}</span></div>
+    ${misses.length ? `<div class="lbl" style="margin-top:16px">Review your misses</div><table><tr><th>Bond</th><th>Treasury</th><th>Offered</th><th>Fair yield</th><th>Answer</th></tr>${misses.map(m => `<tr><td>${esc(m.issuer)} (${m.rating})</td><td>${m.t0.toFixed(1)}%</td><td>${m.yld.toFixed(1)}%</td><td>${m.fair.toFixed(1)}%</td><td><b>${m.pc.verdict}</b><br><span class="left">You said ${VERDICTS[m.picked][0].toLowerCase()}</span></td></tr>`).join("")}</table>` : ""}
+    <div class="controls"><button class="btn" id="go">Go again</button><button class="btn ghost" id="prac">Practice with no clock</button></div></div></div>`;
+  $("#go").onclick = start;
+  $("#prac").onclick = () => setMode("practice");
+}
+document.addEventListener("keydown", e => {
+  if (!q || (mode === "sprint" && !running)) return;
+  if (picked === null && ["1", "2", "3"].includes(e.key)) choose(+e.key - 1);
+  else if (picked !== null && e.key === "Enter" && document.activeElement?.id !== "nextQ") next();
+});
+function setMode(m){
+  mode = m; clearInterval(timer); running = false; score = 0; tried = 0; streak = 0; misses = []; t = 60;
+  $$(".tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === m));
+  if (m === "practice") newQ();
+  draw();
+}
+$$(".tabs button").forEach(b => b.onclick = () => setMode(b.dataset.mode));
+setMode("sprint");
+window.__fys = { get q(){ return q; }, choose, start };
+</script>
+<script src="/site.js"></script>
+</body>
+</html>

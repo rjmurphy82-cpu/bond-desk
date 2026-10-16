@@ -31,7 +31,7 @@ async function doJoin() {
   try {
     const r = await call("join", { code, name, pin: pin || undefined });
     me = { code, gid: r.gid, key: r.key, name: r.name, pin: r.pin }; store.set("bd_play", me);
-    history.replaceState(null, "", "/?c=" + code); S = null; lastKey = ""; await refresh(true); startPoll();
+    history.replaceState(null, "", "/join?c=" + code); S = null; lastKey = ""; await refresh(true); startPoll();
   } catch (e) { renderJoinErr(e.code === "name_taken" ? "That name is already in this game. Add your last initial (like Maya R.), or if it's you rejoining, tap the rejoin link and enter your PIN." : e.message, e.code === "name_taken"); }
 }
 function renderJoinErr(m, pin) { const c = $("#jCode").value, n = $("#jName").value, p = $("#jPin") ? $("#jPin").value : ""; renderJoin(m, pin || !!$("#jPin")); $("#jCode").value = c; $("#jName").value = n; if ($("#jPin")) $("#jPin").value = p; }
@@ -47,7 +47,7 @@ async function refresh(force) {
     const r = await call("state", { code: me.code, gid: me.gid, key: me.key, since: S ? S.v : undefined });
     conn = ""; if (!r.same) { if (!r.me) throw Object.assign(new Error(), { code: "not_in_game" }); S = r; render(); } else setConn();
   } catch (e) {
-    if (e.code === "no_game" || e.code === "not_in_game") { const code = me.code; me = null; store.del("bd_play"); clearInterval(pollT); history.replaceState(null, "", "/?c=" + code); renderJoin(e.code === "no_game" ? "That game has ended." : "Your desk was removed or rejoined on another iPad. Join again."); }
+    if (e.code === "no_game" || e.code === "not_in_game") { const code = me.code; me = null; store.del("bd_play"); clearInterval(pollT); history.replaceState(null, "", "/join?c=" + code); renderJoin(e.code === "no_game" ? "That game has ended." : "Your desk was removed or rejoined on another iPad. Join again."); }
     else { conn = "Reconnecting..."; setConn(); }
   } finally { busy = false; }
 }
@@ -75,7 +75,7 @@ function render() {
 function renderLobby() {
   $("#barSlot").innerHTML = "";
   $("#view").innerHTML = `<div class="center card" style="text-align:center"><div class="label">You're in</div><div class="big" style="font-size:44px">${esc(me.name)}</div>
-    <div class="pinbox"><div class="small" style="color:#E8DCCB">Your PIN. Write it down in case your iPad restarts.</div><div class="v">${me.pin}</div></div>
+    <div class="pinbox"><div class="small" style="color:#CFCFCF">Your PIN. Write it down in case your iPad restarts.</div><div class="v">${me.pin}</div></div>
     <p style="font-size:19px;margin-top:18px">You start with <b>${G.money(G.START_FUND)}</b>. Waiting for Year 1 to open...</p><div class="status" id="conn">${esc(conn)}</div></div>`;
 }
 function bondHTML(b, sel, lockedView) {
@@ -97,7 +97,7 @@ function renderOpen() {
         <div class="small" style="margin-top:8px">Money you don't invest earns ${R.t0.toFixed(1)}% in Treasuries. At year end you sell every bond on the secondary market at that day's price. Fund rule: no more than $200K in junk (BB and below) this year, or a $25,000 fine.</div></div></div>`;
   if (mine) {
     $("#barSlot").innerHTML = "";
-    $("#view").innerHTML = head + `<div class="lockedcard"><div class="label">Locked in 🔒</div><h2>Waiting for the market to close</h2><div style="font-size:18px;margin-top:6px;color:#F2D9C6">${S.locked.length} of ${S.groups.length} desks locked. When everyone's in, Mr. Murphy reveals the year.</div>
+    $("#view").innerHTML = head + `<div class="lockedcard"><div class="label">Locked in 🔒</div><h2>Waiting for the market to close</h2><div style="font-size:18px;margin-top:6px;color:#E6E6E6">${S.locked.length} of ${S.groups.length} desks locked. When everyone's in, your teacher reveals the year.</div>
       <table style="margin-top:10px">${R.bonds.map(b => `<tr><td>${b.id}. ${esc(b.issuer)}</td><td class="r">${mine[b.id] ? "Buy " + k(mine[b.id]) : "Pass"}</td></tr>`).join("")}</table>
       <div class="actions" style="justify-content:flex-start"><button class="btn ghost" id="change" style="color:#fff;border-color:#fff">Change our choices</button></div></div>
       <div class="cols" style="margin-top:14px">${side}<div class="grid">${R.bonds.map(b => bondHTML(b, mine[b.id], true)).join("")}</div></div><div class="status" id="conn">${esc(conn)}</div>`;
@@ -121,9 +121,9 @@ function renderReveal() {
   if (S.step !== "stand") {
     const R0 = G.ROUNDS[S.r], mine = (S.decisions[S.r] || {})[me.gid];
     $("#view").innerHTML = `<div class="center card" style="text-align:center"><div class="label">Year ${R0.year}: ${esc(R0.title)}</div><div class="big" style="font-size:52px">👀 Eyes on the board</div>
-      <p style="font-size:19px">The market is closed. Watch the reveal up front. Your results show up here when Mr. Murphy opens the standings.</p>
+      <p style="font-size:19px">The market is closed. Watch the reveal up front. Your results show up here when your teacher opens the standings.</p>
       <div class="lockedcard" style="text-align:left;margin-top:10px"><div class="label">Your picks this year</div><table>${R0.bonds.map(b => `<tr><td>${b.id}. ${esc(b.issuer)}</td><td class="r">${mine && mine[b.id] ? "Buy " + k(mine[b.id]) : "Pass"}</td></tr>`).join("")}</table>
-      ${mine ? "" : `<div class="small" style="color:#E8DCCB;margin-top:6px">No answer this year, so all your money stayed in cash.</div>`}</div><div class="status" id="conn">${esc(conn)}</div></div>`;
+      ${mine ? "" : `<div class="small" style="color:#CFCFCF;margin-top:6px">No answer this year, so all your money stayed in cash.</div>`}</div><div class="status" id="conn">${esc(conn)}</div></div>`;
     return;
   }
   const R = G.ROUNDS[S.r], f = G.runFund(myDecs(S.r), S.r), y = f.years[S.r], rk = rankings(S.r), answered = !!(S.decisions[S.r] || {})[me.gid];

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bond Terms | District 214 Finance &amp; Investing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<style>
+/* Layout: title, mode tabs, group filter, then flashcards, a quiz, or the full word list */
+.groups{display:flex;flex-wrap:wrap;gap:6px;margin:-6px 0 16px}
+.groups button{background:transparent;border:2px solid var(--line);border-radius:8px;padding:4px 12px;font:600 14px var(--body)}
+.groups button[aria-pressed="true"]{border-color:var(--red);color:var(--redtext);background:var(--redsoft)}
+.flash{perspective:1400px;max-width:820px}
+.fcard{position:relative;display:grid;min-height:300px;cursor:pointer;transform-style:preserve-3d;transition:transform .45s ease}
+.fcard.flip{transform:rotateY(180deg)}
+.face{grid-area:1/1;position:relative;padding-bottom:40px!important;backface-visibility:hidden;border-radius:14px;padding:26px 30px;display:flex;flex-direction:column;justify-content:center;gap:12px;border:1px solid var(--line)}
+.front{background:var(--paper);border-top:6px solid var(--black)}
+.back{background:var(--black);color:var(--onblack);transform:rotateY(180deg)}
+.face .g{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--redtext)}
+.back .g{color:#FF8A99}
+.face .term{font-family:var(--display);font-weight:700;font-size:clamp(34px,5vw,52px);line-height:1.05}
+.face .def{font-size:clamp(19px,2.2vw,23px);line-height:1.4}
+.face .ex{font-size:16px;line-height:1.4;opacity:.85;border-top:1px solid rgba(255,255,255,.2);padding-top:10px}
+.face .tap{position:absolute;bottom:14px;right:20px;font-size:13px;color:var(--muted)}
+.back .tap{color:#BBB}
+@media (prefers-reduced-motion: reduce){.fcard{transition:none}}
+.fnav{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px;max-width:820px}
+.fnav .sp{flex:1}
+.left{color:var(--muted);font-size:15px;font-weight:600}
+.qtext{font-size:clamp(20px,2.4vw,25px);line-height:1.35;font-weight:600;margin:4px 0 16px}
+.qtext.term{font-family:var(--display);font-weight:700;font-size:clamp(30px,4vw,44px)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:700px){.opts{grid-template-columns:1fr}}
+.opt{display:flex;gap:12px;align-items:center;text-align:left;background:var(--bg);border:2px solid var(--line);border-radius:10px;padding:10px 14px;font:600 17px/1.3 var(--body);min-height:58px}
+.opt:hover:not(:disabled){border-color:var(--ink)}
+.opt .k{flex:none;width:32px;height:32px;border-radius:7px;background:var(--black);color:#fff;display:grid;place-items:center;font-family:var(--display);font-size:17px}
+.opt.right{background:var(--good);border-color:var(--good);color:#fff}
+.opt.right .k{background:rgba(0,0,0,.25)}
+.opt.wrong{border-color:var(--red);color:var(--redtext);text-decoration:line-through;background:transparent}
+.opt.dim{opacity:.45}
+.opt:disabled{cursor:default}
+.bar{height:8px;background:var(--gray);border-radius:99px;overflow:hidden;margin:2px 0 14px}
+.bar i{display:block;height:100%;background:var(--red);transition:width .25s}
+.big{font-family:var(--display);font-weight:700;font-size:58px;line-height:1;color:var(--redtext)}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.list td:first-child{font-family:var(--display);font-weight:600;font-size:18px;white-space:nowrap;width:1%}
+.list td{font-size:16px}
+.list tr.gh td{background:var(--gray);font:700 13px var(--body);letter-spacing:.1em;text-transform:uppercase;color:var(--redtext)}
+.star{background:none;border:0;font-size:20px;line-height:1;padding:0 4px;color:var(--muted)}
+.star.on{color:var(--red)}
+kbd{font-family:var(--display);font-size:13px;border:1.5px solid var(--line);border-bottom-width:3px;border-radius:5px;padding:0 6px;background:var(--paper)}
+</style>
+</head>
+<body data-page="practice-bond-terms">
+<div class="shell">
+  <main class="main"><div class="inner">
+    <div class="crumb"><a href="/#practices">Practice On Your Own</a> / Unit 3: Bonds</div>
+    <h1>Bond Terms</h1>
+    <p class="lede">Every term you need for The Bond Desk and The Rating Room. Study with flashcards, then test yourself. Terms you miss on the quiz get starred so you can review just those.</p>
+    <div class="tabs" role="group" aria-label="Mode">
+      <button data-mode="flash" aria-pressed="true">Flashcards</button>
+      <button data-mode="quiz" aria-pressed="false">Quiz</button>
+      <button data-mode="list" aria-pressed="false">Word list</button>
+    </div>
+    <div class="groups" role="group" aria-label="Which terms" id="groups"></div>
+    <div id="view"></div>
+  </div></main>
+</div>
+<script>
+(function(){
+// All terms come from The Bond Desk and The Rating Room. g = group.
+const TERMS = [
+ {g:"Bond basics", t:"Bond", d:"A loan you make to a company or government. It pays you interest, then pays back the loan when the bond matures.", ex:"Each year on The Bond Desk, three bonds hit the market for your fund to buy or pass."},
+ {g:"Bond basics", t:"Issuer", d:"The company or government that borrows the money by selling the bond, and owes the interest and repayment.", ex:"Elm Ridge School District, Summit Software and Northgate Malls are all issuers."},
+ {g:"Bond basics", t:"Coupon", d:"The interest a bond pays you each year, as a percent of what you put in.", ex:"On The Bond Desk, every bond pays its yield as its coupon."},
+ {g:"Bond basics", t:"Yield", d:"The yearly return a bond offers, shown as a percent. Riskier bonds have to offer higher yields to attract buyers.", ex:"Tri-County Stadium (CCC) offered 16.0% while Riverside Water (AA) offered 5.4% in the same year."},
+ {g:"Bond basics", t:"Maturity", d:"How long until the bond ends and the issuer pays back the loan.", ex:"A 20-year bond has a much longer maturity than a 3-year bond."},
+ {g:"Bond basics", t:"Treasury rate", d:"The interest rate on U.S. government bonds, treated as the safe, starting-point rate. Money you don't invest earns this rate.", ex:"Year 1 of The Bond Desk starts with a 4.0% Treasury rate."},
+ {g:"Bond basics", t:"Municipal bond", d:"A bond sold by a city, school district or public authority, often to pay for things like schools, roads or water plants.", ex:"Elm Ridge School District sold municipal bonds to build a STEM wing."},
+ {g:"Bond basics", t:"Corporate bond", d:"A bond sold by a company to raise money.", ex:"Summit Software, Midwest Hotels and Blaze Energy Drinks sold corporate bonds."},
+ {g:"Bond basics", t:"General obligation bond", d:"A government bond backed by the full power to tax. If money runs short, the government can raise taxes to pay bondholders.", ex:"Elm Ridge's bonds are general obligation bonds repaid with property taxes."},
+ {g:"Bond basics", t:"Revenue bond", d:"A bond repaid only from the money one project or service brings in, like water bills or stadium tickets.", ex:"Tri-County Stadium Authority's bonds are repaid from tickets and parking."},
+ {g:"Pricing a bond", t:"Spread", d:"The extra yield added to the Treasury rate to pay you for a bond's risk. The lower the rating, the bigger the spread.", ex:"Spreads in the game: AAA +0.5%, AA +0.8%, A +1.2%, BBB +2.0%, BB +3.5%, B +5.5%, CCC +10.0%."},
+ {g:"Pricing a bond", t:"Fair yield", d:"What a bond should pay for its risk: the Treasury rate plus the spread for its rating.", ex:"With Treasuries at 4.0%, a BBB bond's fair yield is 4.0% + 2.0% = 6.0%."},
+ {g:"Pricing a bond", t:"Good deal", d:"A bond that offers more than its fair yield, so you're paid extra for the risk.", ex:"Midwest Hotels (BBB) offered 6.4% when its fair yield was 6.0%."},
+ {g:"Pricing a bond", t:"Overpriced", d:"A bond that offers less than its fair yield. You aren't being paid enough for the risk, even if the yield looks high.", ex:"Blaze (B) offered 9.0% when its fair yield was 10.0%, then defaulted."},
+ {g:"Pricing a bond", t:"Secondary market", d:"Where investors buy and sell bonds that were already issued, at whatever price the bond is worth that day.", ex:"At the end of each Bond Desk year, you sell every bond on the secondary market."},
+ {g:"Pricing a bond", t:"Interest rate risk", d:"The risk that a bond's price falls because interest rates rise. Longer bonds have more of it.", ex:"When rates jumped 1% in Year 3, a 20-year bond lost about 13% of its price, while a 3-year bond lost about 3%."},
+ {g:"Pricing a bond", t:"Rate sensitivity", d:"About how much a bond's price falls, in percent, if rates rise 1%. It also tells you how much the price rises if rates fall.", ex:"\"If rates rise 1%, its price falls about 8%\" means a rate sensitivity of 8."},
+ {g:"Pricing a bond", t:"Cash", d:"Money you keep instead of buying bonds. On The Bond Desk it earns the Treasury rate, and some years it beats every bond.", ex:"In Year 7, rates rose and cash in Treasuries beat all three bonds."},
+ {g:"Ratings and risk", t:"Credit rating", d:"A letter grade for how likely a borrower is to pay its bondholders in full and on time, from AAA (safest) down to CCC.", ex:"The ladder: AAA, AA, A, BBB, BB, B, CCC."},
+ {g:"Ratings and risk", t:"Rating agency", d:"A company that studies borrowers and gives them credit ratings. Moody's, S&P and Fitch are the big three.", ex:"In The Rating Room, your group plays the rating agency."},
+ {g:"Ratings and risk", t:"Investment grade", d:"Bonds rated BBB or higher. Considered safe enough for careful investors.", ex:"BBB is the last investment-grade step before junk."},
+ {g:"Ratings and risk", t:"High-yield (junk) bond", d:"A bond rated BB or lower. It pays more because the issuer is more likely to miss payments.", ex:"The Bond Desk fund rule caps junk at $200K a year, or a $25,000 fine."},
+ {g:"Ratings and risk", t:"Upgrade", d:"When a rating agency raises a bond's rating. The bond's price goes up.", ex:"Heartland Freight Rail was upgraded from BBB to A after a 10-year contract."},
+ {g:"Ratings and risk", t:"Downgrade", d:"When a rating agency lowers a bond's rating. The bond's price goes down.", ex:"Summit was downgraded from AAA to AA after borrowing billions to buy a rival."},
+ {g:"Ratings and risk", t:"Fallen angel", d:"A bond that gets downgraded from investment grade (BBB) into junk (BB). Its price drops hard.", ex:"Midwest Hotels fell from BBB to BB in the Year 2 recession."},
+ {g:"Ratings and risk", t:"Default", d:"When a borrower misses a payment it owes bondholders. Bondholders lose interest and get back only part of their money.", ex:"In the game, a default pays no interest and returns 40¢ per $1."},
+ {g:"Ratings and risk", t:"Red herring", d:"A piece of news that sounds important but doesn't change whether the borrower can pay you back.", ex:"Blaze's NBA endorsement and Northgate's trampoline park were red herrings."},
+ {g:"The scorecard", t:"Payment history", d:"Whether the borrower has always paid on time, and for how long it has been borrowing.", ex:"Never missed in 20+ years = 4 points. Behind on payments right now = 0."},
+ {g:"The scorecard", t:"Earnings stability", d:"Whether the borrower makes money every year and whether its revenue is growing.", ex:"Profit every year AND revenue up every year = 4 points."},
+ {g:"The scorecard", t:"Debt load", d:"How many years of earnings it would take to pay off all the debt. Total debt ÷ yearly earnings. Lower is safer.", ex:"Northgate: $3,000M ÷ $550M = 5.45 years, which scores 1 point."},
+ {g:"The scorecard", t:"Interest coverage", d:"How many times over earnings can pay this year's interest. Yearly earnings ÷ yearly interest. Higher is safer.", ex:"Elm Ridge: $30M ÷ $4M = 7.5x, just under the 8x line for 4 points."},
+ {g:"The scorecard", t:"Cash cushion", d:"Whether cash on hand could cover the debt due in the next 12 months. Cash ÷ debt due next year.", ex:"Midwest Hotels: $200M ÷ $180M = 1.11, so it could barely cover it."},
+ {g:"The scorecard", t:"Backing & outlook", d:"Who stands behind the bond and how safe the business is. Taxing power or an essential service scores highest.", ex:"Water bills and electricity are essential services; hotels rise and fall with the economy."},
+ {g:"The scorecard", t:"Earnings (surplus)", d:"Money left after operating costs, before interest. For a city, school district or authority it's called the surplus.", ex:"The scorecard uses the most recent year (2026)."},
+ {g:"The scorecard", t:"Cyclical business", d:"A business whose sales rise in good times and fall in bad times, like hotels, airlines and railroads.", ex:"Cyclical businesses score 2 for backing & outlook."},
+ {g:"The scorecard", t:"Essential service", d:"Something people keep paying for even in a recession, like water, electricity or a hospital.", ex:"Riverside Water and Prairie State Power both earn 4 for backing."}
+];
+const GROUPS = [...new Set(TERMS.map(x => x.g))];
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const store = { get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } }, set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} } };
+let starred = new Set(store.get("d214-bond-terms-star") || []);
+const saveStar = () => store.set("d214-bond-terms-star", [...starred]);
+let mode = "flash", group = "all", fi = 0, flipped = false, order = [];
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pool = () => TERMS.filter(x => group === "all" ? true : group === "star" ? starred.has(x.t) : x.g === group);
+
+function drawGroups(){
+  const btn = (k, label) => `<button data-g="${esc(k)}" aria-pressed="${group === k}">${esc(label)}</button>`;
+  $("#groups").innerHTML = btn("all", `All ${TERMS.length} terms`) + GROUPS.map(g => btn(g, g)).join("") + (starred.size ? btn("star", `★ Starred (${starred.size})`) : "");
+  $$("#groups button").forEach(b => b.onclick = () => { group = b.dataset.g; reset(); });
+}
+function reset(){ order = shuffle(pool()); fi = 0; flipped = false; q = null; qi = 0; qScore = 0; qMiss = []; drawGroups(); draw(); }
+
+/* ---------- flashcards ---------- */
+let showDefFirst = false;
+function drawFlash(){
+  const list = order;
+  if (!list.length) { $("#view").innerHTML = `<p class="left">No starred terms yet. Miss one on the quiz, or tap ☆ on a card, and it shows up here.</p>`; return; }
+  const x = list[fi];
+  const frontMain = showDefFirst ? `<div class="def">${esc(x.d)}</div>` : `<div class="term">${esc(x.t)}</div>`;
+  const backMain = showDefFirst ? `<div class="term">${esc(x.t)}</div><div class="ex">${esc(x.ex)}</div>` : `<div class="def">${esc(x.d)}</div><div class="ex">${esc(x.ex)}</div>`;
+  $("#view").innerHTML = `<div class="flash"><div class="fcard ${flipped ? "flip" : ""}" id="fc" role="button" tabindex="0" aria-label="Flip card">
+      <div class="face front"><div class="g">${esc(x.g)}</div>${frontMain}<span class="tap">Tap to flip</span></div>
+      <div class="face back"><div class="g">${esc(x.g)}</div>${backMain}<span class="tap">Tap to flip back</span></div></div></div>
+    <div class="fnav"><button class="btn ghost" id="prev">Previous</button><button class="btn" id="next">Next card</button>
+      <button class="star ${starred.has(x.t) ? "on" : ""}" id="star" title="Star this term" aria-label="Star this term">${starred.has(x.t) ? "★" : "☆"}</button>
+      <span class="sp"></span><span class="left">Card ${fi + 1} of ${list.length}</span>
+      <button class="btn ghost" id="swap">${showDefFirst ? "Show term first" : "Show definition first"}</button><button class="btn ghost" id="shuf">Shuffle</button></div>
+    <p class="left" style="margin-top:14px">Keys: <kbd>Space</kbd> flips, <kbd>→</kbd> next, <kbd>←</kbd> back.</p>`;
+  const flip = () => { flipped = !flipped; $("#fc").classList.toggle("flip", flipped); };
+  $("#fc").onclick = flip;
+  $("#fc").onkeydown = e => { if (e.key === "Enter") flip(); };
+  $("#next").onclick = () => { fi = (fi + 1) % list.length; flipped = false; drawFlash(); };
+  $("#prev").onclick = () => { fi = (fi - 1 + list.length) % list.length; flipped = false; drawFlash(); };
+  $("#star").onclick = () => { starred.has(x.t) ? starred.delete(x.t) : starred.add(x.t); saveStar(); drawGroups(); drawFlash(); };
+  $("#swap").onclick = () => { showDefFirst = !showDefFirst; flipped = false; drawFlash(); };
+  $("#shuf").onclick = () => { order = shuffle(order); fi = 0; flipped = false; drawFlash(); };
+}
+document.addEventListener("keydown", e => {
+  if (mode !== "flash" || !$("#fc") || e.target.tagName === "BUTTON" && e.key === " ") return;
+  if (e.key === " ") { e.preventDefault(); $("#fc").click(); } else if (e.key === "ArrowRight") $("#next").click(); else if (e.key === "ArrowLeft") $("#prev").click();
+});
+
+/* ---------- quiz: alternates "which term?" and "which definition?" ---------- */
+let q = null, qi = 0, qScore = 0, qMiss = [];
+function makeQ(x, i){
+  const others = shuffle(TERMS.filter(y => y.t !== x.t && y.g === x.g)).concat(shuffle(TERMS.filter(y => y.g !== x.g)));
+  const opts = shuffle([x, ...others.slice(0, 3)]);
+  return { x, opts, a: opts.indexOf(x), kind: i % 2 ? "def" : "term", pick: null };
+}
+function drawQuiz(){
+  const list = order;
+  if (!list.length) { $("#view").innerHTML = `<p class="left">No starred terms yet. Miss one on the quiz, or tap ☆ on a flashcard, and it shows up here.</p>`; return; }
+  if (qi >= list.length) {
+    const pct = Math.round(qScore / list.length * 100);
+    $("#view").innerHTML = `<div class="panel"><div class="phead"><span class="t">Quiz done</span></div><div class="pbody">
+      <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap"><span class="big">${qScore}/${list.length}</span><span>${pct === 100 ? "Perfect. You know your bond terms." : pct >= 80 ? "Strong. Review the starred terms, then try again." : "Study the starred terms with flashcards, then retake the quiz."}</span></div>
+      ${qMiss.length ? `<div class="lbl" style="margin-top:16px">Missed (now starred)</div><table class="list">${qMiss.map(x => `<tr><td>${esc(x.t)}</td><td>${esc(x.d)}</td></tr>`).join("")}</table>` : ""}
+      <div class="controls"><button class="btn" id="again">Take it again</button>${qMiss.length ? `<button class="btn ghost" id="studyMiss">Study the starred terms</button>` : ""}</div></div></div>`;
+    $("#again").onclick = () => reset();
+    if ($("#studyMiss")) $("#studyMiss").onclick = () => { group = "star"; mode = "flash"; setTabs(); reset(); };
+    return;
+  }
+  if (!q) q = makeQ(list[qi], qi);
+  const ans = q.pick !== null, isT = q.kind === "term";
+  $("#view").innerHTML = `<div class="panel" style="max-width:980px"><div class="phead"><span class="t">Question ${qi + 1} of ${list.length}</span><span class="tag">${esc(q.x.g)}</span><span class="r">Score ${qScore}</span></div><div class="pbody">
+    <div class="bar"><i style="width:${qi / list.length * 100}%"></i></div>
+    <div class="lbl">${isT ? "Which term matches this definition?" : "Which definition matches this term?"}</div>
+    <div class="qtext ${isT ? "" : "term"}">${esc(isT ? q.x.d : q.x.t)}</div>
+    <div class="opts">${q.opts.map((o, i) => `<button class="opt ${ans ? (i === q.a ? "right" : i === q.pick ? "wrong" : "dim") : ""}" data-i="${i}" ${ans ? "disabled" : ""}><span class="k">${"ABCD"[i]}</span><span>${esc(isT ? o.t : o.d)}</span></button>`).join("")}</div>
+    ${ans ? `<div class="fb ${q.pick === q.a ? "ok" : "no"}" style="margin-top:14px"><div class="fh">${q.pick === q.a ? "Correct" : "Not quite: " + esc(q.x.t)}</div><div>${esc(q.x.ex)}</div></div>
+      <div class="controls"><button class="btn" id="qNext">${qi === list.length - 1 ? "See my score" : "Next question"}</button></div>` : ""}
+    <p class="left" style="margin-top:12px">Keys: <kbd>A</kbd> to <kbd>D</kbd> pick an answer, <kbd>Enter</kbd> goes on.</p></div></div>`;
+  $$(".opt").forEach(b => b.onclick = () => choose(+b.dataset.i));
+  if ($("#qNext")) { $("#qNext").onclick = () => { qi++; q = null; drawQuiz(); }; $("#qNext").focus(); }
+}
+function choose(i){
+  if (!q || q.pick !== null) return;
+  q.pick = i;
+  if (i === q.a) qScore++; else { qMiss.push(q.x); starred.add(q.x.t); saveStar(); drawGroups(); }
+  drawQuiz();
+}
+document.addEventListener("keydown", e => {
+  if (mode !== "quiz" || !q) return;
+  const k = "abcd".indexOf(e.key.toLowerCase());
+  if (k >= 0 && q.pick === null && k < q.opts.length) choose(k);
+});
+
+/* ---------- word list ---------- */
+function drawList(){
+  const list = pool();
+  if (!list.length) { $("#view").innerHTML = `<p class="left">No starred terms yet.</p>`; return; }
+  const gs = [...new Set(list.map(x => x.g))];
+  $("#view").innerHTML = `<div class="panel"><div class="pbody" style="overflow-x:auto"><table class="list">${gs.map(g => `<tr class="gh"><td colspan="3">${esc(g)}</td></tr>` + list.filter(x => x.g === g).map(x => `<tr><td>${esc(x.t)}</td><td>${esc(x.d)}<div class="left" style="font-weight:500;margin-top:3px">${esc(x.ex)}</div></td><td><button class="star ${starred.has(x.t) ? "on" : ""}" data-t="${esc(x.t)}" aria-label="Star ${esc(x.t)}">${starred.has(x.t) ? "★" : "☆"}</button></td></tr>`).join("")).join("")}</table></div></div>`;
+  $$(".list .star").forEach(b => b.onclick = () => { const t = b.dataset.t; starred.has(t) ? starred.delete(t) : starred.add(t); saveStar(); drawGroups(); drawList(); });
+}
+
+function draw(){ (mode === "flash" ? drawFlash : mode === "quiz" ? drawQuiz : drawList)(); }
+function setTabs(){ $$(".tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === mode)); }
+$$(".tabs button").forEach(b => b.onclick = () => { mode = b.dataset.mode; setTabs(); reset(); });
+reset();
+window.__terms = { TERMS, get q(){ return q; } };
+})();
+</script>
+<script src="/site.js"></script>
+</body>
+</html>

@@ -14,9 +14,9 @@
 .qr{width:230px;height:230px;flex:none;border-radius:10px;overflow:hidden;border:6px solid #fff}
 .qr svg{width:100%;height:100%;display:block}
 .code{font-family:Oswald,Arial,sans-serif;font-size:96px;font-weight:700;color:#fff;letter-spacing:.06em;line-height:1}
-.url{font-size:24px;color:#FBF3E6;margin-bottom:6px}.url b{color:var(--light)}
+.url{font-size:24px;color:#F4F4F4;margin-bottom:6px}.url b{color:var(--light)}
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
-#menuBtn{display:none;background:transparent;border:2px solid #E8DCCB;color:#E8DCCB;border-radius:8px;padding:5px 12px;font-size:14px}
+#menuBtn{display:none;background:transparent;border:2px solid #CFCFCF;color:#CFCFCF;border-radius:8px;padding:5px 12px;font-size:14px}
 .tile{background:var(--card);border:2px solid var(--rule);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;text-transform:none;color:var(--brown)}
 .tile .nm{font-family:Oswald,Arial,sans-serif;font-size:22px;text-transform:uppercase;line-height:1.1;overflow:hidden;text-overflow:ellipsis}
 .tile .st{font-family:Oswald,Arial,sans-serif;font-size:14px;text-transform:uppercase;color:var(--muted);white-space:nowrap}
@@ -27,7 +27,7 @@
 .yr .sub{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;color:var(--rust);font-size:17px}
 .tbill{background:var(--brown);color:#fff;border-radius:10px;padding:8px 16px;text-align:center}
 .tbill .v{font-family:Oswald,Arial,sans-serif;font-size:34px;font-weight:700;line-height:1}
-.tbill .k{font-size:12px;color:#E8DCCB;text-transform:uppercase}
+.tbill .k{font-size:12px;color:#CFCFCF;text-transform:uppercase}
 .clock{display:flex;gap:8px;align-items:center}
 .timer{font-family:Oswald,Arial,sans-serif;font-size:46px;color:var(--brown);min-width:110px;text-align:center}
 .timer.low{color:var(--red)}
@@ -45,12 +45,12 @@
 .brk tr.tot td{border-top:2px solid var(--brown);font-family:Oswald,Arial,sans-serif;font-size:20px}
 .verdict{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
 .bond.win{border-color:var(--green)}.bond.lose{border-color:var(--red)}
-.why{background:#FFF6EC;border-left:5px solid var(--orange);border-radius:0 8px 8px 0;padding:8px 10px;font-size:15px;line-height:1.35;margin-top:6px}
+.why{background:#FBF1F2;border-left:5px solid var(--orange);border-radius:0 8px 8px 0;padding:8px 10px;font-size:15px;line-height:1.35;margin-top:6px}
 .why p{margin:0 0 5px}.why b{font-family:Oswald,Arial,sans-serif;font-weight:400;color:var(--rust);text-transform:uppercase;font-size:12px;letter-spacing:.04em;display:block}
 .standings td{font-size:20px}.standings td.nm{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;color:var(--brown)}
 .standings td.pl{font-family:Oswald,Arial,sans-serif;color:var(--rust);font-size:24px}
 .standings td.val{font-family:Oswald,Arial,sans-serif;font-size:24px}
-.standings tr.top td{background:#FFF1E6}.standings tr.bench td{color:var(--muted);font-style:italic;background:#F7F0E4}
+.standings tr.top td{background:#FBE7EA}.standings tr.bench td{color:var(--muted);font-style:italic;background:#F4F3F3}
 .picks{font-family:Consolas,monospace;font-size:15px;color:var(--muted)}
 .winbar{background:var(--orange);color:#fff;border-radius:10px;padding:14px 18px;display:flex;gap:16px;align-items:center;margin-bottom:14px}
 .winbar .t{font-size:56px;line-height:1}.winbar .who{font-family:Oswald,Arial,sans-serif;font-size:36px;text-transform:uppercase;line-height:1.05}
@@ -74,8 +74,8 @@
 </head>
 <body>
 <header>
-  <div><div class="kicker">Hersey | Finance &amp; Investing | Unit 3: Bonds</div><h1>The Bond Desk</h1></div>
-  <div style="display:flex;gap:12px;align-items:center"><span id="offlineTag">Offline mode</span><button id="menuBtn" title="Resume, start a new game, or play without iPads">☰ Menu</button><span class="kicker" style="color:#E8DCCB">Mr. Murphy | John Hersey High School</span></div>
+  <div><div class="kicker">District 214 | Finance &amp; Investing | Unit 3: Bonds</div><h1>The Bond Desk</h1></div>
+  <div style="display:flex;gap:12px;align-items:center"><span id="offlineTag">Offline mode</span><button id="menuBtn" title="Resume, start a new game, or play without iPads">☰ Menu</button><span class="kicker" style="color:#CFCFCF">Mr. Murphy | John Hersey High School</span></div>
 </header>
 <main id="view"></main>
 <div class="modal" id="enterModal"><div class="mbox" id="enterBox"></div></div>

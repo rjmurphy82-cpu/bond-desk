@@ -103,7 +103,7 @@ function render() {
   else if (S.phase === "reveal") renderReveal();
   else renderFinal();
 }
-const joinUrl = () => location.origin + "/?c=" + sess.code;
+const joinUrl = () => location.origin + "/join?c=" + sess.code;
 
 /* ---------- lobby ---------- */
 function renderLobby() {
@@ -111,7 +111,7 @@ function renderLobby() {
     ${offline ? `<div class="card dark"><div class="label">Offline mode</div><div style="font-size:20px;line-height:1.5">Add each desk by hand on the right. During each year, tap a desk's tile to enter its choices.</div></div>`
     : `<div class="card dark"><div class="label">Join the desk</div>
       <div class="joinbox"><div class="qr">${qrSVG(joinUrl())}</div>
-        <div><div class="url">Scan the code, or go to<br><b>${esc(location.host)}</b></div><div class="small" style="font-size:16px">Game code</div><div class="code">${sess.code}</div></div></div>
+        <div><div class="url">Scan the code, or go to<br><b>${esc(location.host)}/join</b></div><div class="small" style="font-size:16px">Game code</div><div class="code">${sess.code}</div></div></div>
       <div class="small" style="margin-top:12px;font-size:15px">Join with your first name(s), like "Maya, Jake & Ava." Each group gets a 3-digit PIN. If an iPad restarts, rejoin with the same name and PIN.</div></div>`}
     <div class="card"><div class="label">Players joined: ${S.groups.length}</div>
       <div class="tiles" style="grid-template-columns:repeat(2,1fr)">${S.groups.map(g => `<div class="tile"><div><div class="nm">${esc(g.name)}</div><div class="st">PIN ${g.pin}${g.manual ? " · added by hand" : ""}</div></div><button class="x" data-g="${g.gid}" title="Remove">✕</button></div>`).join("") || `<div class="small">Waiting for desks to join...</div>`}</div>
@@ -230,7 +230,7 @@ function renderReveal() {
   } else {
     const rows = standings(S.r), bench = G.runFund([], S.r);
     const best = Math.max(...rows.map(x => x.y.gain)), winners = rows.filter(x => x.y.gain === best);
-    body = `${winners.length ? `<div class="winbar"><span class="t">🏆</span><div><div class="label" style="color:#FFE3CF">Desk of the Year</div><div class="who">${winners.map(w => esc(w.g.name)).join(" &amp; ")}</div><div style="font-size:18px">Made ${G.signed(best)} this year.</div></div></div>` : ""}
+    body = `${winners.length ? `<div class="winbar"><span class="t">🏆</span><div><div class="label" style="color:#FFE1E5">Desk of the Year</div><div class="who">${winners.map(w => esc(w.g.name)).join(" &amp; ")}</div><div style="font-size:18px">Made ${G.signed(best)} this year.</div></div></div>` : ""}
       <div class="card"><table class="standings"><tr><th>Place</th><th>Desk</th><th>This year's picks</th><th class="r">Interest</th><th class="r">Price change</th><th class="r">This year</th><th class="r">Fund value</th></tr>
       ${rows.map(x => `<tr class="${x.place === 1 ? "top" : ""}"><td class="pl">${x.place}</td><td class="nm">${esc(x.g.name)}</td><td class="picks">${picksTxt(decs[x.g.gid])}${x.y.fine ? ` <span class="pill r">Junk limit fine −$25K</span>` : ""}</td><td class="r" style="font-size:17px">${G.signed(x.y.interest + x.y.cashGain)}</td><td class="r ${x.y.priceGain < 0 ? "neg" : ""}" style="font-size:17px">${x.y.priceGain ? G.signed(x.y.priceGain) : "$0"}</td><td class="r ${x.y.gain < 0 ? "neg" : "pos"}">${G.signed(x.y.gain)}</td><td class="r val">${G.money(x.f.value)}</td></tr>`).join("")}
       <tr class="bench"><td></td><td>Play-It-Safe Fund</td><td class="picks">all cash, every year</td><td class="r" style="font-size:17px">${G.signed(bench.years[S.r].cashGain)}</td><td class="r" style="font-size:17px">$0</td><td class="r">${G.signed(bench.years[S.r].gain)}</td><td class="r val">${G.money(bench.value)}</td></tr></table>

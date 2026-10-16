@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bond Desk Solo | District 214 Finance &amp; Investing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<style>
+/* Layout: year header, then news + rules on the left and the three bonds on the right, with a sticky money bar to lock in */
+.yrhead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px 20px;flex-wrap:wrap;margin:6px 0 16px}
+.yrhead h2{font-family:var(--display);font-weight:700;font-size:clamp(30px,4vw,44px);line-height:1;margin:2px 0 8px}
+.yrsub{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--redtext)}
+.lvl{display:inline-flex;gap:8px;align-items:center;background:var(--paper);border:2px solid var(--line);border-radius:999px;padding:3px 12px;font-family:var(--display);font-weight:600;font-size:15px;text-transform:uppercase;letter-spacing:.03em}
+.lvl b{color:var(--redtext)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:var(--black);color:#fff;border-radius:10px;padding:6px 14px;text-align:center;min-width:110px}
+.chip.red{background:var(--red)}
+.chip .v{font-family:var(--display);font-weight:600;font-size:24px;line-height:1.1}
+.chip .k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:18px;align-items:start}
+@media (max-width:1050px){.cols{grid-template-columns:1fr}}
+.stack{display:grid;gap:14px;align-content:start}
+.news{list-style:none;margin:0;padding:0}
+.news li{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);line-height:1.35;font-size:17px}
+.news li:last-child{border-bottom:0}
+.news li b{flex:none;width:24px;height:24px;border-radius:50%;background:var(--black);color:#fff;display:grid;place-items:center;font:600 13px var(--display);margin-top:1px}
+.spreads{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.spreads div{background:var(--gray);border-radius:6px;padding:4px 0;font-family:var(--display);font-weight:600;font-size:16px}
+.spreads div.j{background:var(--redsoft);color:var(--redtext)}
+.spreads small{display:block;font:600 12.5px var(--body);color:var(--muted)}
+.tiny{font-size:14px;color:var(--muted);margin-top:8px;line-height:1.4}
+.bond{background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:8px;position:relative}
+.bond.picked{border-color:var(--red)}
+.bond .tag{position:absolute;top:10px;right:14px;font-family:var(--display);font-weight:700;font-size:30px;color:var(--redtext);line-height:1}
+.bond h3{font-family:var(--display);font-weight:600;font-size:23px;line-height:1.1;margin:0;padding-right:36px}
+.bond .what{font-size:15px;color:var(--muted);line-height:1.3}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.stat{background:var(--black);color:#fff;border-radius:8px;padding:5px 8px;text-align:center}
+.stat.j{background:var(--red)}
+.stat .v{font-family:var(--display);font-weight:600;font-size:23px;line-height:1.1}
+.stat .k{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.85}
+.hint{font-size:14.5px;border-radius:6px;padding:5px 9px;background:var(--gray)}
+.hint.fair{background:var(--goodsoft);color:var(--good)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg button{border:2px solid var(--line);background:var(--bg);border-radius:8px;font-family:var(--display);font-weight:600;font-size:18px;padding:11px 0;text-transform:uppercase}
+.seg button:hover{border-color:var(--ink)}
+.seg button.on{background:var(--red);border-color:var(--red);color:#fff}
+.seg button.on.pass{background:var(--black);border-color:var(--black)}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--black);color:#fff;padding:10px clamp(14px,3vw,40px) calc(10px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;gap:12px;z-index:20}
+@media (min-width:901px){.bar{left:272px}}
+.bar .nums{display:flex;gap:20px;flex-wrap:wrap}
+.bar .v{font-family:var(--display);font-weight:600;font-size:22px;line-height:1.1}
+.bar .k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+.bar .over .v{color:#FF8A99}
+body.hasbar #tsz{bottom:84px}
+@media (max-width:700px){body.hasbar #tsz{display:none}.bar .nums{gap:12px}.bar .v{font-size:18px}.bar .k{font-size:10px}.bar .btn{padding:10px 16px;font-size:17px}}
+body.hasbar .main{padding-bottom:140px}
+.res td{font-size:16px}
+.res tr.tot td{font-family:var(--display);font-weight:600;font-size:20px;border-top:2px solid var(--ink)}
+.story{padding:10px 0;border-bottom:1px solid var(--line);line-height:1.4}
+.story:last-child{border-bottom:0}
+.story .who{font-family:var(--display);font-weight:600;font-size:18px}
+.story .pc{margin:6px 0 4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:15px;font-weight:600}
+.story ul{margin:4px 0 0;padding-left:1.1em;font-size:15.5px;color:var(--muted)}
+.story ul li{margin:2px 0}
+.big{font-family:var(--display);font-weight:700;font-size:clamp(38px,6vw,56px);line-height:1}
+.versus{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+@media (max-width:560px){.versus{grid-template-columns:1fr}}
+.versus>div{border:2px solid var(--line);border-radius:10px;padding:8px 12px}
+.versus>div.me{border-color:var(--red)}
+.versus .k{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.versus .v{font-family:var(--display);font-weight:600;font-size:24px}
+.rules li{margin:6px 0;line-height:1.4}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.picks{font-size:14.5px;color:var(--muted)}
+.cols.rev{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:1050px){.cols.rev{grid-template-columns:1fr}}
+.res td:first-child{min-width:9em}
+</style>
+</head>
+<body data-page="practice-bond-desk">
+<div class="shell">
+  <main class="main"><div class="inner">
+    <div class="crumb"><a href="/#practices">Practice On Your Own</a> / Unit 3: Bonds</div>
+    <div id="view"></div>
+  </div></main>
+</div>
+<div id="barSlot"></div>
+<script type="module">
+import * as G from "/game-data.js";
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const k = v => v ? "$" + v / 1000 + "K" : "Pass";
+const KEY = "d214-bd-solo";
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return null; } };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+let st = load() || { phase: "intro", r: 0, decisions: [], draft: { A: 0, B: 0, C: 0 } };
+
+const fundBefore = r => r === 0 ? G.START_FUND : G.runFund(st.decisions, r - 1).value;
+const cashBefore = r => r === 0 ? G.START_FUND : G.runFund([], r - 1).value;
+// Best possible picks for one year, given the money on hand (tries all 27 combinations, fine included)
+function bestFor(r, start) {
+  let best = null;
+  for (const a of G.AMOUNTS) for (const b of G.AMOUNTS) for (const c of G.AMOUNTS) {
+    const p = { A: a, B: b, C: c }, s = G.scoreRound(r, p, start);
+    if (!best || s.gain > best.s.gain) best = { p, s };
+  }
+  return best;
+}
+const pickText = (R, p) => R.bonds.map(b => `${b.id}: ${p && p[b.id] ? "Buy " + k(p[b.id]) : "Pass"}`).join(" · ");
+function setBar(html) { $("#barSlot").innerHTML = html; document.body.classList.toggle("hasbar", !!html); }
+
+/* ---------- intro ---------- */
+function intro() {
+  setBar("");
+  $("#view").innerHTML = `<h1>Bond Desk Solo</h1>
+    <p class="lede">The same ten years you play in class, on your own. You start with <b>${G.money(G.START_FUND)}</b>. Each year three bonds hit the market. Read the news, decide what to buy, then see what happened and why.</p>
+    <div class="cols"><div class="panel"><div class="phead"><span class="t">How it works</span></div><div class="pbody"><ul class="rules" style="margin:0;padding-left:1.1em">
+      <li>For each bond choose <b>Pass</b>, <b>Buy $100K</b> or <b>Buy $200K</b>. Money you don't invest earns the Treasury rate.</li>
+      <li><b>Fair yield</b> = Treasury rate + the spread for the bond's rating. Offered more than fair? Good deal. Less? Overpriced.</li>
+      <li>Every bond pays its yield as interest. At year end you sell it on the secondary market. Its price falls when rates rise and rises when rates fall, more for longer bonds. Upgrades lift the price; downgrades cut it.</li>
+      <li>A <b>default</b> pays no interest and sells for $40 per $100.</li>
+      <li>Fund rule: no more than <b>$200K in junk</b> (BB and below) in one year, or a <b>$25,000 fine</b>.</li>
+      <li>The hints fade as you go: Rookie Desk, Analyst, Senior Analyst, Portfolio Manager.</li></ul></div></div>
+      <div class="panel"><div class="phead"><span class="t">Your goal</span></div><div class="pbody">
+        <p style="margin-top:0">Beat the <b>Play-It-Safe Fund</b>, which keeps everything in cash all ten years. Then see how close you can get to the best possible picks.</p>
+        <div class="spreads" style="margin:12px 0">${G.LADDER.map(r => `<div class="${G.isJunk(r) ? "j" : ""}">${r}<small>+${G.SPREADS[r].toFixed(1)}%</small></div>`).join("")}</div>
+        <div class="tiny">Spreads added to the Treasury rate for each rating. BB and below is junk.</div>
+        <div class="controls"><button class="btn" id="go">Open Year 1</button></div></div></div></div>`;
+  $("#go").onclick = () => { st = { phase: "open", r: 0, decisions: [], draft: { A: 0, B: 0, C: 0 } }; save(); render(); };
+}
+
+/* ---------- a year ---------- */
+function header(R, label) {
+  const lv = G.levelFor(R.year), mine = fundBefore(st.r), cash = cashBefore(st.r);
+  return `<div class="yrhead"><div><div class="yrsub">${label}</div><h2>${esc(R.title)}</h2>
+    <span class="lvl">Level <b>${esc(lv.name)}</b></span> <span class="muted" style="font-size:15px">${esc(lv.note)}</span></div>
+    <div class="chips"><div class="chip red"><div class="v">${G.money(mine)}</div><div class="k">Your fund</div></div><div class="chip"><div class="v">${G.money(cash)}</div><div class="k">Play-It-Safe</div></div>
+    <div class="chip"><div class="v">${st.phase === "reveal" ? R.t0.toFixed(1) + "% → " + R.t1.toFixed(1) + "%" : R.t0.toFixed(1) + "%"}</div><div class="k">Treasury rate</div></div></div></div>`;
+}
+function bondCard(R, b) {
+  const lv = G.levelFor(R.year), junk = G.isJunk(b.rating), d = st.draft;
+  return `<div class="bond ${d[b.id] ? "picked" : ""}"><span class="tag">${b.id}</span><h3>${esc(b.issuer)}</h3><div class="what">${esc(b.what)}</div>
+    <div class="stats"><div class="stat ${junk ? "j" : ""}"><div class="v">${b.rating}</div><div class="k">${junk ? "Rating · junk" : "Rating"}</div></div>
+      <div class="stat"><div class="v">${b.yld.toFixed(1)}%</div><div class="k">Yield</div></div><div class="stat"><div class="v">${b.years} yr</div><div class="k">Matures</div></div></div>
+    ${lv.showFair ? `<div class="hint fair">Fair yield: <b>${G.fairYield(R.t0, b.rating).toFixed(1)}%</b> (${R.t0.toFixed(1)}% + ${G.SPREADS[b.rating].toFixed(1)}% for ${b.rating})</div>` : ""}
+    ${lv.showSens ? `<div class="hint">If rates rise 1%, its price falls about <b>${b.sens}%</b>.</div>` : ""}
+    <div class="seg" data-b="${b.id}" role="group" aria-label="Bond ${b.id}">${G.AMOUNTS.map(a => `<button data-a="${a}" class="${d[b.id] === a ? "on" : ""} ${a ? "" : "pass"}">${a ? "Buy " + k(a) : "Pass"}</button>`).join("")}</div></div>`;
+}
+function openYear() {
+  const R = G.ROUNDS[st.r], sv = fundBefore(st.r);
+  $("#view").innerHTML = header(R, `Year ${R.year} of ${G.NROUNDS}`) + `<div class="cols"><div class="stack">
+      <div class="panel"><div class="phead"><span class="t">Market news</span></div><div class="pbody"><ul class="news">${R.news.map((n, i) => `<li><b>${i + 1}</b><span>${esc(n)}</span></li>`).join("")}</ul></div></div>
+      <div class="panel"><div class="pbody"><div class="lbl">Fair yield = ${R.t0.toFixed(1)}% + spread</div><div class="spreads">${G.LADDER.map(r => `<div class="${G.isJunk(r) ? "j" : ""}">${r}<small>+${G.SPREADS[r].toFixed(1)}%</small></div>`).join("")}</div>
+        <div class="tiny">Money you don't invest earns ${R.t0.toFixed(1)}% in Treasuries. At year end you sell every bond at that day's price. No more than $200K in junk (BB and below), or a $25,000 fine.</div></div></div></div>
+    <div class="stack">${R.bonds.map(b => bondCard(R, b)).join("")}</div></div>`;
+  $$(".seg button").forEach(b => b.onclick = () => { st.draft[b.parentElement.dataset.b] = +b.dataset.a; save(); const y = scrollY; render(); scrollTo(0, y); });
+  const d = st.draft, inv = d.A + d.B + d.C, junk = R.bonds.reduce((a, b) => a + (G.isJunk(b.rating) ? d[b.id] : 0), 0);
+  setBar(`<div class="bar"><div class="nums"><div><div class="v">${G.money(inv)}</div><div class="k">In bonds</div></div><div><div class="v">${G.money(sv - inv)}</div><div class="k">In cash</div></div>
+    <div class="${junk > G.JUNK_LIMIT ? "over" : ""}"><div class="v">${G.money(junk)}</div><div class="k">Junk · limit $200K</div></div></div><button class="btn" id="lock">Lock in</button></div>`);
+  $("#lock").onclick = () => {
+    if (junk > G.JUNK_LIMIT && !confirm("You have more than $200K in junk bonds. That breaks the fund rule and costs a $25,000 fine. Lock in anyway?")) return;
+    st.decisions[st.r] = { ...st.draft }; st.phase = "reveal"; save(); render(); scrollTo(0, 0);
+  };
+}
+function revealYear() {
+  setBar("");
+  const R = G.ROUNDS[st.r], start = fundBefore(st.r), y = G.scoreRound(st.r, st.decisions[st.r], start), after = start + y.gain;
+  const cashStart = cashBefore(st.r), cashY = G.scoreRound(st.r, {}, cashStart), best = bestFor(st.r, start);
+  const nailed = y.gain >= best.s.gain;
+  $("#view").innerHTML = header(R, `Year ${R.year} results`) + `<div class="cols rev"><div class="stack">
+    <div class="panel"><div class="pbody"><div class="lbl">Your desk this year</div><div class="big ${y.gain < 0 ? "neg" : ""}">${G.signed(y.gain)}</div>
+      <div style="margin-top:6px">Fund value now: <b>${G.money(after)}</b></div>
+      <div class="versus"><div class="me"><div class="k">You</div><div class="v ${y.gain < 0 ? "neg" : ""}">${G.signed(y.gain)}</div></div><div><div class="k">All cash</div><div class="v">${G.signed(cashY.gain)}</div></div><div><div class="k">Best possible</div><div class="v">${G.signed(best.s.gain)}</div></div></div>
+      <div class="fb ${nailed ? "ok" : y.gain >= cashY.gain ? "" : "no"}" style="margin-top:12px"><div class="fh">${nailed ? "Best possible picks. Nice work." : y.gain >= cashY.gain ? "You beat cash this year." : "Cash beat you this year."}</div>
+        <div class="picks">Your picks: ${pickText(R, st.decisions[st.r])}<br>Best picks: ${pickText(R, best.p)}</div></div></div></div>
+    <div class="panel"><div class="pbody" style="overflow-x:auto"><table class="res"><tr><th>Bond</th><th class="r">Interest</th><th class="r">Sold for</th><th class="r">Total</th></tr>
+      ${y.lines.map(l => { const b = R.bonds.find(x => x.id === l.id); return l.amt
+        ? `<tr><td>${b.id}. ${esc(b.issuer)}<br><span class="muted" style="font-size:13px">Bought ${k(l.amt)}</span></td><td class="r">${G.signed(l.interest)}</td><td class="r ${l.priceGain < 0 ? "neg" : ""}">$${l.ret.endPrice.toFixed(2)}<br><span class="muted" style="font-size:13px">${l.priceGain ? G.signed(l.priceGain) : "$0"}</span></td><td class="r ${l.gain < 0 ? "neg" : ""}">${G.signed(l.gain)}</td></tr>`
+        : `<tr><td>${b.id}. ${esc(b.issuer)}<br><span class="muted" style="font-size:13px">Passed</span></td><td class="r">–</td><td class="r muted">$${l.ret.endPrice.toFixed(2)}</td><td class="r">–</td></tr>`; }).join("")}
+      <tr><td>Cash in Treasuries<br><span class="muted" style="font-size:13px">${G.money(y.cash)}</span></td><td class="r">${G.signed(y.cashGain)}</td><td class="r">–</td><td class="r">${G.signed(y.cashGain)}</td></tr>
+      ${y.fine ? `<tr><td colspan="3">Junk limit fine (more than $200K in junk)</td><td class="r neg">−$25,000</td></tr>` : ""}
+      <tr class="tot"><td colspan="3">Total for the year</td><td class="r ${y.gain < 0 ? "neg" : ""}">${G.signed(y.gain)}</td></tr></table>
+      <div class="tiny"><b>Interest</b> is what the bond paid you. <b>Sold for</b> is its price per $100 on the secondary market at year end.</div></div></div></div>
+    <div class="panel"><div class="phead"><span class="t">What happened</span></div><div class="pbody">
+      <div class="story"><div class="who">Rates</div>${esc(R.outcome.rateNote)}</div>
+      ${R.bonds.map(b => { const pc = G.priceCheck(R, b), ev = R.outcome[b.id].event, ret = G.bondReturn(R, b);
+        return `<div class="story"><div class="who">${b.id}. ${esc(b.issuer)} <span class="muted" style="font-size:15px">(${b.rating}, ${b.yld.toFixed(1)}%, ${b.years} yr)</span></div>${esc(R.outcome[b.id].story)}
+          <div class="pc"><span class="pill ${pc.verdict === "Good deal" ? "g" : pc.verdict === "Overpriced" ? "r" : "n"}">${pc.verdict}</span>${esc(pc.text)}${ev ? ` · <span class="${ev.default || ev.pct < 0 ? "neg" : "pos"}">${esc(ev.label)}</span>` : ""} · Return <span class="${ret.total < 0 ? "neg" : "pos"}">${G.pct(ret.total)}</span></div>
+          <ul>${R.why[b.id].map(w => `<li>${esc(w)}</li>`).join("")}</ul></div>`; }).join("")}</div></div></div>
+    <div class="controls" style="justify-content:flex-end"><button class="btn ghost" id="redo">Redo this year</button><button class="btn" id="next">${st.r < G.NROUNDS - 1 ? "Open Year " + (st.r + 2) : "See final results"}</button></div>`;
+  $("#redo").onclick = () => { st.draft = { ...st.decisions[st.r] }; st.decisions.length = st.r; st.phase = "open"; save(); render(); scrollTo(0, 0); };
+  $("#next").onclick = () => { if (st.r < G.NROUNDS - 1) { st.r++; st.phase = "open"; st.draft = { A: 0, B: 0, C: 0 }; } else st.phase = "final"; save(); render(); scrollTo(0, 0); };
+}
+
+/* ---------- final ---------- */
+function finalScreen() {
+  setBar("");
+  const last = G.NROUNDS - 1, f = G.runFund(st.decisions, last), cash = G.runFund([], last);
+  let bv = G.START_FUND; const bestYears = G.ROUNDS.map((_, r) => { const b = bestFor(r, bv); bv = b.s.end; return b; });
+  const interest = f.years.reduce((a, y) => a + y.interest + y.cashGain, 0), price = f.years.reduce((a, y) => a + y.priceGain, 0), fines = f.years.reduce((a, y) => a + y.fine, 0);
+  const beat = f.value > cash.value;
+  $("#view").innerHTML = `<h1>Ten years on the desk</h1>
+    <div class="cols"><div class="stack"><div class="panel"><div class="pbody"><div class="lbl">Final fund value</div><div class="big">${G.money(f.value)}</div>
+      <div class="versus"><div class="me"><div class="k">You</div><div class="v">${G.money(f.value)}</div></div><div><div class="k">Play-It-Safe (all cash)</div><div class="v">${G.money(cash.value)}</div></div><div><div class="k">Best possible</div><div class="v">${G.money(bv)}</div></div></div>
+      <div class="fb ${beat ? "ok" : "no"}" style="margin-top:12px"><div class="fh">${beat ? "You beat the Play-It-Safe Fund by " + G.money(f.value - cash.value) + "." : "The Play-It-Safe Fund beat you by " + G.money(cash.value - f.value) + "."}</div>
+        <div>Your money came from <b>${G.signed(interest)}</b> in interest (bonds plus cash) and <b>${G.signed(price)}</b> in secondary-market price gains and losses${fines ? `, minus <b>${G.money(fines)}</b> in junk-limit fines` : ""}.</div></div>
+      <div class="controls"><button class="btn" id="again">Play again</button></div></div></div></div>
+    <div class="panel"><div class="phead"><span class="t">Year by year</span></div><div class="pbody" style="overflow-x:auto"><table class="res"><tr><th>Year</th><th class="r">You</th><th class="r">All cash</th><th>Best picks</th></tr>
+      ${f.years.map((y, r) => `<tr><td>${r + 1}. ${esc(G.ROUNDS[r].title)}</td><td class="r ${y.gain < 0 ? "neg" : ""}">${G.signed(y.gain)}</td><td class="r">${G.signed(cash.years[r].gain)}</td><td class="picks">${pickText(G.ROUNDS[r], bestYears[r].p)}</td></tr>`).join("")}
+      <tr class="tot"><td>Total</td><td class="r">${G.signed(f.value - G.START_FUND)}</td><td class="r">${G.signed(cash.value - G.START_FUND)}</td><td></td></tr></table>
+      <div class="lbl" style="margin-top:16px">Lessons from the desk</div><ul style="margin:0;padding-left:1.1em;line-height:1.45">
+        <li>Compare every yield to its fair yield. A high yield that's below fair is still overpriced.</li>
+        <li>Rates up, long bonds down. Rates down, long bonds up. Match the maturity to where rates are headed.</li>
+        <li>The news matters more than the label. Buyouts paid with debt, missed bills and lost customers come before downgrades and defaults.</li>
+        <li>Some headlines are noise: awards, endorsements and new trampoline parks don't change who pays you back.</li>
+        <li>Cash is a position. Some years, passing on everything is the best trade.</li></ul></div></div></div>`;
+  $("#again").onclick = () => { st = { phase: "intro", r: 0, decisions: [], draft: { A: 0, B: 0, C: 0 } }; save(); render(); scrollTo(0, 0); };
+}
+function restartLink() {
+  if (st.phase === "intro") return;
+  const el = document.createElement("div"); el.className = "crumb"; el.style.marginTop = "28px";
+  el.innerHTML = `<button class="btn ghost" id="restart">Start over from Year 1</button>`;
+  $("#view").appendChild(el);
+  $("#restart").onclick = () => { if (confirm("Start over? Your picks for every year will be cleared.")) { st = { phase: "intro", r: 0, decisions: [], draft: { A: 0, B: 0, C: 0 } }; save(); render(); scrollTo(0, 0); } };
+}
+function render() {
+  if (st.phase === "open") openYear(); else if (st.phase === "reveal") revealYear(); else if (st.phase === "final") finalScreen(); else intro();
+  if (st.phase === "open" || st.phase === "reveal") restartLink();
+}
+render();
+window.__bds = { get st() { return st; }, render, bestFor };
+</script>
+<script src="/site.js"></script>
+</body>
+</html>

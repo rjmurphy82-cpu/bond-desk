@@ -1,3 +1,24 @@
+# District 214 Finance & Investing
+
+The class site for Finance & Investing: a home page, live class games, review games, and practice-on-your-own pages, in the same look as the District 214 Accounting site.
+
+| Page | Who | What |
+|---|---|---|
+| `/` | Students | Home page with every game and practice |
+| `/join` | Students | Join a live Bond Desk game (the host QR code goes here) |
+| `/practice-bond-desk` | Students | Bond Desk Solo: all ten years on your own, with the why after each year. Progress saves in the browser. |
+| `/practice-rating-room` | Students | Rating Room Practice: the 5 class case files, 4 bonus case files, unlimited random issuers, and a 12-question quiz |
+| `/practice-fair-yield-sprint` | Students | Fair Yield Sprint: price random bonds as good deal, fair or overpriced in 60 seconds, or with no clock |
+| `/practice-bond-terms` | Students | Bond Terms: 36 terms from both games as flashcards, a quiz and a word list. Missed terms get starred. |
+| `/practice-bond-short-answer` | Students | Short Answer: 14 questions from both games. Students write, then self-check against a model answer and key points. |
+| `/rating-room` | Teacher (projector) | The Rating Room class game |
+| `/host` | Teacher (projector) | Bond Desk host screen |
+| `/teacher` | Teacher | Links to both class games. Not linked from the student site. |
+
+**Site address:** https://214-investing.vercel.app (the old https://bond-desk-gamma.vercel.app address still works too).
+
+Old links and QR codes that point at `/?c=12345` still work: the home page forwards them to `/join`.
+
 # The Bond Desk
 
 A live classroom bond-investing game for Hersey Finance & Investing (Unit 3: Bonds).
@@ -5,8 +26,8 @@ Each desk (group) runs a $1,000,000 bond fund for ten years on an iPad. Each yea
 
 The game gets harder as it goes. **Rookie Desk** (Years 1–2) shows each bond's fair yield and rate sensitivity. **Analyst** (Years 3–5) drops the fair yield. **Senior Analyst** (Years 6–8) drops the rate-sensitivity hint and adds more noise. **Portfolio Manager** (Years 9–10) uses quiet clues that take two headlines, or memory of an earlier year, to read.
 
-- **Projector (teacher):** `https://YOUR-SITE.vercel.app/host`
-- **iPads (students):** `https://YOUR-SITE.vercel.app` (or scan the QR code on the host screen)
+- **Projector (teacher):** `https://214-investing.vercel.app/host`
+- **iPads (students):** `https://214-investing.vercel.app/join` (or scan the QR code on the host screen)
 
 ## One-time setup (about 10 minutes)
 
@@ -49,11 +70,16 @@ All companies, governments, and outcomes are made up and engineered so every cla
 
 | File | What it is |
 |---|---|
-| `public/game-data.js` | All ten years: news, bonds, outcomes, difficulty levels, explanations, and the scoring math. Edit this to change content. |
-| `public/host.html`, `public/host.js` | Projector screen |
-| `public/index.html`, `public/play.js` | iPad screen |
-| `public/core.js` | Game rules on the server (codes, joining, hidden answers) |
+| `game-data.js` | All ten years: news, bonds, outcomes, difficulty levels, explanations, and the scoring math. Edit this to change content. |
+| `host.html`, `host.js` | Projector screen |
+| `join.html`, `play.js` | iPad screen |
+| `core.js` | Game rules on the server (codes, joining, hidden answers) |
 | `api/game.js` | Vercel function that connects the game to the database |
+| `index.html` | Home page |
+| `site.css`, `site.js` | Shared look, sidebar menu and text-size control for the home and practice pages. Add new pages to the menu in `site.js`. |
+| `rating-room.html`, `rating-data.js` | The Rating Room class game and its case files, scorecard and blitz questions (shared with the practice page) |
+| `practice-*.html` | Practice-on-your-own pages. Terms and short answer questions are listed at the top of the script in their pages. |
+| `teacher/index.html` | Teacher links |
 | `dev.js` | Local test server with a temporary in-memory database: `node dev.js` |
 
 QR codes are generated in the browser with "QRCode for JavaScript" by Kazuhiko Arase (MIT license). "QR Code" is a registered trademark of DENSO WAVE INCORPORATED.

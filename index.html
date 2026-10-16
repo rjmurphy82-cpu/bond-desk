@@ -1,58 +1,119 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#3F2417">
-<title>The Bond Desk</title>
+<title>District 214 Finance &amp; Investing</title>
+<link rel="canonical" href="https://214-investing.vercel.app/">
+<meta name="description" content="Live class games, review games and practice-on-your-own pages for Finance &amp; Investing in High School District 214.">
+<script>
+// Old Bond Desk QR codes pointed at /?c=12345. Send those students to the join page.
+(function(){var c=new URLSearchParams(location.search).get("c");if(c)location.replace("/join?c="+encodeURIComponent(c));})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
 <style>
-body{padding-bottom:110px;-webkit-text-size-adjust:100%}
-header{padding:10px 18px}header h1{font-size:24px}
-main{padding:16px 16px 20px;max-width:1100px}
-.center{max-width:520px;margin:30px auto}
-.field{display:block;margin-top:14px}
-.field span{display:block;font-family:Oswald,Arial,sans-serif;text-transform:uppercase;color:var(--rust);font-size:14px;margin-bottom:4px}
-.field input{width:100%;font-size:26px;padding:12px 14px;border:2px solid var(--rule);border-radius:10px;font-family:Barlow,Arial,sans-serif;background:#fff}
-.field input.code{font-family:Oswald,Arial,sans-serif;letter-spacing:.2em;font-size:36px;text-align:center}
-.link{background:none;border:0;color:var(--rust);text-decoration:underline;font-family:Barlow,Arial,sans-serif;text-transform:none;font-size:16px;padding:8px 0}
-.yrhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-.yrhead h2{font-size:30px;color:var(--brown);line-height:1}.yrhead .sub{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;color:var(--rust);font-size:15px}
-.chip{background:var(--brown);color:#fff;border-radius:10px;padding:6px 12px;text-align:center}
-.chip .v{font-family:Oswald,Arial,sans-serif;font-size:24px;font-weight:700;line-height:1}.chip .k{font-size:11px;color:#E8DCCB;text-transform:uppercase}
-.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:14px;align-items:start}
-@media(max-width:860px){.cols{grid-template-columns:1fr}}
-.news li{font-size:16.5px}
-.bond h3{font-size:21px}
-.bond .seg{margin-top:6px}
-.bond.picked{border-color:var(--orange)}
-.bar{position:fixed;left:0;right:0;bottom:0;background:var(--brown);color:#fff;padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;gap:12px;z-index:20}
-.bar .nums{display:flex;gap:18px;flex-wrap:wrap}
-.bar .n .v{font-family:Oswald,Arial,sans-serif;font-size:22px}.bar .n .k{font-size:11px;color:#E8DCCB;text-transform:uppercase}
-.bar .n.over .v{color:#FFB4A8}
-.bar .btn{font-size:22px;padding:12px 26px}
-.big{font-family:Oswald,Arial,sans-serif;font-size:64px;font-weight:700;color:var(--brown);line-height:1}
-.pinbox{background:var(--brown);color:#fff;border-radius:12px;padding:14px 18px;text-align:center;margin-top:16px}
-.pinbox .v{font-family:Oswald,Arial,sans-serif;font-size:56px;letter-spacing:.15em;color:var(--light);line-height:1.05}
-.lockedcard{background:var(--brown);color:#fff;border-radius:12px;padding:18px 20px}
-.lockedcard h2{font-size:34px}
-.lockedcard table td{color:#fff;border-color:#6b4a38;font-size:18px}
-.res td{font-size:17px}.res tr.tot td{font-family:Oswald,Arial,sans-serif;font-size:22px;border-top:2px solid var(--brown)}
-.story{font-size:15.5px;line-height:1.35;color:var(--ink);padding:6px 0;border-bottom:1px solid var(--rule)}
-.story:last-child{border-bottom:0}
-.story b{font-family:Oswald,Arial,sans-serif;color:var(--rust);font-weight:400}
-.rank{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
-.rank .p{font-family:Oswald,Arial,sans-serif;font-size:60px;color:var(--orange);line-height:1}
-.status{font-size:13px;color:var(--muted);text-align:center;margin-top:10px}
+/* Home: headline, then a card grid per section (same layout as the Accounting site) */
+section{margin-top:34px;scroll-margin-top:70px}
+.sechead{display:flex;align-items:baseline;justify-content:space-between;gap:6px 16px;flex-wrap:wrap;border-bottom:3px solid var(--black);padding-bottom:8px;margin-bottom:16px}
+.sechead h2{font-family:var(--display);font-weight:600;font-size:28px;margin:0;line-height:1.1}
+.sechead span{color:var(--muted);font-size:15px;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.card{display:flex;flex-direction:column;gap:8px;background:var(--paper);border:1px solid var(--line);border-top:4px solid var(--black);border-radius:8px;padding:16px 18px 14px;color:inherit;text-decoration:none;transition:border-color .15s,transform .15s,box-shadow .15s}
+.card:hover{border-top-color:var(--red);transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.08)}
+.ctop{display:flex;align-items:center;gap:10px}
+.chip{flex:none;white-space:nowrap;background:var(--red);color:#fff;font-family:var(--display);font-weight:600;font-size:14px;letter-spacing:.04em;border-radius:4px;padding:1px 8px}
+.kind{min-width:0;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.card h3{font-family:var(--display);font-weight:600;font-size:24px;line-height:1.1;margin:2px 0 0}
+.card p{margin:0;font-size:15px;color:var(--muted);flex:1}
+.cfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid var(--line);padding-top:10px;margin-top:4px}
+.meta{font-size:14px;font-weight:600;color:var(--muted)}
+.go{font-family:var(--display);font-weight:600;font-size:17px;color:var(--redtext)}
+.card.soon{border-top-color:var(--line);background:transparent;border-style:dashed;pointer-events:none}
+.card.soon .chip{background:var(--line);color:var(--ink)}
+.card.live{border-top-color:var(--red)}
+.livetag{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--redtext)}
+.livetag::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px var(--redsoft)}
+@media (prefers-reduced-motion: reduce){.card{transition:none}.card:hover{transform:none}}
 </style>
 </head>
-<body>
-<header><div><div class="kicker">Hersey | Finance &amp; Investing</div><h1>The Bond Desk</h1></div><div class="kicker" id="who" style="color:#E8DCCB"></div></header>
-<main id="view"></main>
-<div id="barSlot"></div>
-<script type="module" src="/play.js"></script>
+<body data-page="home">
+<div class="shell">
+  <main class="main"><div class="inner">
+    <header>
+      <div class="eyebrow">High School District 214</div>
+      <h1>Finance &amp; Investing review and practice</h1>
+      <p class="lede">Live class games your teacher runs on the board, review games for the whole class, and practice pages you can work through on your own, as many times as you want.</p>
+    </header>
+
+    <section id="live">
+      <div class="sechead"><h2>Live Class Games</h2><span>Teacher-led. Join with the code on the board</span></div>
+      <div class="grid">
+        <a class="card live" href="/join">
+          <div class="ctop"><span class="chip">Unit 3</span><span class="kind">Bonds</span><span class="livetag">Live</span></div>
+          <h3>The Bond Desk</h3>
+          <p>Your desk runs a $1,000,000 bond fund for ten years. Read the news, compare each bond's yield to its fair yield, and decide what to buy.</p>
+          <div class="cfoot"><span class="meta">10 years</span><span class="go">Join →</span></div>
+        </a>
+      </div>
+    </section>
+
+    <section id="games">
+      <div class="sechead"><h2>Review Games</h2><span>Played as a class on the board</span></div>
+      <div class="grid">
+        <a class="card" href="/rating-room">
+          <div class="ctop"><span class="chip">Unit 3</span><span class="kind">Bond ratings</span></div>
+          <h3>The Rating Room</h3>
+          <p>Groups score real-looking case files on the six-factor scorecard, lock in a rating, then watch the reveal and the why.</p>
+          <div class="cfoot"><span class="meta">5 rounds + blitz</span><span class="go">Play →</span></div>
+        </a>
+        <div class="card soon">
+          <div class="ctop"><span class="chip">More units</span><span class="kind">More games</span></div>
+          <h3>Coming soon</h3>
+          <p>Games for the other units will show up here.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="practices">
+      <div class="sechead"><h2>Practice On Your Own</h2><span>Work at your own pace, with answers and the why</span></div>
+      <div class="grid">
+        <a class="card" href="/practice-bond-desk">
+          <div class="ctop"><span class="chip">Unit 3</span><span class="kind">Buying bonds</span></div>
+          <h3>Bond Desk Solo</h3>
+          <p>Play all ten years of The Bond Desk by yourself. After each year, see what happened, the price check on every bond, and whether you beat cash.</p>
+          <div class="cfoot"><span class="meta">10 years</span><span class="go">Open →</span></div>
+        </a>
+        <a class="card" href="/practice-rating-room">
+          <div class="ctop"><span class="chip">Unit 3</span><span class="kind">Bond ratings</span></div>
+          <h3>Rating Room Practice</h3>
+          <p>Rate the class case files, then unlimited random issuers. Score each factor, pick the rating, and check your work line by line.</p>
+          <div class="cfoot"><span class="meta">9 cases + unlimited + quiz</span><span class="go">Open →</span></div>
+        </a>
+        <a class="card" href="/practice-fair-yield-sprint">
+          <div class="ctop"><span class="chip">Unit 3</span><span class="kind">Pricing bonds</span></div>
+          <h3>Fair Yield Sprint</h3>
+          <p>Treasury rate plus spread, as fast as you can. Call each bond a good deal, fair price, or overpriced in 60 seconds, or practice with no clock.</p>
+          <div class="cfoot"><span class="meta">Unlimited bonds</span><span class="go">Open →</span></div>
+        </a>
+        <a class="card" href="/practice-bond-terms">
+          <div class="ctop"><span class="chip">Unit 3</span><span class="kind">Terminology</span></div>
+          <h3>Bond Terms</h3>
+          <p>Flashcards, a quiz and a full word list for every term in the bond games. Missed terms get starred so you can review just those.</p>
+          <div class="cfoot"><span class="meta">36 terms</span><span class="go">Open →</span></div>
+        </a>
+        <a class="card" href="/practice-bond-short-answer">
+          <div class="ctop"><span class="chip">Unit 3</span><span class="kind">Short answer</span></div>
+          <h3>Short Answer Practice</h3>
+          <p>Explain what happened in the games in your own words, then check your answer against a model answer and the key points.</p>
+          <div class="cfoot"><span class="meta">14 questions</span><span class="go">Open →</span></div>
+        </a>
+      </div>
+    </section>
+  </div></main>
+</div>
+<script src="/site.js"></script>
 </body>
 </html>

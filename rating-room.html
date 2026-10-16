@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Rating Room | District 214 Finance &amp; Investing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F4F3F3;--card:#FFFFFF;--brown:#111111;--brown2:#2B2B2B;--orange:#C1102F;--rust:#B00E2A;--rule:#D9D9D9;--ink:#111111;--muted:#5C5C5C;
+  --green:#2E7D4F;--greenbg:#E3F1E7;--red:#B3261E;--redbg:#F8E1DE;--light:#FF8A99}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Barlow,Arial,sans-serif;font-size:17px}
+h1,h2,h3,.disp{font-family:Oswald,'Arial Narrow',Arial,sans-serif;text-transform:uppercase;margin:0;letter-spacing:.01em}
+button{font-family:Oswald,'Arial Narrow',Arial,sans-serif;text-transform:uppercase;cursor:pointer}
+header{background:var(--brown);color:#F4F4F4;padding:14px 28px 0;position:relative}
+header:after{content:"";position:absolute;left:0;right:0;bottom:-5px;height:5px;background:var(--orange)}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.kicker{font-family:Oswald,Arial,sans-serif;color:var(--orange);font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+header h1{font-size:34px;line-height:1.05}
+nav{display:flex;gap:4px;margin-top:12px;flex-wrap:wrap}
+nav button{background:transparent;color:#CFCFCF;border:0;padding:10px 18px;font-size:17px;border-radius:6px 6px 0 0}
+nav button.on{background:var(--bg);color:var(--brown)}
+main{padding:24px 28px 30px;max-width:1500px;margin:0 auto}
+.tab{display:none}.tab.on{display:block}
+.label{font-family:Oswald,Arial,sans-serif;color:var(--rust);font-size:14px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
+.card{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:16px 18px}
+.dark{background:var(--brown);color:#F4F4F4;border-color:var(--brown)}.dark .label{color:var(--light)}
+.grid{display:grid;gap:16px}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:18px;align-items:start}
+@media(max-width:1000px){.split{grid-template-columns:1fr}}
+.small{font-size:14px;color:var(--muted)}.dark .small{color:#CFCFCF}
+.btn{background:var(--orange);color:#fff;border:0;border-radius:6px;padding:10px 18px;font-size:17px}
+.btn.dk{background:var(--brown)}.btn.ghost{background:transparent;color:var(--brown);border:2px solid var(--brown)}
+.btn:disabled{opacity:.4;cursor:default}
+table{border-collapse:collapse;width:100%}
+th{background:var(--brown);color:#fff;font-family:Oswald,Arial,sans-serif;font-weight:400;text-transform:uppercase;font-size:14px;text-align:left;padding:7px 10px}
+td{padding:7px 10px;border-bottom:1px solid var(--rule);font-size:16px}
+td.num,th.num{text-align:right}
+.num{font-family:Consolas,'Courier New',monospace}
+.neg{color:var(--red)}
+/* group picker */
+.groups{display:grid;grid-template-columns:repeat(9,1fr);gap:8px;margin-bottom:16px}
+@media(max-width:900px){.groups{grid-template-columns:repeat(3,1fr)}}
+.gbtn{background:var(--card);border:2px solid var(--rule);border-radius:8px;padding:8px 6px;text-align:center;color:var(--brown);text-transform:none}
+.gbtn b{display:block;font-size:20px;font-family:Oswald,Arial,sans-serif}
+.gbtn span{font-family:Barlow,Arial,sans-serif;font-size:12px;color:var(--muted);display:block;line-height:1.2}
+.gbtn.on{border-color:var(--orange);background:#FBE7EA}
+.gbtn .done{display:inline-block;margin-top:4px;background:var(--brown);color:#fff;border-radius:10px;padding:1px 8px;font-size:12px;font-family:Oswald,Arial,sans-serif}
+/* case file */
+.casehead h2{font-size:30px;color:var(--brown);line-height:1.1}
+.facts4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+.fact{background:var(--brown);color:#fff;border-radius:8px;padding:10px 12px}
+.fact .v{font-family:Oswald,Arial,sans-serif;font-size:26px;font-weight:700}
+.fact .k{font-size:13px;color:#CFCFCF}
+.note{border-left:5px solid var(--orange);background:#FBF1F2;padding:10px 12px;border-radius:0 6px 6px 0;margin-top:10px;font-size:16px}
+.note b{font-family:Oswald,Arial,sans-serif;font-weight:400;color:var(--rust);text-transform:uppercase;font-size:13px;letter-spacing:.04em;display:block}
+/* scorecard */
+.frow{border:1px solid var(--rule);background:var(--card);border-radius:8px;padding:8px 12px;margin-bottom:7px}
+.frow.good{border-color:var(--green);background:var(--greenbg)}
+.frow.bad{border-color:var(--red);background:var(--redbg)}
+.fhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.fname{font-family:Oswald,Arial,sans-serif;font-size:19px;color:var(--brown);text-transform:uppercase}
+.fq{font-size:14px;color:var(--muted)}
+.formula{font-size:14px;color:var(--rust);font-weight:600}
+.levels{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:8px}
+.lv{background:#fff;border:2px solid var(--rule);border-radius:6px;padding:5px 6px;text-align:left;text-transform:none;font-family:Barlow,Arial,sans-serif;font-size:12.5px;line-height:1.15;color:var(--ink);min-height:46px}
+.lv b{font-family:Oswald,Arial,sans-serif;font-size:17px;color:var(--rust);display:block}
+.lv.on{border-color:var(--orange);background:#FBE0E4}
+.lv.off{border-color:var(--green);box-shadow:0 0 0 2px var(--green) inset}
+.verdict{margin-top:6px;font-size:14.5px}
+.mathin{width:90px;font-size:16px;padding:3px 6px;border:1px solid var(--rule);border-radius:4px}
+.totalbar{display:flex;gap:12px;align-items:stretch;margin-top:10px;flex-wrap:wrap}
+.tbox{flex:1;min-width:140px;background:var(--brown);color:#fff;border-radius:8px;padding:10px 14px}
+.tbox .v{font-family:Oswald,Arial,sans-serif;font-size:38px;font-weight:700;line-height:1}
+.tbox .k{font-size:13px;color:#CFCFCF;font-family:Oswald,Arial,sans-serif;text-transform:uppercase;letter-spacing:.04em}
+.tbox.or{background:var(--orange)}
+.ladder{display:flex;gap:4px;margin-top:8px}
+.ladder div{flex:1;text-align:center;font-family:Oswald,Arial,sans-serif;padding:6px 0;border-radius:4px;background:#EDEDED;color:var(--brown);font-size:15px}
+.ladder div.ig{background:#E4E4E4}.ladder div.junk{background:#FBE7EA}
+.ladder div.me{background:var(--orange);color:#fff}.ladder div.off{outline:3px solid var(--green)}
+.ladder div small{display:block;font-family:Barlow,Arial,sans-serif;font-size:11px;opacity:.8}
+.result{display:none;margin-top:12px}.result.on{display:block}
+@media(max-width:700px){.facts4{grid-template-columns:1fr 1fr}.levels{grid-template-columns:1fr 1fr}.bopts{grid-template-columns:1fr}.ref{font-size:13px}}
+/* team rounds */
+.rbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.rchips{display:flex;gap:6px}
+.rchips button{background:var(--card);border:2px solid var(--rule);border-radius:8px;padding:8px 14px;font-size:17px;color:var(--brown)}
+.rchips button.on{background:var(--brown);border-color:var(--brown);color:#fff}
+.rchips button .done{color:var(--orange);margin-left:6px}
+.steps{display:flex;gap:4px}
+.steps span{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:15px;padding:6px 12px;border-radius:20px;background:#EDEDED;color:var(--muted)}
+.steps span.on{background:var(--orange);color:#fff}
+.rclock{display:flex;gap:8px;align-items:center}
+.timer.sm{font-size:44px;min-width:110px;text-align:center}
+.ihead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:12px;flex-wrap:wrap}
+.ihead h2{font-size:40px;color:var(--brown);line-height:1}
+.ihead #rWhat{font-size:19px;margin-top:2px}
+.ihint{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;color:var(--rust);font-size:17px;max-width:420px;text-align:right}
+.clues{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.clue{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:10px 14px;position:relative;display:flex;flex-direction:column}
+.clue ol{margin-top:auto!important}
+.clue h3{font-size:20px;color:var(--rust)}
+.clue .fact{background:none;color:var(--ink);padding:0;font-size:21px;line-height:1.25;margin:4px 0 6px;font-weight:600}
+.clue .fact .n{font-family:Consolas,'Courier New',monospace;font-weight:700;color:var(--brown)}
+.clue .fact small{display:block;font-size:16px;font-weight:400;color:var(--muted)}
+.clue ol{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule);padding-top:6px}
+.clue li{display:flex;gap:8px;font-size:14px;line-height:1.3;color:var(--ink)}
+.clue li b{font-family:Oswald,Arial,sans-serif;color:var(--rust);width:14px;flex:none}
+.clue li.hit{background:var(--orange);color:#fff;border-radius:4px;margin:0 -6px;padding:0 6px}.clue li.hit b{color:#fff}
+.clue .badge{position:absolute;top:10px;right:12px;background:var(--brown);color:#fff;font-family:Oswald,Arial,sans-serif;font-size:24px;border-radius:8px;padding:0 12px}
+.clues.mini{margin-top:12px;grid-template-columns:repeat(3,1fr)}
+.clues.mini .clue .fact{font-size:15px;min-height:0;margin:4px 0}
+.clues.mini .clue h3{font-size:16px;padding-right:38px}
+.clues.mini .clue .badge{font-size:20px;top:8px;right:8px}
+.clues.mini .clue ol{display:none}
+.strip{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px}
+.strip div{text-align:center;font-family:Oswald,Arial,sans-serif;border-radius:6px;padding:6px 0;font-size:24px;color:var(--brown);background:#E4E4E4}
+.strip div.junk{background:#FBE7EA}.strip div small{display:block;font-size:14px;font-family:Barlow,Arial,sans-serif;color:var(--muted)}
+.actions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+.btn.big{font-size:22px;padding:12px 26px}
+.answers{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.arow{background:var(--card);border:2px solid var(--rule);border-radius:10px;padding:10px 12px}
+.arow .nm{font-family:Oswald,Arial,sans-serif;font-size:22px;color:var(--brown);text-transform:uppercase;display:flex;justify-content:space-between}
+.arow .nm span{color:var(--orange)}
+.arow .opts{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:6px}
+.arow .opts button{border:2px solid var(--rule);background:#fff;border-radius:6px;padding:8px 0;font-size:16px;color:var(--brown)}
+.arow .opts button.on{background:var(--orange);border-color:var(--orange);color:#fff}
+.arow.set{border-color:var(--orange)}
+.results{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:1000px){.results,.answers,.clues{grid-template-columns:1fr}}
+.offrow{display:flex;align-items:baseline;gap:20px;flex-wrap:wrap}
+.offr{font-family:Oswald,Arial,sans-serif;font-size:96px;font-weight:700;color:#fff;line-height:1}
+#rOffTxt{font-size:22px}
+.rtable td{font-size:19px;padding:6px 10px}.rtable td.pl{font-family:Oswald,Arial,sans-serif;font-size:22px;color:var(--rust)}
+.rtable td.pts{font-family:Oswald,Arial,sans-serif;font-size:24px;color:var(--brown);text-align:right}
+.rtable tr.winner td{background:#FBE7EA}
+@media(max-height:820px){header{padding-top:8px}header h1{font-size:26px}nav{margin-top:6px}nav button{padding:7px 14px}main{padding-top:14px}
+  .ihead{margin-bottom:8px}.ihead h2{font-size:32px}.ihead #rWhat{font-size:16px}.ihint{font-size:15px}.clue .fact{font-size:18px}.clue li{font-size:12.5px;line-height:1.25}.clue h3{font-size:17px}.strip div{font-size:20px;padding:3px 0}.timer.sm{font-size:36px}.rbar{margin-bottom:8px}}
+/* leaderboard */
+.boardwrap{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:18px;align-items:start}
+@media(max-width:1000px){.boardwrap{grid-template-columns:1fr}}
+.btable td{font-size:22px;padding:8px 12px;text-align:center}.btable th{text-align:center;font-size:15px}
+.btable td.nm{text-align:left;font-family:Oswald,Arial,sans-serif;text-transform:uppercase;color:var(--brown)}
+.btable td.tot{font-family:Oswald,Arial,sans-serif;font-size:30px;color:#fff;background:var(--brown)}
+.btable td.place{font-family:Oswald,Arial,sans-serif;font-size:26px;color:var(--rust)}
+.btable tr.first td{background:#FBE0E4}.btable tr.first td.tot{background:var(--orange)}
+.btable td.dash{color:#BBBBBB}
+.pp{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.pp div{background:var(--brown2);border-radius:6px;padding:6px 8px;font-family:Oswald,Arial,sans-serif;font-size:18px;display:flex;justify-content:space-between}
+.pp div b{color:var(--light)}
+/* blitz */
+.bq{font-family:Oswald,Arial,sans-serif;font-size:36px;line-height:1.15;color:var(--brown);margin:8px 0 16px}
+.bopts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.bopt{background:var(--card);border:2px solid var(--rule);border-radius:10px;padding:16px 18px;font-size:24px;display:flex;gap:14px;align-items:center}
+.bopt b{font-family:Oswald,Arial,sans-serif;color:var(--rust);font-size:30px}
+.bopt.right{border-color:var(--green);background:var(--greenbg)}
+.bopt.dim{opacity:.45}
+.timer{font-family:Oswald,Arial,sans-serif;font-size:64px;color:var(--brown);line-height:1}
+.timer.low{color:var(--red)}
+.who{display:grid;grid-template-columns:repeat(9,1fr);gap:6px;margin-top:10px}
+@media(max-width:900px){.who{grid-template-columns:repeat(3,1fr)}}
+.who button{background:#fff;border:2px solid var(--rule);border-radius:6px;padding:8px 2px;font-size:14px;color:var(--brown)}
+.who button.on{background:var(--green);border-color:var(--green);color:#fff}
+/* scoreboard */
+.score{position:sticky;bottom:0;background:var(--brown);display:grid;grid-template-columns:repeat(9,1fr);gap:6px;padding:8px 14px;z-index:5}
+@media(max-width:900px){.score{grid-template-columns:repeat(3,1fr)}}
+.team{background:var(--brown2);color:#fff;border-radius:8px;padding:3px 6px 4px;display:flex;flex-direction:column;align-items:center;min-width:0}
+.team .row{display:flex;align-items:center;gap:6px}
+.team input{background:transparent;border:0;color:var(--light);font-family:Oswald,Arial,sans-serif;font-size:14px;width:100%;min-width:0;text-transform:uppercase;text-align:center}
+.team .pts{font-family:Oswald,Arial,sans-serif;font-size:24px;min-width:30px;text-align:center}
+.team button{background:#444444;color:#fff;border:0;border-radius:4px;width:22px;height:22px;font-size:15px;line-height:1;padding:0;flex:none}
+.team.lead{outline:2px solid var(--orange)}
+.ref td{font-size:15px;vertical-align:top}
+.pill{display:inline-block;font-family:Oswald,Arial,sans-serif;padding:2px 10px;border-radius:12px;font-size:15px}
+.pill.g{background:var(--greenbg);color:var(--green)}.pill.r{background:var(--redbg);color:var(--red)}
+.foot{font-size:13px;color:var(--muted);margin-top:12px}
+
+/* v2 team rounds */
+.casegrid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:1000px){.casegrid{grid-template-columns:1fr}}
+.casegrid .facts4{margin-top:0}
+.casegrid table td{font-size:19px}
+.notes{list-style:none;margin:0;padding:0}
+.notes li{display:flex;gap:10px;font-size:19px;line-height:1.35;padding:9px 0;border-bottom:1px solid var(--rule)}
+.notes li:last-child{border-bottom:0}
+.notes li b{font-family:Oswald,Arial,sans-serif;color:#fff;background:var(--brown);border-radius:50%;width:26px;height:26px;flex:none;display:flex;align-items:center;justify-content:center;font-size:15px;margin-top:1px}
+.btn.sm{padding:6px 10px;font-size:15px}
+.locks{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:900px){.locks{grid-template-columns:1fr 1fr}}
+.lock{background:var(--card);border:2px dashed var(--rule);border-radius:12px;padding:18px 16px;text-align:left;text-transform:none;display:flex;justify-content:space-between;align-items:center;color:var(--brown);min-height:86px}
+.lock .nm{font-family:Oswald,Arial,sans-serif;font-size:26px;text-transform:uppercase}
+.lock .st{font-family:Oswald,Arial,sans-serif;font-size:17px;text-transform:uppercase;color:var(--muted)}
+.lock.done{border:2px solid var(--brown);background:var(--brown);color:#fff}.lock.done .st{color:var(--light)}
+.tip{font-size:14px;color:var(--muted);margin-top:12px}
+.modal{position:fixed;inset:0;background:rgba(17,17,17,.72);display:none;align-items:center;justify-content:center;z-index:20;padding:16px}
+.modal.on{display:flex}
+.mbox{background:var(--card);border-radius:14px;max-width:760px;width:100%;padding:22px 24px;border-top:8px solid var(--orange)}
+.mbox h2{font-size:32px;color:var(--brown)}
+.mrow{margin-top:16px}
+.rpick{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.rpick button,.npick button{border:2px solid var(--rule);background:#fff;border-radius:8px;color:var(--brown);font-size:24px;padding:12px 0}
+.rpick button.j{background:#FBE7EA}
+.npick{display:grid;grid-template-columns:repeat(13,1fr);gap:4px}
+.npick button{font-size:17px;padding:7px 0}
+.chosen{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:16px;margin-top:6px;color:var(--muted)}
+.chosen.ok{color:var(--green)}
+.mact{display:flex;justify-content:space-between;gap:10px;margin-top:20px;flex-wrap:wrap}
+.drum{position:fixed;inset:0;background:var(--brown);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:30;color:#fff;cursor:pointer}
+.drum.on{display:flex}
+.drum .k{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;color:var(--light);font-size:28px;letter-spacing:.05em}
+.drum .big{font-family:Oswald,Arial,sans-serif;font-weight:700;font-size:240px;line-height:1;animation:pop .5s ease-out}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:31}
+.revealtop{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:16px;margin-bottom:16px}
+@media(max-width:1000px){.revealtop{grid-template-columns:1fr}}
+.wincard{background:var(--orange);color:#fff;border-radius:8px;padding:16px 18px;display:flex;gap:18px;align-items:center}
+.wincard .trophy{font-size:70px;line-height:1}
+.wincard .label{color:#FFE1E5}
+.wincard .who2{font-family:Oswald,Arial,sans-serif;font-size:40px;text-transform:uppercase;line-height:1.05}
+.wincard .sub{font-size:18px}
+.wincard.none{background:var(--brown2)}
+.rtable td.pts.neg{color:var(--red)}
+.whyhead{font-size:28px;color:var(--brown);margin:2px 0 8px}
+.whybody p{font-size:18px;line-height:1.45;margin:0 0 10px}
+.whytable td{font-size:16px;vertical-align:top}
+.whytable td.f{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;color:var(--brown);white-space:nowrap}
+.whytable td.m{font-family:Consolas,'Courier New',monospace;font-size:15px;color:var(--rust)}
+.whytable td.p{font-family:Oswald,Arial,sans-serif;font-size:26px;color:var(--orange);text-align:center;width:50px}
+.whytable tr.tot td{background:var(--brown);color:#fff;font-family:Oswald,Arial,sans-serif;font-size:20px}
+.whytable tr.hide{display:none}
+.whywait{border:2px dashed var(--rule);border-radius:8px;padding:18px;text-align:center;color:var(--muted);font-size:17px}
+@media(max-width:1500px){.rchips button{padding:7px 11px;font-size:16px}.steps span{font-size:13px;padding:5px 9px}.timer.sm{font-size:38px;min-width:92px}.rclock .btn{padding:8px 13px;font-size:16px}}
+@media(max-width:1400px){#rSteps{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <div><div class="kicker">District 214 | Finance &amp; Investing | Unit 3: Bonds</div><h1>The Rating Room</h1></div>
+    <div class="kicker" style="color:#CFCFCF">High School District 214</div>
+  </div>
+  <nav>
+    <button data-tab="guide" class="on">The Scorecard</button>
+    <button data-tab="team">Team Rounds</button>
+    <button data-tab="blitz">Blitz</button>
+    <button data-tab="board">Leaderboard</button>
+    <button data-tab="practice">Practice</button>
+  </nav>
+</header>
+<main>
+<!-- ============ SCORECARD GUIDE ============ -->
+<section class="tab on" id="guide">
+  <div class="split">
+    <div class="card">
+      <div class="label">Six things every bond rater checks (0 to 4 points each)</div>
+      <table class="ref" id="refTable"></table>
+    </div>
+    <div class="grid" style="align-content:start">
+      <div class="card dark">
+        <div class="label">Add up the points, then read the rating</div>
+        <table id="scaleTable" style="color:#fff"></table>
+        <div class="small" style="margin-top:8px">BBB and above = investment grade. BB and below = high-yield (junk).</div>
+      </div>
+      <div class="card">
+        <div class="label">Key words</div>
+        <div style="line-height:1.5"><b>Earnings</b> = money left after operating costs, before interest. For a city, school district, or authority, this is its <b>surplus</b>. Use the most recent year (2026).<br><b>Debt due next year</b> = the part of its debt it must repay in the next 12 months.<br><b>Revenue change</b> = (2026 revenue − 2022 revenue) ÷ 2022 revenue.</div>
+      </div>
+      <div class="card small">All companies and governments in The Rating Room are made up. Real rating agencies (Moody's, S&amp;P, Fitch) use many more factors and their own judgment; this scorecard is a simplified version of how they think.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TEAM ROUNDS ============ -->
+<section class="tab" id="team">
+  <div class="rbar">
+    <div class="rchips" id="rChips"></div>
+    <div class="steps" id="rSteps"><span data-s="0">1. Study the case</span><span data-s="1">2. Lock in</span><span data-s="2">3. Reveal &amp; why</span></div>
+    <div class="rclock"><button class="btn ghost sm" id="rMinus" title="Take away a minute">−1</button><span class="timer sm" id="rTime">5:00</span><button class="btn ghost sm" id="rPlus" title="Add a minute">+1</button><button class="btn" id="rStart">Start</button><button class="btn ghost" id="rReset">Reset</button></div>
+  </div>
+  <!-- stage 0: case file -->
+  <div id="stCase">
+    <div class="ihead"><div><div class="label" id="rLbl"></div><h2 id="rName"></h2><div id="rWhat"></div></div><div class="ihint">Do the math on your worksheet. Not every note matters.</div></div>
+    <div class="casegrid">
+      <div class="card">
+        <div class="facts4" id="rFacts"></div>
+        <table id="rYears"></table>
+        <div class="small" style="margin-top:8px">All dollar figures in millions. Made-up issuer.</div>
+      </div>
+      <div class="card"><div class="label">Case notes</div><ul class="notes" id="rNotes"></ul></div>
+    </div>
+    <div class="actions"><button class="btn big" id="rToLock">Time! Lock in answers</button></div>
+  </div>
+  <!-- stage 1: hidden lock-in -->
+  <div id="stLock" style="display:none">
+    <div class="ihead"><div><div class="label">Lock in. Answers stay hidden until the reveal.</div><h2 id="rName2"></h2></div><div class="ihint" id="rLockCount"></div></div>
+    <div class="locks" id="rLocks"></div>
+    <div class="tip">Tap a group, have them pick their rating and point total, then lock it. The screen never shows what a group picked. For extra secrecy, freeze the projector while groups come up.</div>
+    <div class="actions"><button class="btn ghost" id="rBack">Back to the case</button><button class="btn big" id="rReveal">Reveal the official rating</button></div>
+  </div>
+  <!-- stage 2: reveal, results, why -->
+  <div id="stResults" style="display:none">
+    <div class="revealtop">
+      <div class="card dark"><div class="label" id="rLbl3"></div><div class="offrow"><span class="offr" id="rOff"></span><span id="rOffTxt"></span></div></div>
+      <div class="wincard" id="rWin"></div>
+    </div>
+    <div class="results">
+      <div class="card">
+        <div class="label" id="whyLbl"></div>
+        <div id="whyWrap"></div>
+      </div>
+      <div class="grid" style="align-content:start">
+        <div class="card"><div class="label" id="rPtsLbl">Round results</div><table class="rtable" id="rTable"></table>
+          <div class="small" style="margin-top:8px" id="rPtsNote"></div></div>
+        <div class="card dark"><div class="label">How this round scores</div><div style="font-size:19px;line-height:1.5" id="rScoreKey"></div></div>
+      </div>
+    </div>
+    <div class="actions"><button class="btn ghost" id="rEdit">Fix an answer</button><button class="btn dk" id="rBoard">Show leaderboard</button><button class="btn big" id="rNext">Next round</button></div>
+  </div>
+</section>
+
+<div class="modal" id="lockModal"><div class="mbox">
+  <div class="label">Lock in your answer</div><h2 id="mName"></h2>
+  <div class="mrow"><div class="label">Our rating</div><div class="rpick" id="mRate"></div><div class="chosen" id="mRateOk">Not picked yet</div></div>
+  <div class="mrow"><div class="label">Our total points (optional, shown at the reveal)</div><div class="npick" id="mPts"></div><div class="chosen" id="mPtsOk">Not picked yet</div></div>
+  <div class="mact"><div style="display:flex;gap:8px"><button class="btn ghost" id="mCancel">Cancel</button><button class="btn ghost" id="mClear">Start over</button></div><button class="btn big" id="mLock" disabled>Lock it in</button></div>
+</div></div>
+<div class="drum" id="drum"><div class="k" id="drumK"></div><div class="big" id="drumBig"></div></div>
+<canvas id="confetti"></canvas>
+
+<!-- ============ BLITZ ============ -->
+<section class="tab" id="blitz">
+  <div class="split" style="grid-template-columns:minmax(0,2.2fr) minmax(0,1fr)">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center"><div class="label" id="bLbl">Question 1 of 12</div><div class="small">Teams write their letter on a whiteboard and hold it up when time ends</div></div>
+      <div class="bq" id="bQ"></div>
+      <div class="bopts" id="bOpts"></div>
+      <div class="result card dark" id="bRes"></div>
+    </div>
+    <div class="grid" style="align-content:start">
+      <div class="card" style="text-align:center">
+        <div class="label">Clock</div>
+        <div class="timer" id="bTime">20</div>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:10px">
+          <button class="btn" id="bStart">Start</button><button class="btn dk" id="bReveal">Reveal</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="label">Who got it right? Tap them, then save</div>
+        <div class="who" id="bWho" style="grid-template-columns:repeat(3,1fr)"></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn" id="bAward">Save</button><button class="btn dk" id="bNext">Next</button>
+        </div>
+        <div class="small" id="bAwarded" style="margin-top:6px"></div>
+      </div>
+      <button class="btn big" id="bPost" style="display:none">Post blitz placement points</button>
+      <button class="btn ghost" id="bRestart">Restart blitz</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LEADERBOARD ============ -->
+<section class="tab" id="board">
+  <div class="boardwrap">
+    <div class="card"><div class="label">Standings</div><table class="btable" id="bTable"></table></div>
+    <div class="grid" style="align-content:start">
+      <div class="card dark"><div class="label">Blitz placement points</div><div class="pp" id="ppList"></div>
+        <div class="small" style="margin-top:10px">Ties share the higher place, like a golf leaderboard.</div></div>
+      <div class="card"><div class="label">How a round is ranked</div><div style="line-height:1.5"><b>Team rounds:</b> exact rating +10, one step off 0, two or more steps off −5. No answer counts as two or more off. The Final Round doubles everything (+20 / 0 / −10).<br><b>Blitz:</b> most correct answers wins. Question 12 counts twice.</div></div>
+      <button class="btn ghost" id="resetAll">Reset the whole game</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRACTICE ============ -->
+<section class="tab" id="practice">
+  <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+    <button class="btn" id="pNew">New issuer</button>
+    <span class="small" id="pCount">Practice issuer #1. Every issuer is randomly built, so there is always another one.</span>
+  </div>
+  <div class="split">
+    <div id="pCase"></div>
+    <div>
+      <div id="pCard"></div>
+      <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+        <button class="btn" id="pCheck">Check my work</button>
+        <button class="btn ghost" id="pClear">Clear scorecard</button>
+      </div>
+      <div class="result card dark" id="pResult"></div>
+    </div>
+  </div>
+</section>
+</main>
+<div class="score" id="score"></div>
+
+<script src="/rating-data.js"></script>
+<script>
+const DATA = window.RATING_DATA;
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const F = DATA.factors, LADDER = DATA.ladder, SCALE = DATA.scale;
+const fmt = v => "$" + Math.abs(v).toLocaleString("en-US") + "M";
+const money = v => (v<0?"−":"") + fmt(v);
+function rating(t){ for (const [lo,r] of SCALE) if (t>=lo) return r; }
+function bandText(r){ const i=SCALE.findIndex(s=>s[1]===r); const lo=SCALE[i][0], hi=i===0?24:SCALE[i-1][0]-1; return lo+" to "+hi; }
+
+/* ---------- shared scoring rules (same as the case files) ---------- */
+const sDebt=(x,e)=> e<=0?0 : x<1.5?4 : x<3?3 : x<4.5?2 : x<6?1 : 0;
+const sCov=x=> x>=8?4 : x>=5?3 : x>=3?2 : x>=1.5?1 : 0;
+const sCash=x=> x>=2?4 : x>=1?3 : x>=0.5?2 : x>=0.25?1 : 0;
+function sStab(rev,earn){ const P=earn.filter(v=>v>0).length, R=(rev[4]-rev[0])/rev[0]*100, rising=rev.every((v,i)=>i===0||v>rev[i-1]);
+  if(P===0)return 0; if(P===5&&rising)return 4; if(P===5&&R>0)return 3; if((P===5&&R>=-10)||(P===4&&R>=-10))return 2; return 1; }
+function solve(c){ const e=c.earn[4]; const d=e>0?c.debt/e:null, cov=e/c.interest, cs=c.cash/c.due;
+  const P=c.earn.filter(v=>v>0).length, R=(c.rev[4]-c.rev[0])/c.rev[0]*100;
+  c.ratios={debt:d,coverage:cov,cash:cs,P,R}; c.scores={history:c.history,stability:sStab(c.rev,c.earn),debt:sDebt(d===null?99:d,e),coverage:sCov(cov),cash:sCash(cs),backing:c.backing};
+  c.total=Object.values(c.scores).reduce((a,b)=>a+b,0); c.rating=rating(c.total); return c; }
+DATA.cases.forEach(solve);
+
+/* ---------- tabs ---------- */
+$$("nav button").forEach(b=>b.onclick=()=>{ $$("nav button").forEach(x=>x.classList.toggle("on",x===b)); $$(".tab").forEach(t=>t.classList.toggle("on",t.id===b.dataset.tab)); });
+
+/* ---------- points model + scoreboard (9 groups) ---------- */
+const PLACE = DATA.place_points, NR = DATA.rounds.length;
+const teams = Array.from({length:9},(_,i)=>({n:"Group "+(i+1)}));
+const PTS = { r: DATA.rounds.map(()=>null), blitz: null, adj: Array(9).fill(0) };
+const TP = DATA.team_points;
+const total = i => PTS.r.reduce((a,r)=>a+(r?r[i]:0),0) + (PTS.blitz?PTS.blitz[i]:0) + PTS.adj[i];
+// competition ranking: higher score = better; ineligible teams get 0
+function placePoints(scores, eligible, mult){
+  const out = Array(9).fill(0), place = Array(9).fill(null);
+  scores.forEach((s,i)=>{ if(!eligible[i]) return; const better = scores.filter((t,j)=>eligible[j] && t>s).length; place[i]=better+1; out[i]=(PLACE[better]||0)*mult; });
+  return {pts: out, place};
+}
+const ord = n => n + (n%10===1&&n!==11?"st":n%10===2&&n!==12?"nd":n%10===3&&n!==13?"rd":"th");
+function drawScore(){
+  const tots = teams.map((_,i)=>total(i)), max=Math.max(...tots);
+  $("#score").innerHTML=teams.map((t,i)=>`<div class="team ${tots[i]>0&&tots[i]===max?'lead':''}"><input value="${t.n}" data-i="${i}" aria-label="Group name"><div class="row"><button data-i="${i}" data-d="-1">−</button><span class="pts">${tots[i]}</span><button data-i="${i}" data-d="1">+</button></div></div>`).join("");
+  $$("#score input").forEach(inp=>inp.onchange=()=>{ teams[inp.dataset.i].n=inp.value||("Group "+(+inp.dataset.i+1)); refreshAll(); });
+  $$("#score button").forEach(b=>b.onclick=()=>{ PTS.adj[b.dataset.i]+=+b.dataset.d; refreshAll(); });
+}
+function refreshAll(){ drawScore(); drawBoard(); drawRound(); drawWho(); }
+
+/* ---------- reference tables ---------- */
+$("#refTable").innerHTML = `<tr><th>Factor</th><th>What to look at</th><th>4 points looks like</th><th>0 points looks like</th></tr>` +
+  F.map(f=>`<tr><td><b>${f.name}</b></td><td>${f.q}${f.formula?`<br><span class="formula">${f.formula}</span>`:""}</td><td>${f.levels[4]}</td><td>${f.levels[0]}</td></tr>`).join("");
+$("#scaleTable").innerHTML = `<tr><th>Total points</th><th>Rating</th><th>Grade</th></tr>` + SCALE.map(([lo,r],i)=>`<tr><td class="num" style="color:#fff">${bandText(r)}</td><td style="color:#fff"><b>${r}</b></td><td style="color:#CFCFCF">${i<=3?"Investment grade":"Junk"}</td></tr>`).join("");
+
+/* ---------- case file + scorecard renderers ---------- */
+function caseHTML(c, label){
+  const term = c.munis ? "Surplus" : "Earnings";
+  const rows = DATA.years.map((y,i)=>`<tr><td>${y}</td><td class="num">${money(c.rev[i])}</td><td class="num ${c.earn[i]<0?'neg':''}">${money(c.earn[i])}</td></tr>`).join("");
+  return `<div class="card casehead">
+    <div class="label">${label}</div>
+    <h2>${c.name}</h2><div class="small">${c.type}</div>
+    <div style="margin-top:6px">${c.what}</div>
+    <div class="facts4">
+      <div class="fact"><div class="v num">${money(c.debt)}</div><div class="k">Total debt</div></div>
+      <div class="fact"><div class="v num">${money(c.interest)}</div><div class="k">Yearly interest</div></div>
+      <div class="fact"><div class="v num">${money(c.cash)}</div><div class="k">Cash on hand</div></div>
+      <div class="fact"><div class="v num">${money(c.due)}</div><div class="k">Debt due next 12 months</div></div>
+    </div>
+    <table><tr><th>Year</th><th class="num">Revenue</th><th class="num">${term} (before interest)</th></tr>${rows}</table>
+    <div class="note"><b>Payment history</b>${c.historyText}</div>
+    <div class="note"><b>Backing &amp; outlook</b>${c.backingText}</div>
+    <div class="small" style="margin-top:8px">All dollar figures in millions. Made-up issuer.</div>
+  </div>`;
+}
+function scorecard(el, state, opts={}){
+  const tot = F.reduce((a,f)=>a+(state[f.key]??0),0), done = F.every(f=>state[f.key]!==undefined);
+  const r = done ? rating(tot) : "?";
+  const off = opts.official;
+  el.innerHTML = `<div class="card"><div class="label">${opts.title||"Your scorecard"}</div>` + F.map(f=>{
+    const pick = state[f.key], o = off ? off.scores[f.key] : undefined;
+    const cls = off ? (pick===o?"good":"bad") : "";
+    const math = f.kind==="ratio" ? `<div class="formula">${f.formula} = <input class="mathin num" data-k="${f.key}" placeholder="?" value="${state["m_"+f.key]??""}"> ${f.unit==="years"?"years":""}</div>` : "";
+    let verdict = "";
+    if (off){ const rv=off.ratios; const shown = f.key==="debt"? (rv.debt===null?"no earnings":rv.debt.toFixed(2)+" years") : f.key==="coverage"? rv.coverage.toFixed(2)+"x" : f.key==="cash"? rv.cash.toFixed(2) : f.key==="stability"? `profit in ${rv.P} of 5 years; revenue ${rv.R>=0?"+":""}${rv.R.toFixed(1)}%` : "";
+      verdict = `<div class="verdict">${pick===o?'<span class="pill g">Correct</span>':'<span class="pill r">Official: '+o+'</span>'} ${shown?"<b>"+shown+"</b> → ":""}${f.levels[o]}</div>`; }
+    return `<div class="frow ${cls}"><div class="fhead"><span class="fname">${f.name}</span><span class="fq">${f.q}</span></div>${math}
+      <div class="levels">${[4,3,2,1,0].map(l=>`<button class="lv ${pick===l?'on':''} ${off&&o===l&&pick!==l?'off':''}" data-k="${f.key}" data-l="${l}"><b>${l}</b>${f.levels[l]}</button>`).join("")}</div>${verdict}</div>`;
+  }).join("") + `<div class="totalbar"><div class="tbox"><div class="k">Total points</div><div class="v">${done?tot:"–"} <span style="font-size:18px">/ 24</span></div></div>
+     <div class="tbox or"><div class="k">${opts.official?"Your rating":"Rating"}</div><div class="v">${r}</div></div></div>
+     <div class="ladder">${LADDER.map((L,i)=>`<div class="${i<=3?'ig':'junk'} ${L===r?'me':''} ${off&&L===off.rating?'off':''}">${L}<small>${bandText(L)}</small></div>`).join("")}</div></div>`;
+  $$("#"+el.id+" .lv").forEach(b=>b.onclick=()=>{ if(opts.locked) return; state[b.dataset.k]=+b.dataset.l; opts.onChange&&opts.onChange(); });
+  $$("#"+el.id+" .mathin").forEach(inp=>inp.oninput=()=>{ state["m_"+inp.dataset.k]=inp.value; });
+}
+
+/* ---------- TEAM ROUNDS: raw case file, hidden lock-ins, reveal + why ---------- */
+let ri = 0, stage = 0, rLen = 300, rT = 300, rTimer = null, whyShown = DATA.rounds.map(()=>0);
+const rAns = DATA.rounds.map(()=>Array(9).fill(null));   // {r:"AA", p:21|null}
+const RC = DATA.rounds.map(r=>DATA.cases[r.case]);
+const esc = s => String(s).replace(/[&<>"]/g, ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+function roundResult(k){
+  const c = RC[k], off = LADDER.indexOf(c.rating), m = DATA.rounds[k].mult;
+  const d = rAns[k].map(a=> a===null ? null : Math.abs(LADDER.indexOf(a.r)-off));
+  const pts = d.map(x=> (x===0 ? TP.exact : x===1 ? TP.one : TP.miss) * m);
+  return {pts, d};
+}
+const sgn = v => v>0 ? "+"+v : v<0 ? "−"+Math.abs(v) : "0";
+function drawRound(){
+  const R = DATA.rounds[ri], c = RC[ri];
+  $("#rChips").innerHTML = DATA.rounds.map((r,k)=>`<button class="${k===ri?'on':''}" data-k="${k}">${r.name}${r.mult>1?" ×"+r.mult:""}${PTS.r[k]?'<span class="done">✓</span>':''}</button>`).join("");
+  $$("#rChips button").forEach(b=>b.onclick=()=>{ ri=+b.dataset.k; stage = PTS.r[ri]?2:0; resetClock(); drawRound(); });
+  $$("#rSteps span").forEach(sp=>sp.classList.toggle("on", +sp.dataset.s===stage));
+  $("#stCase").style.display = stage===0?"":"none"; $("#stLock").style.display = stage===1?"":"none"; $("#stResults").style.display = stage===2?"":"none";
+  $("#rLbl").textContent = `${R.name}${R.mult>1?"  |  Double points":""}  |  ${c.type}`;
+  $("#rName").textContent = c.name; $("#rWhat").textContent = c.what; $("#rName2").textContent = c.name;
+  if (stage===0){
+    const term = c.munis ? "Surplus" : "Earnings";
+    $("#rFacts").innerHTML = [["Total debt",c.debt],["Yearly interest",c.interest],["Cash on hand",c.cash],["Debt due next 12 months",c.due]].map(([k,v])=>`<div class="fact"><div class="v num">${money(v)}</div><div class="k">${k}</div></div>`).join("");
+    $("#rYears").innerHTML = `<tr><th>Year</th><th class="num">Revenue</th><th class="num">${term} (before interest)</th></tr>` + DATA.years.map((y,i)=>`<tr><td>${y}</td><td class="num">${money(c.rev[i])}</td><td class="num">${money(c.earn[i])}</td></tr>`).join("");
+    $("#rNotes").innerHTML = c.notes.map((n,i)=>`<li><b>${i+1}</b><span>${esc(n)}</span></li>`).join("");
+  }
+  if (stage===1){
+    const n = rAns[ri].filter(a=>a).length;
+    $("#rLockCount").textContent = `${n} of 9 groups locked`;
+    $("#rLocks").innerHTML = teams.map((t,i)=>{ const a=rAns[ri][i]; return `<button class="lock ${a?'done':''}" data-i="${i}"><span class="nm">${esc(t.n)}</span><span class="st">${a?"🔒 Locked":"Tap to lock in"}</span></button>`; }).join("");
+    $$("#rLocks .lock").forEach(b=>b.onclick=()=>{ const i=+b.dataset.i; if(rAns[ri][i] && !confirm(teams[i].n+" is already locked. Clear their answer and re-enter it?")) return; openLock(i); });
+    $("#rReveal").disabled = n===0;
+  }
+  if (stage===2) drawResults();
+}
+/* lock-in modal: buttons never stay highlighted, so the room cannot see the pick */
+let mi = null, mPick = {r:null,p:null};
+function openLock(i){ mi=i; mPick={r:null,p:null}; $("#mName").textContent = teams[i].n; drawModal(); $("#lockModal").classList.add("on"); }
+function drawModal(){
+  $("#mRate").innerHTML = LADDER.map((L,k)=>`<button class="${k>3?'j':''}" data-r="${L}">${L}</button>`).join("");
+  $("#mPts").innerHTML = Array.from({length:25},(_,k)=>`<button data-p="${k}">${k}</button>`).join("");
+  $("#mRateOk").textContent = mPick.r? "✓ Rating picked (hidden)" : "Not picked yet"; $("#mRateOk").classList.toggle("ok",!!mPick.r);
+  $("#mPtsOk").textContent = mPick.p!==null? "✓ Points picked (hidden)" : "Optional. Not picked yet"; $("#mPtsOk").classList.toggle("ok",mPick.p!==null);
+  $("#mLock").disabled = !mPick.r;
+  $$("#mRate button").forEach(b=>b.onclick=()=>{ mPick.r=b.dataset.r; drawModal(); });
+  $$("#mPts button").forEach(b=>b.onclick=()=>{ mPick.p=+b.dataset.p; drawModal(); });
+}
+const closeLock = ()=>{ $("#lockModal").classList.remove("on"); mi=null; };
+$("#mCancel").onclick = closeLock;
+$("#mClear").onclick = ()=>{ mPick={r:null,p:null}; drawModal(); };
+$("#mLock").onclick = ()=>{ if(mi===null||!mPick.r) return; rAns[ri][mi] = {r:mPick.r, p:mPick.p}; closeLock(); drawRound(); };
+
+function drawResults(){
+  const R = DATA.rounds[ri], c = RC[ri], {pts, d} = roundResult(ri), W = c.why, m = R.mult;
+  $("#rLbl3").textContent = `${R.name}: official rating`;
+  $("#rOff").textContent = c.rating;
+  $("#rOffTxt").innerHTML = `<b>${esc(c.name)}</b><br>${c.total} of 24 points<br>${LADDER.indexOf(c.rating)<=3?"Investment grade":"High-yield (junk)"}`;
+  const winners = teams.map((_,i)=>i).filter(i=>d[i]===0);
+  $("#rWin").classList.toggle("none", !winners.length);
+  $("#rWin").innerHTML = winners.length
+    ? `<div class="trophy">🏆</div><div><div class="label">Rating Agency of the Round</div><div class="who2">${winners.map(i=>esc(teams[i].n)).join(" &amp; ")}</div><div class="sub">Nailed it: <b>${c.rating}</b>. ${winners.length>1?"Each group earns":"Earns"} <b>${sgn(TP.exact*m)} points</b>.</div></div>`
+    : `<div class="trophy">🎯</div><div><div class="label">Rating Agency of the Round</div><div class="who2">Nobody nailed it</div><div class="sub">The official rating was <b>${c.rating}</b>. Walk through the why to see where it slipped.</div></div>`;
+  const order = teams.map((t,i)=>i).sort((a,b)=>(d[a]??99)-(d[b]??99) || a-b);
+  $("#rPtsLbl").textContent = `${R.name} results${m>1?" (double points)":""}`;
+  $("#rTable").innerHTML = `<tr><th>Group</th><th>Rating</th><th>Pts guess</th><th>Off by</th><th class="num">Earned</th></tr>` + order.map(i=>{ const a=rAns[ri][i], x=d[i];
+    return `<tr class="${x===0?'winner':''}"><td>${esc(teams[i].n)}</td><td><b>${a?a.r:"no answer"}</b></td><td>${a&&a.p!==null?a.p:"–"}</td><td>${x===null?"–":x===0?"Exact":x+" step"+(x>1?"s":"")}</td><td class="pts ${pts[i]<0?'neg':''}">${sgn(pts[i])}</td></tr>`; }).join("");
+  $("#rPtsNote").textContent = `Exact ${sgn(TP.exact*m)}  |  One step off ${sgn(TP.one*m)}  |  Two or more off ${sgn(TP.miss*m)}  |  No answer counts as two or more off.`;
+  $("#rScoreKey").innerHTML = `Exact rating: <b>${sgn(TP.exact*m)}</b><br>One step off: <b>${sgn(TP.one*m)}</b><br>Two or more steps off: <b>${sgn(TP.miss*m)}</b>${m>1?"<br><span class=small>Final Round: everything doubles.</span>":""}`;
+  // the why: hidden until the teacher walks through it
+  $("#whyLbl").textContent = `Why ${c.name} is rated ${c.rating}`;
+  const shown = whyShown[ri];
+  if (shown===0){
+    $("#whyWrap").innerHTML = `<div class="whywait">Ask a few groups what they got first. Then walk the class through the six factors.<div style="margin-top:12px;display:flex;gap:8px;justify-content:center"><button class="btn" id="whyStep">Show the why, one factor at a time</button><button class="btn ghost" id="whyAll">Show it all</button></div></div>`;
+  } else {
+    const rows = F.map((f,k)=>`<tr class="${k<shown?'':'hide'}"><td class="f">${f.name}</td><td class="m">${esc(W.f[f.key][0])}</td><td>${esc(W.f[f.key][1])}</td><td class="p">${c.scores[f.key]}</td></tr>`).join("");
+    const done = shown>=F.length;
+    $("#whyWrap").innerHTML = `<h3 class="whyhead">${esc(W.headline)}</h3>
+      <table class="whytable"><tr><th>Factor</th><th>The math or clue</th><th>Why</th><th class="num">Pts</th></tr>${rows}
+      ${done?`<tr class="tot"><td colspan="3">${F.map(f=>c.scores[f.key]).join(" + ")} = ${c.total} points → ${c.rating}</td><td class="p" style="color:#fff">${c.total}</td></tr>`:""}</table>
+      ${done?`<div class="whybody" style="margin-top:12px"><p>${esc(W.body)}</p></div><div class="note"><b>The trap</b>${esc(W.trap)}</div><div class="note"><b>Red herrings</b>${esc(W.noise)}</div>`
+            :`<div style="margin-top:10px;display:flex;gap:8px"><button class="btn" id="whyStep">Next factor (${shown+1} of 6)</button><button class="btn ghost" id="whyAll">Show it all</button></div>`}`;
+  }
+  const st=$("#whyStep"), al=$("#whyAll");
+  if (st) st.onclick=()=>{ whyShown[ri]=Math.min(F.length,whyShown[ri]+1); drawResults(); };
+  if (al) al.onclick=()=>{ whyShown[ri]=F.length; drawResults(); };
+  $("#rNext").disabled = ri>=NR-1;
+}
+/* clock */
+function resetClock(){ clearInterval(rTimer); rTimer=null; rT=rLen; showClock(); }
+function showClock(){ $("#rTime").textContent = Math.floor(rT/60)+":"+String(rT%60).padStart(2,"0"); $("#rTime").classList.toggle("low", rT<=30); }
+$("#rStart").onclick=()=>{ clearInterval(rTimer); rTimer=setInterval(()=>{ if(rT>0){ rT--; showClock(); } else clearInterval(rTimer); },1000); };
+$("#rReset").onclick=resetClock;
+$("#rPlus").onclick=()=>{ rT+=60; if(!rTimer) rLen=Math.min(rLen+60,900); showClock(); };
+$("#rMinus").onclick=()=>{ rT=Math.max(0,rT-60); if(!rTimer) rLen=Math.max(60,rLen-60); showClock(); };
+$("#rToLock").onclick=()=>{ clearInterval(rTimer); stage=1; drawRound(); };
+$("#rBack").onclick=()=>{ stage=0; drawRound(); };
+$("#rEdit").onclick=()=>{ stage=1; drawRound(); };   // re-reveal recalculates; points are replaced, never doubled
+$("#rBoard").onclick=()=>$('nav button[data-tab="board"]').click();
+$("#rNext").onclick=()=>{ if(ri<NR-1){ ri++; stage = PTS.r[ri]?2:0; resetClock(); drawRound(); } };
+/* drumroll reveal + confetti */
+let drumT = [];
+function finishReveal(){ drumT.forEach(clearTimeout); drumT=[]; $("#drum").classList.remove("on"); stage=2; refreshAll(); confetti(); }
+$("#rReveal").onclick=()=>{
+  const n = rAns[ri].filter(a=>a).length;
+  if (n<9 && !confirm(`Only ${n} of 9 groups are locked. Groups without an answer get 0. Reveal anyway?`)) return;
+  PTS.r[ri] = roundResult(ri).pts;
+  const c = RC[ri], seq = ["3","2","1",c.rating];
+  $("#drumK").textContent = "The official rating for "+c.name; $("#drum").classList.add("on");
+  seq.forEach((s,k)=>drumT.push(setTimeout(()=>{ const b=$("#drumBig"); b.textContent=s; b.style.animation="none"; void b.offsetWidth; b.style.animation=""; },k*800)));
+  drumT.push(setTimeout(finishReveal, seq.length*800+1100));
+};
+$("#drum").onclick = finishReveal;
+function confetti(){
+  const cv=$("#confetti"), x=cv.getContext("2d"); cv.width=innerWidth; cv.height=innerHeight;
+  const cols=["#C1102F","#111111","#FF8A99","#FFFFFF","#B00E2A"];
+  const P=Array.from({length:160},()=>({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,s:5+Math.random()*7,r:Math.random()*6,c:cols[Math.floor(Math.random()*cols.length)]}));
+  let f=0; (function tick(){ x.clearRect(0,0,cv.width,cv.height); P.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.r+=.1; x.save(); x.translate(p.x,p.y); x.rotate(p.r); x.fillStyle=p.c; x.fillRect(-p.s/2,-p.s/4,p.s,p.s/2); x.restore(); });
+    if(++f<200) requestAnimationFrame(tick); else x.clearRect(0,0,cv.width,cv.height); })();
+}
+
+/* ---------- LEADERBOARD ---------- */
+function drawBoard(){
+  const tots = teams.map((_,i)=>total(i));
+  const placeArr = tots.map(t=>tots.filter(u=>u>t).length+1);
+  const order = teams.map((_,i)=>i).sort((a,b)=>tots[b]-tots[a] || a-b);
+  const cell = v => v===null||v===undefined ? '<td class="dash">–</td>' : `<td>${v}</td>`;
+  $("#bTable").innerHTML = `<tr><th>Place</th><th style="text-align:left">Group</th>${DATA.rounds.map(r=>`<th>${r.name}${r.mult>1?" ×"+r.mult:""}</th>`).join("")}<th>Blitz</th><th>Bonus</th><th>Total</th></tr>` +
+    order.map(i=>`<tr class="${placeArr[i]===1&&tots[i]>0?'first':''}"><td class="place">${ord(placeArr[i])}</td><td class="nm">${teams[i].n}</td>${PTS.r.map(r=>cell(r?r[i]:null)).join("")}${cell(PTS.blitz?PTS.blitz[i]:null)}${cell(PTS.adj[i]||null)}<td class="tot">${tots[i]}</td></tr>`).join("");
+  $("#ppList").innerHTML = PLACE.map((p,k)=>`<div><span>${ord(k+1)}</span><b>${p}</b></div>`).join("");
+}
+$("#resetAll").onclick=()=>{ if(!confirm("Reset every score and answer?")) return; PTS.r=DATA.rounds.map(()=>null); PTS.blitz=null; PTS.adj=Array(9).fill(0); whyShown.fill(0); rAns.forEach(a=>a.fill(null)); bHits.forEach(h=>h.clear()); ri=0; stage=0; bi=0; showBlitz(); resetClock(); refreshAll(); };
+
+/* ---------- BLITZ: track correct answers, then post placement points ---------- */
+let bi=0, bT=20, bTimer=null;
+const bHits = DATA.blitz.map(()=>new Set());
+const bCount = i => DATA.blitz.reduce((a,q,k)=>a+(bHits[k].has(i)?(q.double?2:1):0),0);
+let bWhoSel = new Set();
+function drawWho(){ $("#bWho").innerHTML = teams.map((t,i)=>`<button class="${bWhoSel.has(i)?'on':''}" data-i="${i}">${t.n} (${bCount(i)})</button>`).join(""); $$("#bWho button").forEach(b=>b.onclick=()=>{ const i=+b.dataset.i; bWhoSel.has(i)?bWhoSel.delete(i):bWhoSel.add(i); drawWho(); }); }
+function showBlitz(){
+  const q = DATA.blitz[bi]; clearInterval(bTimer); bT=20; $("#bTime").textContent=bT; $("#bTime").classList.remove("low");
+  $("#bLbl").textContent = `Question ${bi+1} of ${DATA.blitz.length}` + (q.double?"  |  Counts double":"");
+  $("#bQ").textContent = q.q;
+  $("#bOpts").innerHTML = q.o.map((o,i)=>`<div class="bopt" data-i="${i}"><b>${"ABCD"[i]}</b>${o}</div>`).join("");
+  $("#bRes").classList.remove("on"); bWhoSel=new Set(bHits[bi]); $("#bAwarded").textContent= bHits[bi].size? "Saved: "+[...bHits[bi]].map(i=>teams[i].n).join(", ") : ""; drawWho();
+  $("#bNext").disabled = bi>=DATA.blitz.length-1;
+  $("#bPost").style.display = bi>=DATA.blitz.length-1 ? "" : "none";
+}
+$("#bStart").onclick=()=>{ clearInterval(bTimer); bTimer=setInterval(()=>{ bT--; $("#bTime").textContent=Math.max(bT,0); $("#bTime").classList.toggle("low",bT<=5); if(bT<=0){ clearInterval(bTimer); } },1000); };
+$("#bReveal").onclick=()=>{ clearInterval(bTimer); const q=DATA.blitz[bi];
+  $$(".bopt").forEach(d=>{ const i=+d.dataset.i; d.classList.toggle("right",i===q.a); d.classList.toggle("dim",i!==q.a); });
+  $("#bRes").innerHTML=`<div class="label">Answer: ${"ABCD"[q.a]}</div><div style="font-size:20px">${q.why}</div>`; $("#bRes").classList.add("on"); };
+$("#bAward").onclick=()=>{ bHits[bi]=new Set(bWhoSel); $("#bAwarded").textContent = bWhoSel.size? "Saved: "+[...bWhoSel].map(i=>teams[i].n).join(", ") : "Saved: nobody got it."; drawWho(); };
+$("#bNext").onclick=()=>{ if(bi<DATA.blitz.length-1){ bi++; showBlitz(); } };
+$("#bPost").onclick=()=>{ const sc=teams.map((_,i)=>bCount(i)); PTS.blitz = placePoints(sc, sc.map(v=>v>0), 1).pts; refreshAll(); $('nav button[data-tab="board"]').click(); };
+$("#bRestart").onclick=()=>{ bi=0; showBlitz(); };
+
+/* ---------- ROUND 3: practice generator ---------- */
+let seed = Date.now() % 2147483647;
+const rnd=()=>{ seed=(seed*16807)%2147483647; return (seed-1)/2147483646; };
+const rint=(a,b)=>a+Math.floor(rnd()*(b-a+1)), rr=(a,b)=>a+rnd()*(b-a), pickA=a=>a[Math.floor(rnd()*a.length)];
+const HIST = {4:["Has borrowed for %y years. Never missed or been late on a payment."],3:["First borrowed %s years ago. Never missed a payment."],2:["Paid one interest payment 2 weeks late six years ago, then caught up."],1:["Missed an interest payment two years ago and paid it 4 months late."],0:["Missed its last two interest payments and has not paid them yet."]};
+const KIND = {
+  4:[{t:"Municipal general obligation bond",w:"A suburban city selling bonds for new roads and a library.",b:"Repaid with property and sales taxes. Bondholders are backed by the city's full power to tax.",m:true,n:["City of Oak Bluff","Village of Cedar Hollow","Lakeview Township","Brookfield Park District"]},
+      {t:"Utility revenue bond",w:"Supplies water and sewer service to 300,000 people.",b:"Repaid from monthly water bills, an essential service people pay even in a recession.",m:true,n:["Clearwater Utility District","Stonebrook Water Authority","Bluff County Water"]}],
+  3:[{t:"Corporate bond",w:"Makes medical equipment sold to hospitals nationwide.",b:"A top company in a stable, growing industry. Hospitals sign long contracts.",n:["Northstar Medical","Bellwood Health Devices","Granite Peak Labs"]},
+      {t:"Corporate bond",w:"Runs a payment-processing network for stores.",b:"A leader in a stable, growing industry.",n:["Ridgeline Payments","Copperleaf Data"]}],
+  2:[{t:"Corporate bond",w:"Builds trucks and farm equipment.",b:"Solid company, but sales rise and fall with the economy.",n:["Prairie Iron Works","Sawgrass Machinery"]},
+      {t:"Corporate bond",w:"Runs an airline with 200 planes.",b:"Travel booms in good times and drops in bad times.",n:["Kestrel Air","Bluewing Airlines"]}],
+  1:[{t:"Corporate bond",w:"Prints and sells newspapers and magazines.",b:"Readers keep moving online. A shrinking industry.",n:["Daily Ledger Media","Morning Post Group"]},
+      {t:"Corporate bond",w:"Runs a chain of video game stores.",b:"Heavy competition from online stores. Sales keep shrinking.",n:["Pixel Planet Stores","GameVault Retail"]}],
+  0:[{t:"Revenue bond",w:"Built a water park repaid from ticket sales.",b:"Repayment depends only on ticket sales at one water park. If a bad summer keeps people away, the money is not there.",m:true,n:["Splash Valley Authority","Sunset Bay Park District"]},
+      {t:"Corporate bond",w:"Mining company with a single copper mine.",b:"Repayment depends on one mine and the price of copper, which swings wildly.",n:["Red Mesa Mining","Crooked Creek Minerals"]}],
+};
+function series(level, small){ // returns {rev, earn}
+  const base=small?rint(2,40)*10:rint(3,60)*100, m=rr(0.12,0.24);
+  let rev=[base], earn;
+  const grow=()=>{ for(let i=1;i<5;i++) rev.push(Math.round(rev[i-1]*(1+rr(0.03,0.09)))); };
+  if(level===4){ grow(); }
+  else if(level===3){ grow(); const d=rint(1,3); rev[d]=Math.round(rev[d-1]*rr(0.9,0.97)); for(let i=d+1;i<5;i++) rev[i]=Math.round(rev[i-1]*(1+rr(0.05,0.1))); if(rev[4]<=rev[0]) rev[4]=Math.round(rev[0]*1.08); }
+  else if(level===2){ if(rnd()<0.5){ const R=rr(-0.08,-0.02); for(let i=1;i<5;i++) rev.push(Math.round(base*(1+R*i/4+rr(-0.03,0.03)))); rev[4]=Math.round(base*(1+R)); }
+                      else { for(let i=1;i<5;i++) rev.push(Math.round(rev[i-1]*(1+rr(0.0,0.03)))); } }
+  else if(level===1){ const R=rr(-0.3,-0.14); for(let i=1;i<5;i++) rev.push(Math.round(base*(1+R*i/4))); }
+  else { for(let i=1;i<5;i++) rev.push(Math.round(rev[i-1]*(1+rr(0.2,0.6)))); }
+  earn = rev.map(v=>Math.round(v*m*rr(0.85,1.1)));
+  if(level===2 && rev[4]>=rev[0]){ earn[rint(1,3)] = -Math.round(rev[0]*rr(0.02,0.06)); } // 4 of 5 profitable
+  if(level===0) earn = rev.map(v=>-Math.round(v*rr(0.05,0.2)));
+  return {rev, earn};
+}
+function buildIssuer(){
+  // pick a target rating, then factor levels that land in its band
+  const target = pickA(LADDER), lo = SCALE.find(s=>s[1]===target)[0], hi = target==="AAA"?24:SCALE[SCALE.findIndex(s=>s[1]===target)-1][0]-1;
+  let lv; for(let k=0;k<500;k++){ lv=F.map(()=>rint(0,4)); const t=lv.reduce((a,b)=>a+b,0); if(t>=lo&&t<=hi && !(lv[1]===0&&(lv[2]||lv[3]))) break; }
+  const [h,st,dl,cv,ch,bk] = lv;
+  const kind = pickA(KIND[bk]);
+  const {rev, earn} = series(st===0?0:st, !!kind.m);
+  const e = earn[4];
+  const dR = [[6.5,9],[4.7,5.8],[3.2,4.3],[1.7,2.8],[0.3,1.3]][dl], cR=[[0.5,1.3],[1.7,2.8],[3.2,4.7],[5.3,7.6],[9,20]][cv], kR=[[0.06,0.2],[0.28,0.45],[0.55,0.9],[1.1,1.8],[2.2,4]][ch];
+  const E = Math.max(e, 1), debt = Math.max(5, Math.round(Math.abs(E)*rr(...dR))), interest = Math.max(1, Math.round((e>0?e:Math.abs(e)+E)/rr(...cR)));
+  const due = Math.max(2, Math.round(debt*rr(0.06,0.14))), cash = Math.max(1, Math.round(due*rr(...kR)));
+  const c = { name: pickA(kind.n), type: kind.t + ", " + pickA([5,7,10,15,20]) + " years", what: kind.w, munis: !!kind.m, rev, earn, debt, interest, cash, due,
+    history: h, historyText: pickA(HIST[h]).replace("%y", rint(22,60)).replace("%s", rint(3,15)), backing: bk, backingText: kind.b };
+  return solve(c);  // official scores come from the actual numbers, same rules as the case files
+}
+let pc=null, pState={}, pN=0, pChecked=false;
+function drawPractice(){
+  $("#pCase").innerHTML = caseHTML(pc, "Practice issuer");
+  scorecard($("#pCard"), pState, { official: pChecked?pc:null, locked: pChecked, onChange: drawPractice });
+  if(pChecked){ const right=F.filter(f=>pState[f.key]===pc.scores[f.key]).length, tot=F.reduce((a,f)=>a+(pState[f.key]??0),0), mine=F.every(f=>pState[f.key]!==undefined)?rating(tot):"(incomplete)";
+    $("#pResult").innerHTML=`<div class="label">Official rating</div><div style="display:flex;gap:18px;align-items:baseline;flex-wrap:wrap"><span class="disp" style="font-size:54px;color:#fff">${pc.rating}</span><span>${pc.total} points | ${LADDER.indexOf(pc.rating)<=3?"Investment grade":"High-yield (junk)"}</span></div><div>You rated it <b>${mine}</b> and scored <b>${right} of 6</b> factors correctly. Green rows match; red rows show the official score and the math behind it.</div>`;
+    $("#pResult").classList.add("on"); } else $("#pResult").classList.remove("on");
+}
+$("#pNew").onclick=()=>{ pc=buildIssuer(); pState={}; pChecked=false; pN++; $("#pCount").textContent=`Practice issuer #${pN}. Every issuer is randomly built, so there is always another one.`; drawPractice(); };
+$("#pCheck").onclick=()=>{ pChecked=true; drawPractice(); };
+$("#pClear").onclick=()=>{ if(pChecked) return; pState={}; drawPractice(); };
+
+/* ---------- init ---------- */
+drawScore(); drawBoard(); drawRound(); showBlitz(); $("#pNew").click();
+window.__rr = { DATA, buildIssuer, teams, PTS, rAns, solve, total, RC, roundResult };
+})();
+</script>
+</body>
+</html>
