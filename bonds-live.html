@@ -274,79 +274,81 @@ body.host-reveal #app{display:grid;grid-template-columns:minmax(0,1fr) minmax(30
 "use strict";
 /* ============================================================ QUESTION BANK
    Unit 3: Bonds. First option is always the correct one; options are shuffled when a game is built.
-   Every company and number is made up and none come from The Credit Desk years, so the quiz doesn't give away the game. */
+   Questions test the bond concepts and math, not the rules of the class games. Every number a question needs is in the question. */
 const SKILLS={
- yield:{name:"Fair Yield",short:"Fair yield",secs:20,desc:"Treasury rate + the spread for the rating.",
-   tip:"Fair yield = Treasury rate + spread. Spreads: AAA +0.5, AA +0.8, A +1.2, BBB +2.0, BB +3.5, B +5.5, CCC +10.0. Riskier bonds need a bigger spread."},
- call:{name:"Make the Call",short:"Good deal or not",secs:25,desc:"Compare what the bond pays to its fair yield.",
-   tip:"Edge = what the bond pays − fair yield. Below 0: Overpriced. 0 to under 0.3: Fair price. 0.3 or more: Good deal. A high yield alone is not a good deal."},
- ratios:{name:"Scorecard Ratios",short:"The three ratios",secs:25,desc:"Debt load, interest coverage and cash cushion.",
-   tip:"Debt load = total debt ÷ earnings (lower is safer; under 1.5 scores 4). Coverage = earnings ÷ yearly interest (higher is safer; 8x or more scores 4). Cash cushion = cash ÷ debt due next year (higher is safer; 2 or more scores 4)."},
- rating:{name:"Points to Rating",short:"Points to rating",secs:20,desc:"Read the scale, find junk, and compare to the posted rating.",
-   tip:"Scale: AAA 22–24, AA 19–21, A 16–18, BBB 13–15, BB 10–12, B 6–9, CCC 0–5. BBB and up is investment grade; BB and lower is junk. If your rating is lower than the posted one, expect a downgrade."},
- price:{name:"Price Moves",short:"Rating and rate moves",secs:25,desc:"How rating changes and interest rates move a bond's price.",
-   tip:"Each rating step moves the price 4% (up for an upgrade, down for a downgrade). Crossing the junk line (BBB to BB) adds 4% more. Rate move = −sensitivity × rate change, so when rates rise, prices fall."},
- fund:{name:"Fund Math",short:"Return and fund rules",secs:30,desc:"Total return, dollars earned and the fund rules.",
-   tip:"Total return = yield + rating move + rate move. Dollars = amount × total return. A default loses 60%. A bond POSTED as BB or lower is capped at $200K (more is a $25,000 fine). Cash earns the Treasury rate."}
+ yield:{name:"Fair Yield",short:"Fair yield",secs:20,desc:"Treasury rate + the spread for the bond's risk.",
+   tip:"Fair yield = Treasury rate + spread. The spread is the extra yield investors want for taking the bond's risk, so the riskier the bond, the bigger the spread."},
+ call:{name:"Good Deal or Overpriced?",short:"Good deal or overpriced",secs:25,desc:"Compare what the bond pays to its fair yield.",
+   tip:"Find the fair yield first. If the bond pays more than its fair yield, it's a good deal. If it pays less, it's overpriced. A high yield alone does not make a good deal; a risky bond should pay a lot."},
+ ratios:{name:"The Three Ratios",short:"The three ratios",secs:25,desc:"Debt load, interest coverage and cash cushion.",
+   tip:"Debt load = total debt ÷ earnings (years to pay off the debt; lower is safer). Interest coverage = earnings ÷ yearly interest (higher is safer). Cash cushion = cash ÷ debt due next year (above 1 means it can pay what's due)."},
+ rating:{name:"Ratings and Risk",short:"Credit ratings",secs:20,desc:"Investment grade, junk, upgrades and downgrades.",
+   tip:"Ratings run AAA, AA, A, BBB (investment grade), then BB, B, CCC (high-yield or junk). Rating agencies grade the issuer's ability to pay. A lower rating means more risk and a higher yield. An upgrade raises a bond's price; a downgrade lowers it."},
+ price:{name:"Rates and Prices",short:"Interest rate risk",secs:25,desc:"What happens to bond prices when interest rates move.",
+   tip:"Rates and bond prices move in opposite directions. Price change = −rate sensitivity × rate change. Longer bonds have higher sensitivity, so they have more interest rate risk."},
+ fund:{name:"Bond Basics and Return",short:"Bond basics and return",secs:30,desc:"Issuers, bond types, default and total return.",
+   tip:"The issuer borrows; the investor lends. The coupon is the interest it pays; at maturity you get your money back. Total return = yield + price change. Dollars earned = amount invested × total return."}
 };
 const ORDER=["yield","call","ratios","rating","price","fund"];
 const BANK=[
  // ---- fair yield
- {id:"y1",sk:"yield",p:"Treasury rate 3.0%. Rated A (spread +1.2%). What is the fair yield?",o:["4.2%","3.0%","1.8%","4.5%"],x:"3.0% + 1.2% = 4.2%."},
- {id:"y2",sk:"yield",p:"Treasury rate 4.5%. Rated BB (spread +3.5%). What is the fair yield?",o:["8.0%","4.5%","1.0%","6.5%"],x:"4.5% + 3.5% = 8.0%."},
- {id:"y3",sk:"yield",p:"Treasury rate 3.5%. Rated AAA. What is the fair yield?",o:["4.0%","3.5%","4.3%","3.0%"],x:"AAA spread is +0.5%, so 3.5% + 0.5% = 4.0%."},
- {id:"y4",sk:"yield",p:"Treasury rate 5.0%. Rated CCC. What is the fair yield?",o:["15.0%","10.0%","5.0%","10.5%"],x:"CCC spread is +10.0%, so 5.0% + 10.0% = 15.0%."},
- {id:"y5",sk:"yield",p:"Treasury rate 2.5%. Rated B. What is the fair yield?",o:["8.0%","5.5%","3.0%","7.5%"],x:"B spread is +5.5%, so 2.5% + 5.5% = 8.0%."},
- {id:"y6",sk:"yield",p:"Treasury rate 4.0%. A bond's fair yield is 6.0%. What is its rating?",o:["BBB","A","BB","AA"],x:"6.0% − 4.0% = a 2.0% spread, which is BBB."},
- {id:"y7",sk:"yield",p:"In the fair-yield formula, the spread is:",o:["The extra yield investors want for taking the bond's risk","The bond's price change","The Treasury rate","The coupon paid twice a year"],x:"The spread is extra pay for risk. Safer bonds get a small spread; risky bonds get a big one."},
- {id:"y8",sk:"yield",p:"Why does a B bond have a bigger spread than an AA bond?",o:["Investors need more pay to take more default risk","B bonds are always newer","The government sets B spreads higher","B bonds are always shorter"],x:"More risk of not getting paid back means investors demand a higher yield."},
- // ---- make the call
- {id:"c1",sk:"call",p:"Fair yield is 5.0%. The bond pays 5.5%. What's the call?",o:["Good deal","Fair price","Overpriced","Can't tell"],x:"Edge = 5.5 − 5.0 = +0.5. That's 0.3 or more, so it's a good deal."},
- {id:"c2",sk:"call",p:"Fair yield is 6.2%. The bond pays 6.3%. What's the call?",o:["Fair price","Good deal","Overpriced","Can't tell"],x:"Edge = +0.1. That's 0 to under 0.3, so it's a fair price."},
- {id:"c3",sk:"call",p:"Fair yield is 4.8%. The bond pays 4.5%. What's the call?",o:["Overpriced","Fair price","Good deal","Can't tell"],x:"Edge = −0.3. It pays less than it should, so it's overpriced."},
- {id:"c4",sk:"call",p:"Treasury 4.0%. Rated A (+1.2%). The bond pays 5.0%. What's the call?",o:["Overpriced","Fair price","Good deal","Can't tell"],x:"Fair yield = 5.2%. It pays 5.0%, which is 0.2 less, so it's overpriced."},
- {id:"c5",sk:"call",p:"Treasury 3.0%. Rated BBB (+2.0%). The bond pays 5.4%. What's the call?",o:["Good deal","Fair price","Overpriced","Can't tell"],x:"Fair yield = 5.0%. Edge = +0.4, so it's a good deal."},
- {id:"c6",sk:"call",p:"Treasury 4.5%. Rated AA (+0.8%). The bond pays 5.4%. What's the call?",o:["Fair price","Good deal","Overpriced","Can't tell"],x:"Fair yield = 5.3%. Edge = +0.1, so it's a fair price."},
- {id:"c7",sk:"call",p:"A bond pays 9.0%, the highest yield on the board. Is it automatically a good deal?",o:["No. Compare it to its fair yield first","Yes. The highest yield always wins","Yes, as long as it's junk","No. High yields always default"],x:"A risky bond should pay a lot. It's only a good deal if it pays more than its fair yield."},
- {id:"c8",sk:"call",p:"The edge is exactly +0.3%. What's the call?",o:["Good deal","Fair price","Overpriced","Can't tell"],x:"+0.3 or more is a good deal."},
- // ---- scorecard ratios
+ {id:"y1",sk:"yield",p:"Treasury rate 3.0%. The bond's spread is +1.2%. What is the fair yield?",o:["4.2%","3.0%","1.8%","4.5%"],x:"3.0% + 1.2% = 4.2%."},
+ {id:"y2",sk:"yield",p:"Treasury rate 4.5%. The bond's spread is +3.5%. What is the fair yield?",o:["8.0%","4.5%","1.0%","6.5%"],x:"4.5% + 3.5% = 8.0%."},
+ {id:"y3",sk:"yield",p:"Treasury rate 3.5%. The bond's spread is +0.5%. What is the fair yield?",o:["4.0%","3.5%","4.3%","3.0%"],x:"3.5% + 0.5% = 4.0%."},
+ {id:"y4",sk:"yield",p:"Treasury rate 5.0%. The bond's spread is +10.0%. What is the fair yield?",o:["15.0%","10.0%","5.0%","10.5%"],x:"5.0% + 10.0% = 15.0%. A spread that big means a very risky bond."},
+ {id:"y5",sk:"yield",p:"Treasury rate 4.0%. A bond's fair yield is 6.0%. What is its spread?",o:["+2.0%","+6.0%","+10.0%","+1.5%"],x:"Spread = fair yield − Treasury rate = 6.0% − 4.0% = 2.0%."},
+ {id:"y6",sk:"yield",p:"In the fair-yield formula, the spread is:",o:["The extra yield investors want for taking the bond's risk","The bond's price change","The Treasury rate","The coupon paid twice a year"],x:"The spread is extra pay for risk. Safer bonds get a small spread; risky bonds get a big one."},
+ {id:"y7",sk:"yield",p:"Why does a B-rated bond have a bigger spread than an AA-rated bond?",o:["Investors need more pay to take more default risk","B bonds are always newer","The government sets B spreads higher","B bonds are always shorter"],x:"More risk of not getting paid back means investors demand a higher yield."},
+ {id:"y8",sk:"yield",p:"Why is the Treasury rate the starting point for fair yield?",o:["U.S. Treasury bonds are treated as the safest bonds there are","Treasury bonds pay the highest yield","Every company must pay the Treasury rate","It is set by the rating agencies"],x:"Treasuries are backed by the U.S. government, so they are the no-risk baseline. Every other bond adds a spread on top."},
+ // ---- good deal or overpriced
+ {id:"c1",sk:"call",p:"Fair yield is 5.0%. The bond pays 5.5%. What's the call?",o:["Good deal","Overpriced","Can't tell","It will default"],x:"It pays 0.5% more than its fair yield, so it's a good deal."},
+ {id:"c2",sk:"call",p:"Fair yield is 4.8%. The bond pays 4.5%. What's the call?",o:["Overpriced","Good deal","Can't tell","It will default"],x:"It pays 0.3% less than it should for its risk, so it's overpriced."},
+ {id:"c3",sk:"call",p:"Treasury 4.0%. Spread +1.2%. The bond pays 5.0%. What's the call?",o:["Overpriced","Good deal","Can't tell","It will default"],x:"Fair yield = 4.0% + 1.2% = 5.2%. It pays 5.0%, less than fair, so it's overpriced."},
+ {id:"c4",sk:"call",p:"Treasury 3.0%. Spread +2.0%. The bond pays 5.4%. What's the call?",o:["Good deal","Overpriced","Can't tell","It will default"],x:"Fair yield = 5.0%. It pays 5.4%, more than fair, so it's a good deal."},
+ {id:"c5",sk:"call",p:"Treasury 4.5%. Spread +3.5%. The bond pays 7.6%. What's the call?",o:["Overpriced","Good deal","Can't tell","It will default"],x:"Fair yield = 8.0%. 7.6% looks high, but it's less than fair for this much risk, so it's overpriced."},
+ {id:"c6",sk:"call",p:"A bond pays 9.0%, the highest yield on the board. Is it automatically a good deal?",o:["No. Compare it to its fair yield first","Yes. The highest yield always wins","Yes, as long as it's junk","No. High yields always default"],x:"A risky bond should pay a lot. It's only a good deal if it pays more than its fair yield."},
+ {id:"c7",sk:"call",p:"A bond pays LESS than its fair yield. What does that tell you?",o:["You're not being paid enough for the risk","It's a bargain","It must be a Treasury bond","Its rating will go up"],x:"Paying less than fair means the price is too high for the risk you take."},
+ {id:"c8",sk:"call",p:"Two bonds both pay 6.0%. Bond X's fair yield is 5.2%. Bond Y's is 6.8%. Which is the better deal?",o:["Bond X","Bond Y","They're the same","Can't tell"],x:"Bond X pays 0.8% more than fair. Bond Y pays 0.8% less than fair. Same yield, very different deals."},
+ // ---- the three ratios
  {id:"r1",sk:"ratios",p:"Total debt $600M. Yearly earnings $200M. What is the debt load?",o:["3 years","0.33 years","400 years","800 years"],x:"Debt ÷ earnings = 600 ÷ 200 = 3 years to pay it off."},
  {id:"r2",sk:"ratios",p:"Earnings $120M. Yearly interest $20M. What is the interest coverage?",o:["6x","0.17x","100x","140x"],x:"Earnings ÷ interest = 120 ÷ 20 = 6x."},
  {id:"r3",sk:"ratios",p:"Cash $45M. Debt due next year $30M. What is the cash cushion?",o:["1.5","0.67","15","75"],x:"Cash ÷ debt due = 45 ÷ 30 = 1.5."},
- {id:"r4",sk:"ratios",p:"Total debt $500M. Earnings $100M. Debt load and its score (0 to 4)?",o:["5 years, score 1","5 years, score 4","0.2 years, score 4","50 years, score 0"],x:"500 ÷ 100 = 5 years. 4.5 to under 6 scores 1."},
- {id:"r5",sk:"ratios",p:"Debt load is 1.2 years. What does it score (0 to 4)?",o:["4","3","1","0"],x:"Under 1.5 years is the best band, so it scores 4."},
- {id:"r6",sk:"ratios",p:"Interest coverage is 2.5x. What does it score (0 to 4)?",o:["1","2","3","0"],x:"1.5x to under 3x scores 1."},
- {id:"r7",sk:"ratios",p:"Cash cushion is 0.4. What does it score (0 to 4)?",o:["1","2","0","3"],x:"0.25 to under 0.5 scores 1."},
+ {id:"r4",sk:"ratios",p:"Total debt $500M. Earnings $50M. What is the debt load?",o:["10 years","0.1 years","450 years","5 years"],x:"500 ÷ 50 = 10 years. That's a lot of debt for what it earns."},
+ {id:"r5",sk:"ratios",p:"Company A has a debt load of 2 years. Company B has 7 years. Which is safer?",o:["Company A","Company B","They're equal","Can't tell"],x:"For debt load, lower is safer. A could pay off its debt in 2 years of earnings."},
+ {id:"r6",sk:"ratios",p:"Company A has interest coverage of 9x. Company B has 1.5x. Which is safer?",o:["Company A","Company B","They're equal","Can't tell"],x:"For coverage, higher is safer. A earns 9 times its interest bill."},
+ {id:"r7",sk:"ratios",p:"A cash cushion of 0.5 means:",o:["It has only half the cash it needs for debt due next year","It has twice the cash it needs","It has no debt","It earns 50% on its cash"],x:"Cash ÷ debt due = 0.5, so cash covers only half of what's due."},
  {id:"r8",sk:"ratios",p:"For which ratio is a LOWER number safer?",o:["Debt load","Interest coverage","Cash cushion","All three"],x:"Less debt per dollar of earnings is safer. For coverage and cash cushion, higher is safer."},
  {id:"r9",sk:"ratios",p:"Interest coverage of 1.2x means:",o:["Earnings barely cover the interest bill","The company has no debt","It has 1.2 years of cash","It earns 12 times its interest"],x:"It earns only 1.2 times what it owes in interest. One bad year and it can't pay."},
- // ---- points to rating
- {id:"g1",sk:"rating",p:"A scorecard adds up to 20 of 24. What is the rating?",o:["AA","AAA","A","BBB"],x:"AA is 19 to 21."},
- {id:"g2",sk:"rating",p:"A scorecard adds up to 11 of 24. What is the rating?",o:["BB","BBB","B","A"],x:"BB is 10 to 12."},
- {id:"g3",sk:"rating",p:"A scorecard adds up to 16 of 24. What is the rating?",o:["A","AA","BBB","BB"],x:"A is 16 to 18."},
- {id:"g4",sk:"rating",p:"A scorecard adds up to 7 of 24. What is the rating?",o:["B","BB","CCC","BBB"],x:"B is 6 to 9."},
- {id:"g5",sk:"rating",p:"Six factor scores: 3, 2, 2, 3, 2, 1. Total and rating?",o:["13, BBB","13, BB","12, BB","14, A"],x:"3+2+2+3+2+1 = 13. BBB is 13 to 15."},
- {id:"g6",sk:"rating",p:"What is the LOWEST investment-grade rating?",o:["BBB","A","BB","AA"],x:"BBB and up is investment grade. BB and lower is junk."},
- {id:"g7",sk:"rating",p:"The agency posts BBB. Your scorecard says B. What do you expect?",o:["A downgrade into junk","An upgrade","No change","The bond pays off early"],x:"Your numbers say the company is weaker than the posted rating, so the agency will likely cut it."},
- {id:"g8",sk:"rating",p:"The agency posts BB. Your scorecard says A. What is likely?",o:["An upgrade, so the price should rise","A downgrade, so the price should fall","A default","Nothing. Ratings never change"],x:"The posted rating is out of date. When the agency catches up, the price goes up."},
- // ---- price moves
- {id:"m1",sk:"price",p:"A bond is upgraded one step, from BBB to A. Price change?",o:["+4%","−4%","+8%","0%"],x:"Each step is 4%. Upgrade means up."},
- {id:"m2",sk:"price",p:"A bond is downgraded two steps, from AA to BBB. Price change?",o:["−8%","−4%","+8%","−12%"],x:"2 steps × 4% = −8%. It stays investment grade, so no extra hit."},
- {id:"m3",sk:"price",p:"A bond is downgraded from A to BB (it crosses the junk line). Price change?",o:["−12%","−8%","−4%","−16%"],x:"A to BBB to BB is 2 steps (−8%), plus 4% more for crossing into junk: −12%."},
- {id:"m4",sk:"price",p:"A bond is upgraded from BB to BBB (back to investment grade). Price change?",o:["+8%","+4%","−8%","+12%"],x:"1 step (+4%) plus 4% for crossing the junk line: +8%."},
- {id:"m5",sk:"price",p:"Rates rise 0.5%. The bond's sensitivity is 6. Price change?",o:["−3%","+3%","−6%","−0.5%"],x:"−6 × 0.5 = −3%."},
- {id:"m6",sk:"price",p:"Rates fall 1%. The bond's sensitivity is 8. Price change?",o:["+8%","−8%","+1%","−1%"],x:"−8 × (−1) = +8%. Falling rates push prices up."},
- {id:"m7",sk:"price",p:"Interest rates go up. What happens to the price of bonds you already own?",o:["It falls","It rises","It stays the same","It doubles"],x:"New bonds pay more, so old bonds are worth less."},
- {id:"m8",sk:"price",p:"Which bond's price moves the most when rates change?",o:["A 20-year bond","A 2-year bond","A 5-year bond","A 1-year Treasury bill"],x:"Longer bonds have higher sensitivity."},
- {id:"m9",sk:"price",p:"Posted A, your scorecard says A, and rates stay flat. Price change?",o:["0%","+4%","−4%","+1.2%"],x:"No rating change and no rate change means no price change."},
- // ---- fund math
- {id:"f1",sk:"fund",p:"A bond pays 5%. It gets downgraded one step (−4%). Rates stay flat. Total return?",o:["1%","9%","−4%","5%"],x:"5% − 4% + 0% = 1%."},
- {id:"f2",sk:"fund",p:"A bond pays 4%, gets upgraded (+4%), and rates rise 0.5% with sensitivity 6 (−3%). Total return?",o:["5%","11%","8%","1%"],x:"4% + 4% − 3% = 5%."},
- {id:"f3",sk:"fund",p:"You put $200K in a bond with a 7% total return. Dollars earned?",o:["$14,000","$1,400","$140,000","$7,000"],x:"$200,000 × 0.07 = $14,000."},
- {id:"f4",sk:"fund",p:"You put $300K in a bond with a −2% total return. Dollars?",o:["−$6,000","+$6,000","−$600","−$60,000"],x:"$300,000 × −0.02 = −$6,000."},
- {id:"f5",sk:"fund",p:"You put $100K in a bond that defaults. What happens?",o:["You lose $60,000","You lose $100,000","You lose $6,000","Nothing. The agency pays you back"],x:"A default loses 60%: $100,000 × 0.60 = $60,000."},
- {id:"f6",sk:"fund",p:"A bond is POSTED as B. How much can you put in without a fine?",o:["Up to $200K","Up to $300K","$0 only","Up to $100K"],x:"Bonds posted BB or lower are capped at $200K. $300K means a $25,000 fine."},
- {id:"f7",sk:"fund",p:"You keep $300K in cash. The Treasury rate is 4%. What does it earn?",o:["$12,000","$1,200","$120,000","$0"],x:"Cash earns the Treasury rate: $300,000 × 0.04 = $12,000."},
- {id:"f8",sk:"fund",p:"Posted BBB and your scorecard says BBB. Can you put in $300K?",o:["Yes. The cap is only for bonds POSTED BB or lower","No. Every bond is capped at $200K","No. It's a $25,000 fine","Only if rates are falling"],x:"BBB is investment grade, so there's no cap."}
+ // ---- ratings and risk
+ {id:"g1",sk:"rating",p:"Which rating is the safest?",o:["AAA","BBB","A","AA"],x:"AAA is the top rating."},
+ {id:"g2",sk:"rating",p:"What is the LOWEST investment-grade rating?",o:["BBB","A","BB","AA"],x:"BBB and up is investment grade. BB and lower is high-yield (junk)."},
+ {id:"g3",sk:"rating",p:"Which of these is a high-yield (junk) rating?",o:["BB","BBB","A","AA"],x:"BB, B and CCC are junk."},
+ {id:"g4",sk:"rating",p:"What does a rating agency do?",o:["Grades how likely an issuer is to pay its debts","Sets the Treasury rate","Sells bonds to investors","Guarantees the bond will be repaid"],x:"Agencies like S&P, Moody's and Fitch grade credit risk. They don't guarantee anything."},
+ {id:"g5",sk:"rating",p:"As a bond's rating goes DOWN, what usually happens to the yield investors demand?",o:["It goes up","It goes down","It stays the same","It becomes zero"],x:"Lower rating means more risk, so investors want more yield."},
+ {id:"g6",sk:"rating",p:"A bond is downgraded from BBB to BB. What is it called?",o:["A fallen angel","A rising star","A Treasury","A red herring"],x:"A fallen angel drops from investment grade to junk, and its price usually falls hard."},
+ {id:"g7",sk:"rating",p:"The agency rates a company BBB, but your analysis of its numbers says B. What do you expect?",o:["A downgrade, so the bond's price should fall","An upgrade, so the price should rise","No change","The bond pays off early"],x:"If the numbers are weaker than the rating, the rating is likely to be cut, and the price drops."},
+ {id:"g8",sk:"rating",p:"The agency rates a company BB, but its numbers have improved a lot. What is likely?",o:["An upgrade, so the price should rise","A downgrade, so the price should fall","A default","Nothing. Ratings never change"],x:"Ratings can be out of date. When the agency catches up, the price goes up."},
+ {id:"g9",sk:"rating",p:"Why does a drop from BBB to BB usually hit the price extra hard?",o:["Many funds aren't allowed to hold junk bonds, so they all sell","The coupon stops","The bond matures right away","The Treasury rate changes"],x:"Crossing into junk forces many investors to sell at once, pushing the price down further."},
+ // ---- rates and prices
+ {id:"m1",sk:"price",p:"Interest rates go up. What happens to the price of bonds you already own?",o:["It falls","It rises","It stays the same","It doubles"],x:"New bonds now pay more, so older bonds paying less are worth less."},
+ {id:"m2",sk:"price",p:"Interest rates go down. What happens to the price of bonds you already own?",o:["It rises","It falls","It stays the same","It drops to zero"],x:"Your bond pays more than new bonds, so buyers will pay more for it."},
+ {id:"m3",sk:"price",p:"Rates rise 0.5%. The bond's rate sensitivity is 6. Price change?",o:["−3%","+3%","−6%","−0.5%"],x:"−6 × 0.5 = −3%."},
+ {id:"m4",sk:"price",p:"Rates fall 1%. The bond's rate sensitivity is 8. Price change?",o:["+8%","−8%","+1%","−1%"],x:"−8 × (−1) = +8%. Falling rates push prices up."},
+ {id:"m5",sk:"price",p:"Rates rise 1%. The bond's rate sensitivity is 15. Price change?",o:["−15%","+15%","−1%","−16%"],x:"−15 × 1 = −15%. Long bonds can lose a lot when rates rise."},
+ {id:"m6",sk:"price",p:"Which bond's price moves the most when rates change?",o:["A 20-year bond","A 2-year bond","A 5-year bond","A 1-year Treasury bill"],x:"Longer bonds have higher rate sensitivity."},
+ {id:"m7",sk:"price",p:"Interest rate risk is the risk that:",o:["Rates rise and your bond's price falls","The issuer stops paying","The rating goes up","The coupon gets bigger"],x:"Even a perfectly safe bond loses value if rates rise."},
+ {id:"m8",sk:"price",p:"Where do investors buy and sell bonds after they're first issued?",o:["The secondary market","The rating agency","The Treasury","The issuer only"],x:"Bonds trade between investors on the secondary market, and that's where prices move."},
+ {id:"m9",sk:"price",p:"You expect rates to RISE soon. Which bond is the safer pick?",o:["A short bond with low sensitivity","A 30-year bond","A long bond with high sensitivity","They will all fall the same"],x:"Short bonds have low sensitivity, so their price falls less when rates rise."},
+ // ---- bond basics and return
+ {id:"f1",sk:"fund",p:"When you buy a bond, you are:",o:["Lending money to the issuer","Buying part ownership of the company","Opening a savings account","Paying the issuer's taxes"],x:"A bond is a loan. The issuer pays you interest and pays you back at maturity."},
+ {id:"f2",sk:"fund",p:"A bond's coupon is:",o:["The interest it pays","The date it pays you back","Its credit rating","Its price on the market"],x:"The coupon is the interest payment. Maturity is when you get your money back."},
+ {id:"f3",sk:"fund",p:"A city's bond is repaid only from tolls on one bridge. What kind of bond is it?",o:["A revenue bond","A general obligation bond","A Treasury bond","A corporate bond"],x:"A revenue bond is repaid from one project's income. A general obligation bond is backed by the city's taxing power."},
+ {id:"f4",sk:"fund",p:"What does it mean when an issuer defaults?",o:["It fails to make the payments it promised","It pays off the bond early","Its rating goes up","It raises the coupon"],x:"A default means missed payments. Investors may get back only part of their money."},
+ {id:"f5",sk:"fund",p:"A bond pays 5%. Its price falls 4%. What is the total return?",o:["1%","9%","−4%","5%"],x:"Total return = yield + price change = 5% − 4% = 1%."},
+ {id:"f6",sk:"fund",p:"A bond pays 4%. Its price rises 4% from an upgrade and falls 3% from rising rates. Total return?",o:["5%","11%","8%","1%"],x:"4% + 4% − 3% = 5%."},
+ {id:"f7",sk:"fund",p:"You invest $200K in a bond with a 7% total return. Dollars earned?",o:["$14,000","$1,400","$140,000","$7,000"],x:"$200,000 × 0.07 = $14,000."},
+ {id:"f8",sk:"fund",p:"You invest $300K in a bond with a −2% total return. Dollars?",o:["−$6,000","+$6,000","−$600","−$60,000"],x:"$300,000 × −0.02 = −$6,000."},
+ {id:"f9",sk:"fund",p:"Which business is the safest borrower in a recession?",o:["A water utility (essential service)","A cruise line (cyclical business)","A luxury car maker","A new scooter startup"],x:"People pay for essential services in any economy. Cyclical businesses earn less when the economy slows."}
 ];
 BANK.forEach(q=>{q.ans=0});
 
@@ -425,7 +427,7 @@ const MOCK=/[?&]mock=1/.test(location.search);
 const ROLE=window.BRL_ROLE||"student";
 const GAME="bondslive"; // keeps each live game's codes separate
 const hdr=()=>`<h1 class="title">Bonds <span>Live.</span></h1>
-  <p class="lede">${ROLE==="teacher"?"Teacher screen. Put this on the projector, create a game, and students join on their devices with the code. Six rounds on Unit 3 bonds (fair yield, the call, ratios, ratings, price moves, fund math); right answers earn 600 points plus up to 400 for speed, and wrong answers cost a lot (set below), so students should never guess.":"Six quick rounds on bonds, run by your teacher. Have a calculator ready. Right answers earn 600 points plus up to 400 more for speed. Wrong answers cost a lot of points, so never guess. If you are not sure, let the clock run out and you get 0. At the end you get a report on what to practice, and you can practice it right here."}</p>`;
+  <p class="lede">${ROLE==="teacher"?"Teacher screen. Put this on the projector, create a game, and students join on their devices with the code. Six rounds on Unit 3 bonds (fair yield, good deal or overpriced, ratios, ratings, rates and prices, bond basics); right answers earn 600 points plus up to 400 for speed, and wrong answers cost a lot (set below), so students should never guess.":"Six quick rounds on bonds, run by your teacher. Have a calculator ready. Right answers earn 600 points plus up to 400 more for speed. Wrong answers cost a lot of points, so never guess. If you are not sure, let the clock run out and you get 0. At the end you get a report on what to practice, and you can practice it right here."}</p>`;
 function home(){
   stopTick();KEYPICK=KEYNEXT=null;setFit(false);$("#who").hidden=true;
   ROLE==="teacher"?hostSetup():joinForm();
@@ -590,7 +592,7 @@ async function hostSetup(){
     <p>Questions per round (6 rounds):</p><div class="seg" id="sp"><button data-v="2">2 (12 total)</button><button data-v="3" aria-pressed="true">3 (18 total)</button><button data-v="4">4 (24 total)</button></div>
     <p>Wrong answer:</p><div class="seg" id="pn"><button data-v="0">No penalty</button><button data-v="500">−500</button><button data-v="1000" aria-pressed="true">−1,000</button><button data-v="1500">−1,500</button></div>
     <p>Time:</p><div class="seg" id="st"><button data-v="1" aria-pressed="true">Standard</button><button data-v="1.5">Extra time (+50%)</button><button data-v="2">Double time</button></div>
-    <p class="note">Standard: 20 seconds for fair yield and ratings, 25 for the call, ratios and price moves, 30 for fund math.</p>
+    <p class="note">Standard: 20 seconds for fair yield and ratings, 25 for good deal or overpriced, ratios and rates, 30 for bond basics and return.</p>
     <div class="err" id="er"></div><button class="btn main" id="go">Create game</button></div>`;
   const seg=(id,set)=>$(id).onclick=e=>{const b=e.target.closest("button");if(!b)return;[...$(id).children].forEach(x=>x.setAttribute("aria-pressed",x===b));set(+b.dataset.v)};
   seg("#sp",v=>per=v);seg("#st",v=>mult=v);seg("#pn",v=>pen=v);
