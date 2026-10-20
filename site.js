@@ -3,6 +3,7 @@
 (function () {
   var NAV = [
     { group: "Live Class Games" },
+    { href: "/bonds-live", ch: "3", label: "Bonds Live (quiz)", page: "bonds-live" },
     { href: "/credit", ch: "3", label: "Credit Desk Live", page: "credit" },
     { href: "/join", ch: "3", label: "Bond Desk Live", page: "join" },
     { group: "Review Games" },

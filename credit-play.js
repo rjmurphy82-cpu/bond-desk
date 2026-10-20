@@ -132,8 +132,7 @@ function renderPrice() {
   $("#view").innerHTML = head("Price it") + sheet("B") + `<div class="cols"><div class="grid" style="align-content:start">
       <div class="card"><div class="label">Rate news</div><p style="font-size:19px;margin:0"><b>${esc(y.rateNews)}</b></p><div class="small" style="margin-top:6px">Rates up → bond prices down. Rates down → prices up. Long bonds move the most.</div></div>
       <div class="card"><div class="label">Fair yield = ${y.t0.toFixed(1)}% + spread</div><div class="spreads">${C.LADDER.map(r => `<div class="${C.isJunk(r) ? "j" : ""}" style="${r === R ? "outline:3px solid var(--brown)" : ""}">${r}<small>+${C.SPREADS[r].toFixed(1)}%</small></div>`).join("")}</div>
-        <div class="small" style="margin-top:8px">Cash earns ${y.t0.toFixed(1)}%. No more than $200K in a bond <b>posted</b> as junk (BB or lower), or a $25,000 fine.</div></div>
-      ${caseFileHTML(y)}</div>
+        <div class="small" style="margin-top:8px">Cash earns ${y.t0.toFixed(1)}%. No more than $200K in a bond <b>posted</b> as junk (BB or lower), or a $25,000 fine.</div></div></div>
     <div class="bond"><h3>${esc(y.issuer.name)}</h3>
       <div class="stats" style="grid-template-columns:repeat(4,1fr)"><div class="stat" style="background:var(--green)"><div class="v">${R}</div><div class="k">Your rating</div></div><div class="stat ${junk ? "j" : ""}"><div class="v">${b.posted}</div><div class="k">Agency posted</div></div>
         <div class="stat"><div class="v">${b.yld.toFixed(1)}%</div><div class="k">Bond pays</div></div><div class="stat"><div class="v">${b.years} yr</div><div class="k">Matures</div></div></div>
