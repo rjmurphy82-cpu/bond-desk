@@ -207,7 +207,8 @@ function priceIt() {
       <div class="panel"><div class="phead"><span class="t">Rate news</span></div><div class="pbody"><p style="margin:0;font-size:18px"><b>${esc(y.rateNews)}</b></p>
         <div class="tiny">Rates up → bond prices down. Rates down → prices up. Long bonds move the most.</div></div></div>
       <div class="panel"><div class="pbody"><div class="lbl">Spreads (add to the Treasury rate)</div><div class="scale">${C.LADDER.map(r => `<div class="${C.isJunk(r) ? "j" : ""} ${r === mine ? "me" : ""}">${r}<small>+${C.SPREADS[r].toFixed(1)}%</small></div>`).join("")}</div>
-        <div class="tiny">Money you don't buy bonds with earns ${y.t0.toFixed(1)}% in Treasuries. No more than $200K in a bond posted as junk (BB or lower), or a $25,000 fine.</div></div></div></div>
+        <div class="tiny">Money you don't buy bonds with earns ${y.t0.toFixed(1)}% in Treasuries. No more than $200K in a bond posted as junk (BB or lower), or a $25,000 fine.</div></div></div>
+      ${caseFile(y.issuer)}</div>
     <div class="stack"><div class="bond"><h3>${esc(y.issuer.name)}</h3>
       <div class="stats"><div class="stat mine"><div class="v">${mine}</div><div class="k">Your rating</div></div><div class="stat ${junk ? "j" : ""}"><div class="v">${b.posted}</div><div class="k">Agency's posted</div></div>
         <div class="stat"><div class="v">${b.yld.toFixed(1)}%</div><div class="k">Bond pays</div></div><div class="stat"><div class="v">${b.years} yr</div><div class="k">Matures</div></div></div>
