@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Credit Desk Live · Host</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:1000px){.hero{grid-template-columns:1fr}}
+.joinbox{display:flex;gap:22px;align-items:center}
+.qr{width:230px;height:230px;flex:none;border-radius:10px;overflow:hidden;border:6px solid #fff}
+.qr svg{width:100%;height:100%;display:block}
+.code{font-family:Oswald,Arial,sans-serif;font-size:96px;font-weight:700;color:#fff;letter-spacing:.06em;line-height:1}
+.url{font-size:24px;color:#F4F4F4;margin-bottom:6px}.url b{color:var(--light)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+#menuBtn{display:none;background:transparent;border:2px solid #CFCFCF;color:#CFCFCF;border-radius:8px;padding:5px 12px;font-size:14px}
+.tile{background:var(--card);border:2px solid var(--rule);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;text-transform:none;color:var(--brown)}
+.tile .nm{font-family:Oswald,Arial,sans-serif;font-size:22px;text-transform:uppercase;line-height:1.1;overflow:hidden;text-overflow:ellipsis}
+.tile .st{font-family:Oswald,Arial,sans-serif;font-size:14px;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.tile.done{background:var(--brown);border-color:var(--brown);color:#fff}.tile.done .st{color:var(--light)}
+.tile .x{background:none;border:0;color:var(--muted);font-size:20px;padding:0 4px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.yr h2{font-size:40px;color:var(--brown);line-height:1}
+.yr .sub{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;color:var(--rust);font-size:17px}
+.tbill{background:var(--brown);color:#fff;border-radius:10px;padding:8px 16px;text-align:center}
+.tbill .v{font-family:Oswald,Arial,sans-serif;font-size:34px;font-weight:700;line-height:1}
+.tbill .k{font-size:12px;color:#CFCFCF;text-transform:uppercase}
+.clock{display:flex;gap:8px;align-items:center}
+.timer{font-family:Oswald,Arial,sans-serif;font-size:46px;color:var(--brown);min-width:110px;text-align:center}
+.timer.low{color:var(--red)}
+.board{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,2fr);gap:16px;align-items:start}
+@media(max-width:1100px){.board{grid-template-columns:1fr}}
+.bonds{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:1000px){.bonds{grid-template-columns:1fr}}
+.codechip{font-family:Oswald,Arial,sans-serif;background:var(--sand);color:var(--brown);border-radius:8px;padding:6px 12px;font-size:16px}
+.codechip b{font-size:22px;color:var(--orange)}
+.ratebanner{background:var(--brown);color:#fff;border-radius:10px;padding:14px 18px;font-size:21px;margin-bottom:14px;display:flex;gap:14px;align-items:center}
+.ratebanner .arrow{font-family:Oswald,Arial,sans-serif;font-size:40px;color:var(--light)}
+.out{margin-top:8px;border-top:2px dashed var(--rule);padding-top:8px}
+.out .story{font-size:16px;line-height:1.35}
+.brk{width:100%;margin-top:6px}.brk td{padding:3px 4px;font-size:15px;border:0}.brk td.r{font-family:Consolas,monospace}
+.brk tr.tot td{border-top:2px solid var(--brown);font-family:Oswald,Arial,sans-serif;font-size:20px}
+.verdict{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
+.bond.win{border-color:var(--green)}.bond.lose{border-color:var(--red)}
+.why{background:#FBF1F2;border-left:5px solid var(--orange);border-radius:0 8px 8px 0;padding:8px 10px;font-size:15px;line-height:1.35;margin-top:6px}
+.why p{margin:0 0 5px}.why b{font-family:Oswald,Arial,sans-serif;font-weight:400;color:var(--rust);text-transform:uppercase;font-size:12px;letter-spacing:.04em;display:block}
+.standings td{font-size:20px}.standings td.nm{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;color:var(--brown)}
+.standings td.pl{font-family:Oswald,Arial,sans-serif;color:var(--rust);font-size:24px}
+.standings td.val{font-family:Oswald,Arial,sans-serif;font-size:24px}
+.standings tr.top td{background:#FBE7EA}.standings tr.bench td{color:var(--muted);font-style:italic;background:#F4F3F3}
+.picks{font-family:Consolas,monospace;font-size:15px;color:var(--muted)}
+.winbar{background:var(--orange);color:#fff;border-radius:10px;padding:14px 18px;display:flex;gap:16px;align-items:center;margin-bottom:14px}
+.winbar .t{font-size:56px;line-height:1}.winbar .who{font-family:Oswald,Arial,sans-serif;font-size:36px;text-transform:uppercase;line-height:1.05}
+.tabs2{display:flex;gap:6px}
+.tabs2 button{background:var(--card);border:2px solid var(--rule);border-radius:8px;padding:8px 16px;font-size:18px;color:var(--brown)}
+.tabs2 button.on{background:var(--brown);border-color:var(--brown);color:#fff}
+.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:12px;align-items:end;margin-bottom:16px}
+.pod{background:var(--brown);color:#fff;border-radius:12px 12px 0 0;text-align:center;padding:16px 10px}
+.pod .p{font-family:Oswald,Arial,sans-serif;font-size:44px;color:var(--light);line-height:1}
+.pod .n{font-family:Oswald,Arial,sans-serif;font-size:28px;text-transform:uppercase}
+.pod .v{font-size:22px}
+.pod.first{background:var(--orange);padding:28px 10px}.pod.first .p{color:#fff}
+.lessons li{font-size:15px;line-height:1.35;margin-bottom:5px}
+#offlineTag{display:none;background:var(--rust);color:#fff;border-radius:6px;padding:3px 10px;font-family:Oswald,Arial,sans-serif;font-size:14px}
+.drum{position:fixed;inset:0;background:var(--brown);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:50;color:#fff;cursor:pointer}
+.drum.on{display:flex}
+.drum .k{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;color:var(--light);font-size:28px}
+.drum .big{font-family:Oswald,Arial,sans-serif;font-weight:700;font-size:200px;line-height:1;animation:pop .5s ease-out}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* Credit Desk Live additions */
+.stagepills{display:flex;gap:6px;flex-wrap:wrap}
+.stagepills span{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:16px;border:2px solid var(--rule);background:var(--card);border-radius:8px;padding:5px 12px;color:var(--brown)}
+.stagepills span small{font-family:Barlow,Arial,sans-serif;text-transform:none;color:var(--muted);font-size:13px}
+.stagepills span.now{background:var(--orange);border-color:var(--orange);color:#fff}.stagepills span.now small{color:#FFE1E5}
+.stagepills span.done{background:var(--sand)}
+.cfname{font-size:30px;color:var(--brown);line-height:1.05;margin:2px 0 4px}
+.cfwhat{font-size:17px;color:var(--muted);margin-bottom:10px}
+.cffacts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.cffacts .v{font-size:26px}
+.cftable td{font-size:17px;padding:5px 10px}
+.cf .news li{font-size:17px}
+.sheetbar{background:#FFF3B0;border-bottom:3px solid #E0B000;border-radius:8px;padding:8px 14px;font-size:18px;margin-bottom:12px;color:#111}
+.truth{display:flex;gap:22px;align-items:center}
+.truth .L{font-family:Oswald,Arial,sans-serif;font-weight:700;font-size:130px;line-height:.9;color:var(--orange)}
+.ladderboard{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}
+.ladderboard>div{background:var(--card);border:2px solid var(--rule);border-radius:10px;padding:8px;min-height:120px}
+.ladderboard>div.hit{border-color:var(--green);background:var(--greenbg)}
+.ladderboard>div.post{box-shadow:inset 0 0 0 3px var(--rule)}
+.ladderboard .h{font-family:Oswald,Arial,sans-serif;font-size:28px;color:var(--brown);display:flex;justify-content:space-between;align-items:baseline}
+.ladderboard .h small{font-size:14px;color:var(--muted)}
+.ladderboard .nm{font-size:14px;line-height:1.25;margin-top:4px;font-weight:600;color:var(--ink)}
+.ladderboard .tagp{font-family:Oswald,Arial,sans-serif;font-size:12px;text-transform:uppercase;color:var(--rust)}
+.facttbl td{font-size:17px;padding:6px 10px}
+.marketgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.marketgrid .stat .v{font-size:40px}
+.big2{font-family:Oswald,Arial,sans-serif;font-size:56px;line-height:1;color:var(--brown)}
+</style>
+</head>
+<body>
+<header>
+  <div><div class="kicker">District 214 | Finance &amp; Investing | Unit 3: Bonds</div><h1>Credit Desk Live</h1></div>
+  <div style="display:flex;gap:12px;align-items:center"><span id="offlineTag">Offline mode</span><button id="menuBtn" title="Resume, start a new game, or play without iPads">☰ Menu</button></div>
+</header>
+<main id="view"></main>
+<div class="modal" id="enterModal"><div class="mbox" id="enterBox"></div></div>
+<div class="drum" id="drum"><div class="k" id="drumK"></div><div class="big" id="drumBig"></div></div>
+<script type="module" src="/credit-host.js"></script>
+</body>
+</html>

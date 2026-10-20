@@ -5,6 +5,8 @@ The class site for Finance & Investing: a home page, live class games, review ga
 | Page | Who | What |
 |---|---|---|
 | `/` | Students | Home page with every game and practice |
+| `/credit` | Students | Join Credit Desk Live (the host QR code goes here) |
+| `/credit-host` | Teacher (projector) | Credit Desk Live host screen: groups rate each borrower on iPads, then buy; you run the reveal. Uses the same database as The Bond Desk. |
 | `/join` | Students | Join a live Bond Desk game (the host QR code goes here) |
 | `/practice-credit-desk` | Students | The Credit Desk: The Rating Room and The Bond Desk combined. Six years: rate the borrower with the scorecard, use that rating to find the fair yield and decide how much to buy, then see the agency's rating change and the rate move. Pairs with the Credit Desk Analyst Worksheet. |
 | `/practice-bond-desk` | Students | Bond Desk Solo: all ten years on your own, with the why after each year. Progress saves in the browser. |
@@ -92,6 +94,7 @@ All companies, governments, and outcomes are made up and engineered so every cla
 | `index.html` | Home page |
 | `site.css`, `site.js` | Shared look, sidebar menu and text-size control for the home and practice pages. Add new pages to the menu in `site.js`. |
 | `rating-room.html`, `rating-data.js` | The Rating Room class game and its case files, scorecard and blitz questions (shared with the practice page) |
+| `credit-core.js`, `api/credit.js`, `credit-host.*`, `credit.html`, `credit-play.js`, `credit-view.js`, `credit-client.js` | Credit Desk Live: server rules, Vercel function, projector screen, iPad screen, shared pieces |
 | `credit-desk-data.js` | The Credit Desk's six issuers, their true ratings (computed by the scorecard), and the scoring math |
 | `practice-*.html` | Practice-on-your-own pages. Terms and short answer questions are listed at the top of the script in their pages. |
 | `teacher/index.html`, `teacher/reports.html` | Teacher links and the student report dashboard |
