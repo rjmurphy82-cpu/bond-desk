@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Reports | District 214 Finance &amp; Investing</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<style>
+/* Layout: code gate, then filters, a sortable class table, and a detail panel for one student */
+.wrap{max-width:1400px;margin:0 auto;padding:28px clamp(16px,3vw,40px) 60px}
+.top{display:flex;align-items:center;gap:14px;font-weight:600;color:var(--muted);flex-wrap:wrap}
+.top img{height:40px;border-radius:3px}.top a{color:inherit}
+.gate{max-width:460px}
+.field span{display:block;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--redtext);margin-bottom:4px}
+.field input,.field select{width:100%;font:600 18px var(--body);padding:9px 12px;border:2px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink)}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin:16px 0}
+.bar .field{min-width:170px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.err{background:var(--badsoft);color:var(--bad);border-radius:8px;padding:10px 14px;font-weight:600;margin-top:10px}
+.tw{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:12px}
+table td,table th{font-size:15px;white-space:nowrap}
+th button{all:unset;cursor:pointer}
+th button:after{content:" ↕";opacity:.5}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--redsoft)}
+tbody tr.sel td{background:var(--gray)}
+.ok{color:var(--good);font-weight:700}.no{color:var(--muted)}
+.sum{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 14px}
+.chip{background:var(--black);color:#fff;border-radius:10px;padding:6px 14px}
+.chip .v{font-family:var(--display);font-weight:600;font-size:24px;line-height:1.1}
+.chip .k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+.detail{margin-top:16px}
+.ans{border-top:1px solid var(--line);padding:10px 0}
+.ans .h{font-family:var(--display);font-weight:600;font-size:18px}
+.ans .t{white-space:pre-wrap;line-height:1.45;margin-top:4px}
+.left{color:var(--muted);font-size:15px;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><img src="/logo-214.png" alt="District 214"><a href="/">District 214 Finance &amp; Investing</a> | <a href="/teacher">Teacher</a> | Student reports</div>
+  <p class="eyebrow" style="margin-top:22px">Teacher only</p>
+  <h1>Student reports</h1>
+  <div id="app"></div>
+</div>
+<script src="/bond-short-answer-data.js"></script>
+<script>
+(function(){
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const money = v => v == null ? "" : "$" + Math.round(v).toLocaleString("en-US");
+let code = ""; try { code = sessionStorage.getItem("d214-fin-tcode") || ""; } catch (e) {}
+let all = [], latestOnly = true, period = "all", search = "", sortKey = "name", sortDir = 1, sel = null;
+
+async function api(body){
+  const r = await fetch("/api/report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  let j = null; try { j = await r.json(); } catch (e) {}
+  if (!r.ok) throw new Error((j && j.message) || "Error " + r.status);
+  return j;
+}
+function gate(msg){
+  $("#app").innerHTML = `<div class="panel gate"><div class="pbody"><label class="field"><span>Teacher code</span><input id="code" type="password" autocomplete="current-password" value="${esc(code)}"></label>
+    <div class="controls" style="margin-top:12px"><button class="btn" id="go">Show reports</button></div>${msg ? `<div class="err">${esc(msg)}</div>` : ""}
+    <p class="left" style="margin-top:12px">The code is the TEACHER_CODE you set in Vercel (see the README).</p></div></div>`;
+  $("#go").onclick = () => { code = $("#code").value.trim(); load(); };
+  $("#code").onkeydown = e => { if (e.key === "Enter") $("#go").click(); };
+}
+async function load(){
+  try { const j = await api({ action: "list", code }); all = j.reports; try { sessionStorage.setItem("d214-fin-tcode", code); } catch (e) {} draw(); }
+  catch (e) { gate(e.message); }
+}
+const keyOf = r => (r.period + "|" + r.name).toLowerCase().replace(/\s+/g, " ");
+function rowsNow(){
+  let rows = all;
+  if (latestOnly) { const seen = new Map(); for (const r of all) { const k = keyOf(r); if (!seen.has(k) || seen.get(k).at < r.at) seen.set(k, r); } rows = [...seen.values()]; }
+  if (period !== "all") rows = rows.filter(r => r.period === period);
+  if (search) rows = rows.filter(r => r.name.toLowerCase().includes(search));
+  const val = r => ({ name: r.name.toLowerCase(), period: +r.period || 0, at: r.at, cd: r.cd?.value || 0, bd: r.bd?.value || 0, rr: r.rr?.nailed || 0, fy: r.sprint?.best || 0, tm: r.terms?.bestFull ?? -1, sa: r.sa?.hit || 0 })[sortKey];
+  return rows.slice().sort((a, b) => (val(a) > val(b) ? 1 : val(a) < val(b) ? -1 : 0) * sortDir);
+}
+const counts = new Map();
+function draw(){
+  counts.clear(); for (const r of all) counts.set(keyOf(r), (counts.get(keyOf(r)) || 0) + 1);
+  const periods = [...new Set(all.map(r => r.period))].sort((a, b) => (+a || 0) - (+b || 0));
+  const rows = rowsNow();
+  const avg = f => { const v = rows.map(f).filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+  const beat = rows.filter(r => r.bd?.beatCash && r.bd?.finished).length;
+  const head = (k, t) => `<th><button data-k="${k}">${t}</button></th>`;
+  $("#app").innerHTML = `<div class="bar">
+      <label class="field"><span>Period</span><select id="per"><option value="all">All periods</option>${periods.map(p => `<option value="${esc(p)}" ${p === period ? "selected" : ""}>Period ${esc(p)}</option>`).join("")}</select></label>
+      <label class="field"><span>Find a student</span><input id="find" value="${esc(search)}" placeholder="Name"></label>
+      <label class="left" style="display:flex;gap:8px;align-items:center;padding-bottom:10px"><input type="checkbox" id="latest" ${latestOnly ? "checked" : ""}> Newest report per student</label>
+      <span style="flex:1"></span><div class="controls"><button class="btn ghost" id="refresh">Refresh</button><button class="btn ghost" id="csv">Download CSV</button><button class="btn ghost" id="clear">Clear all reports</button></div></div>
+    <div class="sum"><div class="chip"><div class="v">${rows.length}</div><div class="k">Students</div></div>
+      <div class="chip"><div class="v">${beat}</div><div class="k">Finished Bond Desk & beat cash</div></div>
+      <div class="chip"><div class="v">${avg(r => r.rr?.nailed)?.toFixed(1) ?? "–"}<span style="font-size:15px"> / 9</span></div><div class="k">Avg cases nailed</div></div>
+      <div class="chip"><div class="v">${avg(r => r.sprint?.runs ? r.sprint.best : null)?.toFixed(1) ?? "–"}</div><div class="k">Avg sprint best</div></div>
+      <div class="chip"><div class="v">${avg(r => r.terms?.bestFull)?.toFixed(1) ?? "–"}<span style="font-size:15px"> / 36</span></div><div class="k">Avg terms quiz</div></div></div>
+    ${rows.length ? `<div class="tw"><table><thead><tr>${head("name", "Student")}${head("period", "Per.")}${head("at", "Sent")}${head("cd", "Credit Desk")}${head("bd", "Bond Desk Solo")}${head("rr", "Rating cases")}<th>Random / quiz</th>${head("fy", "Sprint best")}${head("tm", "Terms quiz")}${head("sa", "Short answer")}</tr></thead>
+      <tbody>${rows.map((r, i) => `<tr data-i="${i}" class="${sel === r ? "sel" : ""}"><td><b>${esc(r.name)}</b>${counts.get(keyOf(r)) > 1 ? ` <span class="left">×${counts.get(keyOf(r))}</span>` : ""}</td><td>${esc(r.period)}</td><td>${new Date(r.at).toLocaleString([], { month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit" })}</td>
+        <td>${r.cd?.years ? `${r.cd.years}/6 · ${r.cd.exact}/${r.cd.years} rated · ${money(r.cd.value)} ${r.cd.beatCash ? '<span class="ok">beat cash</span>' : '<span class="no">behind</span>'}` : '<span class="no">not started</span>'}</td>
+        <td>${r.bd?.years ? `${r.bd.years}/10 · ${money(r.bd.value)} ${r.bd.beatCash ? '<span class="ok">beat cash</span>' : '<span class="no">behind cash</span>'}` : '<span class="no">not started</span>'}</td>
+        <td>${r.rr ? `<b>${r.rr.nailed}</b>/9 <span class="left">(${r.rr.checked} checked)</span>` : ""}</td>
+        <td>${r.rr ? `${r.rr.randomExact}/${r.rr.randomTried} · quiz ${r.rr.quizBest ?? "–"}/${r.rr.quizOf || 12}` : ""}</td>
+        <td>${r.sprint?.runs ? `<b>${r.sprint.best}</b> <span class="left">(${r.sprint.runs} run${r.sprint.runs > 1 ? "s" : ""})</span>` : '<span class="no">–</span>'}</td>
+        <td>${r.terms?.bestFull != null ? `<b>${r.terms.bestFull}</b>/${r.terms.full}` : '<span class="no">–</span>'}</td>
+        <td>${r.sa ? `${r.sa.checked}/${r.sa.of} · ${r.sa.hit}/${r.sa.points} pts` : ""}</td></tr>`).join("")}</tbody></table></div>`
+      : `<p class="left">No reports yet. Students send one from <b>My Report</b> on the site.</p>`}
+    <div id="detail"></div>`;
+  $("#per").onchange = e => { period = e.target.value; sel = null; draw(); };
+  $("#find").oninput = e => { search = e.target.value.trim().toLowerCase(); const p = e.target.selectionStart; draw(); const f = $("#find"); f.focus(); f.setSelectionRange(p, p); };
+  $("#latest").onchange = e => { latestOnly = e.target.checked; draw(); };
+  $("#refresh").onclick = load;
+  $("#csv").onclick = () => csv(rows);
+  $("#clear").onclick = async () => { if (!confirm("Delete every student report? This can't be undone. Download the CSV first if you want a copy.")) return; try { await api({ action: "clear", code }); all = []; sel = null; draw(); } catch (e) { alert(e.message); } };
+  $$("th button").forEach(b => b.onclick = () => { sortDir = sortKey === b.dataset.k ? -sortDir : 1; sortKey = b.dataset.k; draw(); });
+  $$("tbody tr").forEach(tr => tr.onclick = () => { sel = rows[+tr.dataset.i]; draw(); $("#detail").scrollIntoView({ behavior: "smooth", block: "start" }); });
+  if (sel) detail(sel);
+}
+function detail(r){
+  const bd = r.bd || {}, sa = r.sa || { answers: [] };
+  $("#detail").innerHTML = `<div class="panel detail"><div class="phead"><span class="t">${esc(r.name)}</span><span class="tag">Period ${esc(r.period)}</span><span class="r">Sent ${new Date(r.at).toLocaleString()}</span></div><div class="pbody">
+    <div class="lbl">The Credit Desk</div>
+    <p style="margin-top:0">${r.cd?.years ? `${r.cd.years} of 6 years${r.cd.finished ? " (finished)" : ""}. Fund ${money(r.cd.value)} vs. all cash ${money(r.cd.cash)}. Ratings exactly right: ${r.cd.exact} of ${r.cd.years}.<br><span class="left">${r.cd.ratings.map(x => `${esc(x.name)}: said ${x.mine || "–"}, true ${x.truth}`).join(" · ")}</span>` : "Not started."}</p>
+    <div class="lbl">Bond Desk Solo</div>
+    <p style="margin-top:0">${bd.years ? `${bd.years} of 10 years played${bd.finished ? " (finished)" : ""}. Fund ${money(bd.value)} vs. all cash ${money(bd.cash)}. The best possible picks finish at $1,754,283.` : "Not started."}
+      ${bd.yearGains ? `<br><span class="left">By year: ${bd.yearGains.map((g, i) => `Y${i + 1} ${g >= 0 ? "+" : "−"}${money(Math.abs(g))}`).join(" · ")}</span>` : ""}</p>
+    <div class="lbl">Bond Terms</div><p style="margin-top:0">${r.terms?.attempts ? `Best full quiz ${r.terms.bestFull ?? "–"}/${r.terms.full}. ${r.terms.missed?.length ? "Missed last time: " + r.terms.missed.map(esc).join(", ") + "." : ""}` : "No quiz yet."}</p>
+    <div class="lbl">Short answers</div>
+    ${sa.answers.map((a, i) => `<div class="ans"><div class="h">${i + 1}. ${esc(a.title)} <span class="left">(${esc(a.set)}) ${a.checked ? `· self-check ${a.hit}/${a.of} key points` : a.text.trim() ? "· not checked yet" : ""}</span></div><div class="t">${a.text.trim() ? esc(a.text) : '<span class="no">No answer</span>'}</div></div>`).join("")}
+  </div></div>`;
+}
+function csv(rows){
+  const cols = ["Name", "Period", "Sent", "Credit Desk years (of 6)", "Credit Desk value", "Credit Desk ratings exact", "Bond Desk years", "Bond Desk value", "Beat cash", "Rating cases nailed (of 9)", "Rating cases checked", "Random nailed", "Random tried", "Rating quiz best (of 12)", "Sprint best", "Sprint runs", "Terms quiz best (of 36)", "Short answers checked (of 14)", "Short answer key points hit", "Short answer key points possible"];
+  const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const lines = [cols.map(q).join(",")].concat(rows.map(r => [r.name, r.period, new Date(r.at).toLocaleString(), r.cd?.years, r.cd?.value != null ? Math.round(r.cd.value) : "", r.cd?.exact, r.bd?.years, r.bd?.value != null ? Math.round(r.bd.value) : "", r.bd?.years ? (r.bd.beatCash ? "yes" : "no") : "",
+    r.rr?.nailed, r.rr?.checked, r.rr?.randomExact, r.rr?.randomTried, r.rr?.quizBest, r.sprint?.best, r.sprint?.runs, r.terms?.bestFull, r.sa?.checked, r.sa?.hit, r.sa?.points].map(q).join(",")));
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" })); a.download = "bond-practice-reports.csv"; a.click();
+}
+code ? load() : gate("");
+})();
+</script>
+</body>
+</html>
