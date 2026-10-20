@@ -73,6 +73,9 @@ const VERDICTS = [["Overpriced", "Pays less than fair"], ["Fair price", "At fair
 const BEST_KEY = "d214-fair-yield-best";
 let mode = "sprint", q = null, picked = null, score = 0, tried = 0, streak = 0, bestStreak = 0, t = 60, timer = null, running = false, misses = [];
 let best = 0; try { best = +localStorage.getItem(BEST_KEY) || 0; } catch (e) {}
+const STATS_KEY = "d214-fair-yield-stats";
+function stats(){ try { return JSON.parse(localStorage.getItem(STATS_KEY)) || {}; } catch (e) { return {}; } }
+function saveStats(R){ R.at = Date.now(); try { localStorage.setItem(STATS_KEY, JSON.stringify(R)); } catch (e) {} }
 
 function newQ(){
   const [issuer, rating] = pick(ISSUERS), t0 = pick([3.0, 3.5, 4.0, 4.5, 5.0, 5.5]);
@@ -108,6 +111,7 @@ function choose(i){
   if (!q || picked !== null) return;
   picked = i; tried++;
   if (i === q.ans) { score++; streak++; bestStreak = Math.max(bestStreak, streak); } else { streak = 0; misses.push({ ...q, picked: i }); }
+  if (mode === "practice") { const R = stats(); R.practiceTried = (R.practiceTried || 0) + 1; R.practiceRight = (R.practiceRight || 0) + (i === q.ans ? 1 : 0); saveStats(R); }
   draw();
 }
 function next(){ newQ(); draw(); }
@@ -122,7 +126,7 @@ function startScreen(){
 function start(){
   score = 0; tried = 0; streak = 0; bestStreak = 0; misses = []; t = 60; running = true; newQ(); draw();
   clearInterval(timer);
-  timer = setInterval(() => { t--; if (t <= 0) { clearInterval(timer); running = false; if (score > best) { best = score; try { localStorage.setItem(BEST_KEY, best); } catch (e) {} } draw(); } else { const c = $(".chip.red"); if (c) { c.querySelector(".v").textContent = "0:" + String(t).padStart(2, "0"); c.classList.toggle("low", t <= 10); } } }, 1000);
+  timer = setInterval(() => { t--; if (t <= 0) { clearInterval(timer); running = false; { const R = stats(); R.runs = (R.runs || 0) + 1; R.lastScore = score; R.lastTried = tried; R.best = Math.max(R.best || 0, score); R.bestStreak = Math.max(R.bestStreak || 0, bestStreak); saveStats(R); } if (score > best) { best = score; try { localStorage.setItem(BEST_KEY, best); } catch (e) {} } draw(); } else { const c = $(".chip.red"); if (c) { c.querySelector(".v").textContent = "0:" + String(t).padStart(2, "0"); c.classList.toggle("low", t <= 10); } } }, 1000);
 }
 function endScreen(){
   const pct = tried ? Math.round(score / tried * 100) : 0;

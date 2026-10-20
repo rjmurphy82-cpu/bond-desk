@@ -6,16 +6,30 @@ The class site for Finance & Investing: a home page, live class games, review ga
 |---|---|---|
 | `/` | Students | Home page with every game and practice |
 | `/join` | Students | Join a live Bond Desk game (the host QR code goes here) |
+| `/practice-credit-desk` | Students | The Credit Desk: The Rating Room and The Bond Desk combined. Six years: rate the borrower with the scorecard, use that rating to find the fair yield and decide how much to buy, then see the agency's rating change and the rate move. Pairs with the Credit Desk Analyst Worksheet. |
 | `/practice-bond-desk` | Students | Bond Desk Solo: all ten years on your own, with the why after each year. Progress saves in the browser. |
 | `/practice-rating-room` | Students | Rating Room Practice: the 5 class case files, 4 bonus case files, unlimited random issuers, and a 12-question quiz |
 | `/practice-fair-yield-sprint` | Students | Fair Yield Sprint: price random bonds as good deal, fair or overpriced in 60 seconds, or with no clock |
 | `/practice-bond-terms` | Students | Bond Terms: 36 terms from both games as flashcards, a quiz and a word list. Missed terms get starred. |
 | `/practice-bond-short-answer` | Students | Short Answer: 14 questions from both games. Students write, then self-check against a model answer and key points. |
+| `/my-report` | Students | My Report: everything they finished on the practice pages, sent to the teacher dashboard with name and period |
 | `/rating-room` | Teacher (projector) | The Rating Room class game |
 | `/host` | Teacher (projector) | Bond Desk host screen |
 | `/teacher` | Teacher | Links to both class games. Not linked from the student site. |
+| `/teacher/reports` | Teacher | Student reports by period, with each student's short answers and a CSV download. Needs the teacher code. |
 
 **Site address:** https://214-investing.vercel.app (the old https://bond-desk-gamma.vercel.app address still works too).
+
+## Student reports: one-time setup
+
+The reports use the same Upstash database as The Bond Desk. The dashboard is protected by a teacher code that only lives in Vercel (the GitHub repo is public, so the code is never in the files).
+
+1. In Vercel, open the project, then **Settings → Environment Variables**.
+2. Add a variable named `TEACHER_CODE`. For the value, type a code only you know. Save.
+3. Go to **Deployments**, open the **⋯** menu on the newest deployment, and click **Redeploy**.
+4. Open `/teacher/reports` and enter your code.
+
+Reports are kept for 180 days (up to 3,000). Students type first name and last initial, plus their period. Use **Clear all reports** at the end of a unit, after downloading the CSV if you want a copy.
 
 Old links and QR codes that point at `/?c=12345` still work: the home page forwards them to `/join`.
 
@@ -78,8 +92,11 @@ All companies, governments, and outcomes are made up and engineered so every cla
 | `index.html` | Home page |
 | `site.css`, `site.js` | Shared look, sidebar menu and text-size control for the home and practice pages. Add new pages to the menu in `site.js`. |
 | `rating-room.html`, `rating-data.js` | The Rating Room class game and its case files, scorecard and blitz questions (shared with the practice page) |
+| `credit-desk-data.js` | The Credit Desk's six issuers, their true ratings (computed by the scorecard), and the scoring math |
 | `practice-*.html` | Practice-on-your-own pages. Terms and short answer questions are listed at the top of the script in their pages. |
-| `teacher/index.html` | Teacher links |
+| `teacher/index.html`, `teacher/reports.html` | Teacher links and the student report dashboard |
+| `my-report.html`, `api/report.js` | Student report page and the function that stores reports |
+| `bond-short-answer-data.js` | The 14 short answer questions (shared by the Short Answer page, My Report and the dashboard) |
 | `dev.js` | Local test server with a temporary in-memory database: `node dev.js` |
 
 QR codes are generated in the browser with "QRCode for JavaScript" by Kazuhiko Arase (MIT license). "QR Code" is a registered trademark of DENSO WAVE INCORPORATED.

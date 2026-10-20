@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Report | District 214 Finance &amp; Investing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<style>
+/* Layout: who you are, then one row per practice with its status and numbers, then send */
+.wrap{max-width:1000px}
+.who{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:12px;align-items:end}
+@media (max-width:600px){.who{grid-template-columns:1fr}}
+.field span{display:block;font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--redtext);margin-bottom:4px}
+.field input,.field select{width:100%;font:600 19px var(--body);padding:10px 12px;border:2px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink)}
+.rows{display:grid;gap:10px;margin-top:16px}
+.row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,2fr) auto;gap:14px;align-items:center;background:var(--paper);border:1px solid var(--line);border-left:6px solid var(--line);border-radius:10px;padding:12px 16px}
+.row.done{border-left-color:var(--good)}.row.part{border-left-color:var(--red)}
+@media (max-width:760px){.row{grid-template-columns:1fr}}
+.row h3{font-family:var(--display);font-weight:600;font-size:21px;margin:0;line-height:1.1}
+.row .st{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-top:4px;color:var(--muted)}
+.row.done .st{color:var(--good)}.row.part .st{color:var(--redtext)}
+.row .nums{font-size:15.5px;line-height:1.45}
+.row a{font-family:var(--display);font-weight:600;color:var(--redtext);text-decoration:none;white-space:nowrap}
+.sendbox{margin-top:18px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.left{color:var(--muted);font-size:15px;font-weight:600}
+.err{background:var(--badsoft);color:var(--bad);border-radius:8px;padding:10px 14px;font-weight:600;margin-top:10px}
+@media print{.controls,.tabs,#tsz{display:none!important}.row{break-inside:avoid}}
+</style>
+</head>
+<body data-page="my-report">
+<div class="shell">
+  <main class="main"><div class="inner"><div class="wrap">
+    <div class="crumb"><a href="/#practices">Practice On Your Own</a> / Unit 3: Bonds</div>
+    <h1>My Report</h1>
+    <p class="lede">Everything you've done on the practice pages, from this device. When you're finished, type your name, pick your period, and send it to your teacher. You can send again later; your teacher sees your newest report.</p>
+    <div class="panel"><div class="pbody">
+      <div class="who"><label class="field"><span>First name and last initial</span><input id="name" maxlength="40" autocomplete="off" placeholder="e.g. Maya R."></label>
+        <label class="field"><span>Class period</span><select id="period"><option value="">Pick one</option></select></label></div>
+    </div></div>
+    <div class="rows" id="rows"></div>
+    <div class="panel sendbox"><div class="pbody">
+      <div class="lbl">Ready?</div>
+      <div id="sendNote" class="left">Do as much as you can first. Your report only includes work done on this device and this browser.</div>
+      <div class="controls"><button class="btn" id="send">Send to my teacher</button><button class="btn ghost" id="print">Print my report</button></div>
+      <div id="msg"></div>
+    </div></div>
+  </div></div></main>
+</div>
+<script src="/bond-short-answer-data.js"></script>
+<script type="module">
+import * as G from "/game-data.js";
+import * as CD from "/credit-desk-data.js";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const get = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } };
+const set = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+const SA = window.BOND_SHORT_ANSWER;
+const PERIODS = ["1", "2", "3", "4", "5", "6", "7", "8"];
+$("#period").innerHTML = `<option value="">Pick one</option>` + PERIODS.map(p => `<option value="${p}">Period ${p}</option>`).join("");
+const me = get("d214-fin-me") || {};
+$("#name").value = me.name || ""; $("#period").value = me.period || "";
+const remember = () => set("d214-fin-me", { name: $("#name").value.trim(), period: $("#period").value });
+$("#name").oninput = remember; $("#period").onchange = remember;
+
+/* ---------- gather what each practice page saved on this device ---------- */
+function gather(){
+  // Bond Desk Solo
+  const st = get("d214-bd-solo"), dec = st && Array.isArray(st.decisions) ? st.decisions.filter(Boolean) : [];
+  const years = st && st.phase === "final" ? G.NROUNDS : dec.length;
+  const bd = { years, of: G.NROUNDS, finished: !!(st && st.phase === "final") };
+  if (years) { const f = G.runFund(st.decisions, years - 1), c = G.runFund([], years - 1); bd.value = f.value; bd.cash = c.value; bd.beatCash = f.value > c.value; bd.yearGains = f.years.map(y => y.gain); }
+  // Rating Room Practice
+  const rr0 = get("d214-rr-practice") || {}, cases = rr0.cases || [], rq = get("d214-rr-quiz") || {};
+  const rr = { checked: cases.filter(c => c && c.checked).length, nailed: cases.filter(c => c && c.checked && c.right).length, of: 9,
+    randomTried: (rr0.tally || {}).tried || 0, randomExact: (rr0.tally || {}).exact || 0, quizBest: rq.best ?? null, quizOf: rq.of || 12, quizAttempts: rq.attempts || 0 };
+  // Fair Yield Sprint
+  const fy = get("d214-fair-yield-stats") || {};
+  const sprint = { runs: fy.runs || 0, best: fy.best || 0, lastScore: fy.lastScore ?? null, lastTried: fy.lastTried ?? null, bestStreak: fy.bestStreak || 0, practiceTried: fy.practiceTried || 0, practiceRight: fy.practiceRight || 0 };
+  // Bond Terms
+  const tq = get("d214-bond-terms-quiz") || {};
+  const terms = { attempts: tq.attempts || 0, bestFull: tq.bestFull ?? null, full: tq.full || 36, last: tq.last || null, missed: tq.missed || [] };
+  // Short Answer
+  const sa0 = get("d214-bond-short-answer") || {};
+  const answers = SA.map((q, i) => { const s = sa0[i] || {}; return { title: q.title, set: q.set, text: String(s.text || "").slice(0, 1500), checked: !!s.shown, hit: (s.hit || []).length, of: q.points.length }; });
+  const sa = { of: SA.length, answered: answers.filter(a => a.text.trim()).length, checked: answers.filter(a => a.checked).length,
+    hit: answers.reduce((n, a) => n + (a.checked ? a.hit : 0), 0), points: answers.reduce((n, a) => n + (a.checked ? a.of : 0), 0), answers };
+  // The Credit Desk
+  const c0 = get("d214-credit-desk"), cpicks = c0 && Array.isArray(c0.picks) ? c0.picks : [];
+  const cyears = c0 && c0.phase === "final" ? CD.YEARS.length : cpicks.filter(x => x !== null && x !== undefined).length;
+  const cd = { years: cyears, of: CD.YEARS.length, finished: !!(c0 && c0.phase === "final"), ratings: [] };
+  if (cyears) { const f = CD.runFund(cpicks, cyears - 1), c = CD.runFund([], cyears - 1); cd.value = f.value; cd.cash = c.value; cd.beatCash = f.value > c.value; cd.yearGains = f.years.map(y => y.gain);
+    cd.ratings = CD.YEARS.slice(0, cyears).map((y, i) => ({ name: y.issuer.name, mine: (c0.rate[i] || {}).rating || null, truth: y.truth.rating }));
+    cd.exact = cd.ratings.filter(r => r.mine === r.truth).length; }
+  return { bd, rr, sprint, terms, sa, cd };
+}
+const status = (done, started) => done ? ["done", "Done"] : started ? ["part", "In progress"] : ["", "Not started"];
+function draw(){
+  const R = gather(), rows = [];
+  { const d = R.cd, [c, t] = status(d.finished, d.years);
+    rows.push([c, t, "The Credit Desk", "/practice-credit-desk", d.years ? `${d.years} of ${d.of} years. Ratings exactly right: <b>${d.exact} of ${d.years}</b>. Fund <b>${G.money(d.value)}</b> vs. all cash ${G.money(d.cash)}: ${d.beatCash ? "<b>beat cash</b>" : "behind cash"}.` : "Rate each borrower, then decide how much of its bond to buy. Six years."]); }
+  { const b = R.bd, [c, t] = status(b.finished, b.years);
+    rows.push([c, t, "Bond Desk Solo", "/practice-bond-desk", b.years ? `${b.years} of ${b.of} years played. Fund value <b>${G.money(b.value)}</b> vs. all cash ${G.money(b.cash)}: ${b.beatCash ? "<b>beat cash</b>" : "behind cash"}.` : "Play all ten years and try to beat the Play-It-Safe Fund."]); }
+  { const r = R.rr, [c, t] = status(r.checked >= r.of, r.checked || r.randomTried || r.quizAttempts);
+    rows.push([c, t, "Rating Room Practice", "/practice-rating-room", `Case files: <b>${r.nailed} of ${r.of}</b> nailed (${r.checked} checked). Random issuers: ${r.randomExact} of ${r.randomTried} nailed. Quick quiz best: ${r.quizBest === null ? "not taken" : `<b>${r.quizBest} of ${r.quizOf}</b>`}.`]); }
+  { const s = R.sprint, [c, t] = status(s.runs > 0, s.practiceTried);
+    rows.push([c, t, "Fair Yield Sprint", "/practice-fair-yield-sprint", s.runs ? `Best 60-second sprint: <b>${s.best} correct</b> (${s.runs} run${s.runs > 1 ? "s" : ""}, best streak ${s.bestStreak}). Practice: ${s.practiceRight} of ${s.practiceTried} right.` : s.practiceTried ? `Practice: ${s.practiceRight} of ${s.practiceTried} right. Try a 60-second sprint.` : "Do at least one 60-second sprint."]); }
+  { const q = R.terms, [c, t] = status(q.bestFull !== null, q.attempts);
+    rows.push([c, t, "Bond Terms", "/practice-bond-terms", q.bestFull !== null ? `Best full quiz: <b>${q.bestFull} of ${q.full}</b> (${q.attempts} quiz${q.attempts > 1 ? "zes" : ""}).` : q.attempts ? `Last quiz: ${q.last.score} of ${q.last.of}. Take the quiz on all ${q.full} terms.` : `Take the quiz on all ${q.full} terms.`]); }
+  { const a = R.sa, [c, t] = status(a.checked >= a.of, a.answered);
+    rows.push([c, t, "Short Answer", "/practice-bond-short-answer", a.answered ? `<b>${a.checked} of ${a.of}</b> answered and checked. Key points hit: <b>${a.hit} of ${a.points}</b>.` : `Answer and check all ${a.of} questions.`]); }
+  $("#rows").innerHTML = rows.map(([c, t, h, href, n]) => `<div class="row ${c}"><div><h3>${h}</h3><div class="st">${t}</div></div><div class="nums">${n}</div><a href="${href}">Open →</a></div>`).join("");
+  const sent = get("d214-fin-sent");
+  if (sent) $("#sendNote").textContent = "Last sent " + new Date(sent).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }) + ". Sending again replaces it with your newest work.";
+  return R;
+}
+draw();
+$("#print").onclick = () => print();
+$("#send").onclick = async () => {
+  const name = $("#name").value.trim(), period = $("#period").value, R = draw();
+  const say = (m, bad) => $("#msg").innerHTML = `<div class="${bad ? "err" : "fb ok"}" style="margin-top:12px">${bad ? esc(m) : `<div class="fh">${esc(m)}</div>`}</div>`;
+  if (!name) return say("Type your first name and last initial first.", true);
+  if (!period) return say("Pick your class period first.", true);
+  $("#send").disabled = true;
+  try {
+    const r = await fetch("/api/report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "submit", report: { v: 1, name, period, unit: "Unit 3: Bonds", ...R } }) });
+    let j = null; try { j = await r.json(); } catch (e) {}
+    if (!r.ok) throw new Error((j && j.message) || "Couldn't send. Try again.");
+    set("d214-fin-sent", Date.now()); draw(); say("Sent! Your teacher has your report.");
+  } catch (e) { say(e.message === "Failed to fetch" ? "Can't reach the site. Check the Wi-Fi and try again." : e.message, true); }
+  finally { $("#send").disabled = false; }
+};
+</script>
+<script src="/site.js"></script>
+</body>
+</html>

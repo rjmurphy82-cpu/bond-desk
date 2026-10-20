@@ -285,13 +285,14 @@ function drawRandom(){
   wire(RS.c, RS, () => keepScroll(drawRandom), () => { t.tried++; if (RS.r === RS.c.rating) t.exact++; persist(); },
     () => { RS.c = null; RS.s = {}; RS.r = null; RS.checked = false; drawRandom(); scrollTo(0, 0); });
 }
-let qi = 0, qPick = null, qScore = 0, qDone = new Set();
+let qi = 0, qPick = null, qScore = 0; let qDone = new Set();
 function drawQuiz(){
   const Q = DATA.blitz, q = Q[qi];
   if (qi >= Q.length) {
+    if (!qDone.logged) { const R = store.get("d214-rr-quiz") || { attempts: 0 }; R.attempts++; R.last = qScore; R.of = Q.length; R.best = Math.max(R.best || 0, qScore); R.at = Date.now(); store.set("d214-rr-quiz", R); qDone.logged = true; }
     $("#view").innerHTML = `<div class="panel"><div class="phead"><span class="t">Quick quiz done</span></div><div class="pbody"><div class="sumrow"><span class="big">${qScore}/${Q.length}</span><span>${qScore===Q.length?"Perfect. You're ready for the Rating Room.":qScore>=9?"Strong. Review the ones you missed, then try a case file.":"Look over the scorecard below, then take it again."}</span></div>
       <div class="controls"><button class="btn" id="qAgain">Take it again</button><button class="btn ghost" id="qCases">Go to the case files</button></div></div></div>`;
-    $("#qAgain").onclick = () => { qi = 0; qPick = null; qScore = 0; qDone.clear(); drawQuiz(); };
+    $("#qAgain").onclick = () => { qi = 0; qPick = null; qScore = 0; qDone = new Set(); drawQuiz(); };
     $("#qCases").onclick = () => setMode("cases");
     return;
   }

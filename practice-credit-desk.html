@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Credit Desk | District 214 Finance &amp; Investing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<style>
+/* Layout: year header with a 3-stage tracker (Rate it, Price it, See what happened), then that stage's two-column work area */
+.yrhead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px 20px;flex-wrap:wrap;margin:6px 0 12px}
+.yrhead h2{font-family:var(--display);font-weight:700;font-size:clamp(28px,4vw,42px);line-height:1;margin:2px 0 0}
+.yrsub{font-size:13px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--redtext)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{background:var(--black);color:#fff;border-radius:10px;padding:6px 14px;text-align:center;min-width:104px}
+.chip.red{background:var(--red)}
+.chip .v{font-family:var(--display);font-weight:600;font-size:22px;line-height:1.1}
+.chip .k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+.stages{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0 0 16px}
+.stage{border-radius:10px;padding:8px 12px;background:var(--paper);border:2px solid var(--line);display:flex;gap:10px;align-items:center}
+.stage b{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--gray);font-family:var(--display);font-size:16px}
+.stage span{font-family:var(--display);font-weight:600;font-size:18px;line-height:1.1}
+.stage small{display:block;font:600 12.5px var(--body);color:var(--muted)}
+.stage.now{border-color:var(--red);background:var(--redsoft)}.stage.now b{background:var(--red);color:#fff}
+.stage.done b{background:var(--good);color:#fff}
+@media (max-width:640px){.stage small{display:none}.stage span{font-size:15px}}
+.sheet{background:#FFF3B0;border-bottom:3px solid #E0B000;border-radius:8px;padding:8px 14px;font-size:15.5px;margin-bottom:14px;color:#111}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:18px;align-items:start}
+@media (max-width:1050px){.cols{grid-template-columns:1fr}}
+.stack{display:grid;gap:14px;align-content:start}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+@media (max-width:560px){.facts{grid-template-columns:1fr 1fr}}
+.fact{background:var(--black);color:#fff;border-radius:8px;padding:7px 10px}
+.fact .v{font-family:var(--display);font-weight:600;font-size:23px;line-height:1.1}
+.fact .k{font-size:12.5px;opacity:.85;line-height:1.2}
+.notes{list-style:none;margin:6px 0 0;padding:0}
+.notes li{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);line-height:1.35}
+.notes li:last-child{border-bottom:0}
+.notes li b{flex:none;width:24px;height:24px;border-radius:50%;background:var(--black);color:#fff;display:grid;place-items:center;font:600 13px var(--display);margin-top:1px}
+.tiny{font-size:13.5px;color:var(--muted);margin-top:8px}
+.frow{border:2px solid var(--line);border-radius:10px;padding:9px 12px;margin-bottom:8px;background:var(--paper)}
+.fname{font-family:var(--display);font-weight:600;font-size:18px;text-transform:uppercase}
+.fq{font-size:13.5px;color:var(--muted)}
+.fq b{color:var(--redtext)}
+.levels{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:7px}
+@media (max-width:640px){.levels{grid-template-columns:1fr}}
+.lv{text-align:left;background:var(--bg);border:2px solid var(--line);border-radius:8px;padding:5px 7px;font-size:12.5px;line-height:1.2;min-height:46px}
+.lv b{display:block;font-family:var(--display);font-size:18px;color:var(--redtext);line-height:1.1}
+.lv:hover{border-color:var(--ink)}
+.lv.on{border-color:var(--red);background:var(--redsoft)}
+.totals{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.tbox{flex:1;min-width:140px;background:var(--black);color:#fff;border-radius:10px;padding:8px 14px}
+.tbox.red{background:var(--red)}
+.tbox .k{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;opacity:.85}
+.tbox .v{font-family:var(--display);font-weight:700;font-size:34px;line-height:1.05}
+.scale{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.scale div{background:var(--gray);border-radius:6px;padding:4px 0;font-family:var(--display);font-weight:600;font-size:16px}
+.scale div.j{background:var(--redsoft);color:var(--redtext)}
+.scale div.me{outline:3px solid var(--ink)}
+.scale small{display:block;font:600 12px var(--body);color:var(--muted)}
+.bond{background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:10px}
+.bond h3{font-family:var(--display);font-weight:600;font-size:24px;margin:0;line-height:1.1}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+@media (max-width:560px){.stats{grid-template-columns:1fr 1fr}}
+.stat{background:var(--black);color:#fff;border-radius:8px;padding:6px 8px;text-align:center}
+.stat.j{background:var(--red)}.stat.mine{background:var(--good)}
+.stat .v{font-family:var(--display);font-weight:600;font-size:22px;line-height:1.1}
+.stat .k{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;opacity:.9}
+.hint{font-size:14.5px;border-radius:6px;padding:6px 10px;background:var(--gray)}
+.calc{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:17px;font-weight:600}
+.calc input{width:96px;font:600 19px var(--body);padding:6px 10px;border:2px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink)}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+@media (max-width:560px){.seg{grid-template-columns:1fr 1fr}}
+.seg button{border:2px solid var(--line);background:var(--bg);border-radius:8px;font-family:var(--display);font-weight:600;font-size:18px;padding:12px 0;text-transform:uppercase}
+.seg button:hover:not(:disabled){border-color:var(--ink)}
+.seg button.on{background:var(--red);border-color:var(--red);color:#fff}
+.seg button.on.pass{background:var(--black);border-color:var(--black)}
+.seg button:disabled{opacity:.4;cursor:default}
+.res td{font-size:15.5px}
+.res tr.tot td{font-family:var(--display);font-weight:600;font-size:19px;border-top:2px solid var(--ink)}
+.cmp td{font-size:14.5px;padding:5px 8px}
+.cmp tr.bad td{background:var(--badsoft)}.cmp tr.ok td{background:var(--goodsoft)}
+.math{font-size:15.5px;line-height:1.6}
+.math b{font-family:var(--display);font-weight:600;font-size:18px}
+.big{font-family:var(--display);font-weight:700;font-size:clamp(36px,6vw,54px);line-height:1}
+.versus{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+@media (max-width:560px){.versus{grid-template-columns:1fr}}
+.versus>div{border:2px solid var(--line);border-radius:10px;padding:8px 12px}
+.versus>div.me{border-color:var(--red)}
+.versus .k{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.versus .v{font-family:var(--display);font-weight:600;font-size:23px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;align-items:center}
+.left{color:var(--muted);font-size:15px;font-weight:600}
+.rules li{margin:7px 0;line-height:1.4}
+.stepcards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+@media (max-width:760px){.stepcards{grid-template-columns:1fr}}
+.stepcards>div{background:var(--paper);border:1px solid var(--line);border-top:4px solid var(--red);border-radius:8px;padding:12px 14px}
+.stepcards h3{font-family:var(--display);font-weight:600;font-size:21px;margin:0 0 4px}
+.stepcards p{margin:0;font-size:15px;color:var(--muted)}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--black);color:#fff;padding:10px clamp(14px,3vw,40px) calc(10px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;gap:12px;z-index:20}
+@media (min-width:901px){.bar{left:272px}}
+.bar .nums{display:flex;gap:20px;flex-wrap:wrap}
+.bar .v{font-family:var(--display);font-weight:600;font-size:21px;line-height:1.1}
+.bar .k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+.bar .over .v{color:#FF8A99}
+body.hasbar #tsz{bottom:84px}
+body.hasbar .main{padding-bottom:140px}
+@media (max-width:700px){body.hasbar #tsz{display:none}.bar .nums{gap:12px}.bar .v{font-size:17px}.bar .btn{padding:10px 14px;font-size:16px}}
+</style>
+</head>
+<body data-page="practice-credit-desk">
+<div class="shell">
+  <main class="main"><div class="inner">
+    <div class="crumb"><a href="/#practices">Practice On Your Own</a> / Unit 3: Bonds</div>
+    <div id="view"></div>
+  </div></main>
+</div>
+<div id="barSlot"></div>
+<script type="module">
+import * as C from "/credit-desk-data.js";
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const k = v => v ? "$" + v / 1000 + "K" : "Pass";
+const M = v => (v < 0 ? "−" : "") + "$" + Math.abs(v).toLocaleString("en-US") + "M";
+const KEY = "d214-credit-desk", N = C.YEARS.length;
+const fresh = () => ({ phase: "intro", i: 0, rate: [], fair: [], picks: [], draft: 0 });
+let st; try { st = JSON.parse(localStorage.getItem(KEY)) || fresh(); } catch (e) { st = fresh(); }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+const myRate = i => st.rate[i] || (st.rate[i] = { s: {} });
+const myTotal = i => C.FACTORS.reduce((a, f) => a + (myRate(i).s[f.key] ?? 0), 0);
+const allScored = i => C.FACTORS.every(f => myRate(i).s[f.key] !== undefined);
+const myRating = i => C.ratingFor(myTotal(i));
+const fundBefore = i => i === 0 ? C.START_FUND : C.runFund(st.picks, i - 1).value;
+const cashBefore = i => i === 0 ? C.START_FUND : C.runFund([], i - 1).value;
+function setBar(h) { $("#barSlot").innerHTML = h; document.body.classList.toggle("hasbar", !!h); }
+const keepY = fn => { const y = scrollY; fn(); scrollTo(0, y); };
+
+/* ---------- header ---------- */
+function header(y, stage) {
+  const names = [["Rate it", "Score the borrower"], ["Price it", "Fair yield, then decide"], ["See what happened", "Rating change + rates"]];
+  return `<div class="yrhead"><div><div class="yrsub">Year ${y.year} of ${N}</div><h2>${esc(y.title)}</h2></div>
+    <div class="chips"><div class="chip red"><div class="v">${C.money(fundBefore(st.i) + (stage === 2 ? C.scoreYear(st.i, st.picks[st.i] || 0, fundBefore(st.i)).gain : 0))}</div><div class="k">Your fund</div></div>
+      <div class="chip"><div class="v">${stage === 2 ? y.t0.toFixed(1) + "% → " + y.t1.toFixed(1) + "%" : y.t0.toFixed(1) + "%"}</div><div class="k">Treasury rate</div></div></div></div>
+    <div class="stages">${names.map(([a, b], n) => `<div class="stage ${n === stage ? "now" : n < stage ? "done" : ""}"><b>${n < stage ? "✓" : n + 1}</b><span>${a}<small>${b}</small></span></div>`).join("")}</div>
+    <div class="sheet"><b>▶ Worksheet:</b> fill in <b>Year ${y.year}, Part ${"ABC"[stage]}</b> on your Credit Desk worksheet while you do this screen.</div>`;
+}
+
+/* ---------- intro ---------- */
+function intro() {
+  setBar("");
+  $("#view").innerHTML = `<h1>The Credit Desk</h1>
+    <p class="lede">You are the rating analyst AND the fund manager. Each year a company or government wants to borrow from your $1,000,000 fund. First you rate it yourself with the scorecard. Then you use <b>your</b> rating to decide if its bond is worth buying. Then you find out what really happened.</p>
+    <div class="stepcards"><div><h3>1. Rate it</h3><p>Read the case file. Score the six factors, 0 to 4 each. Your points give you your rating.</p></div>
+      <div><h3>2. Price it</h3><p>The agency's posted rating may be out of date. Find the fair yield using YOUR rating, compare it to what the bond pays, and pick how much to buy.</p></div>
+      <div><h3>3. See what happened</h3><p>The agency moves the rating to the true one, rates move, and you see your return and why.</p></div></div>
+    <div class="cols"><div class="panel"><div class="phead"><span class="t">The rules</span></div><div class="pbody"><ul class="rules" style="margin:0;padding-left:1.1em">
+      <li><b>Fair yield</b> = Treasury rate + the spread for the rating. Pays more than fair = good deal. Pays less = overpriced.</li>
+      <li>By year end, the agency fixes its rating. <b>Each step</b> the rating moves changes the price <b>4%</b>. Crossing the junk line (BBB ↔ BB) adds <b>4% more</b>.</li>
+      <li>Rates up → bond prices down (long bonds move most). Rates down → prices up.</li>
+      <li>A <b>default</b> pays no interest and you get back $40 per $100.</li>
+      <li>Choose Pass, $100K, $200K or $300K. Money you don't invest earns the Treasury rate.</li>
+      <li>Fund rule: no more than <b>$200K</b> in a bond <b>posted</b> as junk (BB or lower), or a <b>$25,000 fine</b>.</li></ul></div></div>
+      <div class="panel"><div class="phead"><span class="t">Spreads and the scale</span></div><div class="pbody">
+        <div class="scale">${C.LADDER.map(r => `<div class="${C.isJunk(r) ? "j" : ""}">${r}<small>+${C.SPREADS[r].toFixed(1)}%</small></div>`).join("")}</div>
+        <div class="tiny">Spread added to the Treasury rate for each rating.</div>
+        <div class="scale" style="margin-top:12px">${C.LADDER.map(r => `<div class="${C.isJunk(r) ? "j" : ""}">${r}<small>${C.bandText(r)} pts</small></div>`).join("")}</div>
+        <div class="tiny">Scorecard points (out of 24) for each rating.</div>
+        <p style="margin-bottom:0">Goal: beat the <b>Play-It-Safe Fund</b> (all cash) and rate as many borrowers exactly right as you can.</p>
+        <div class="controls"><button class="btn" id="go">Start Year 1</button></div></div></div></div>`;
+  $("#go").onclick = () => { st = fresh(); st.phase = "rate"; save(); render(); scrollTo(0, 0); };
+}
+
+/* ---------- 1. rate it ---------- */
+function caseFile(c) {
+  const term = c.munis ? "Surplus" : "Earnings";
+  return `<div class="panel"><div class="phead"><span class="t">${esc(c.name)}</span><span class="r">${esc(c.type)}</span></div><div class="pbody">
+    <p style="margin:0 0 12px">${esc(c.what)}</p>
+    <div class="facts">${[["Total debt", c.debt], ["Yearly interest", c.interest], ["Cash on hand", c.cash], ["Debt due next 12 months", c.due]].map(([a, v]) => `<div class="fact"><div class="v">${M(v)}</div><div class="k">${a}</div></div>`).join("")}</div>
+    <table><tr><th>Year</th><th class="r">Revenue</th><th class="r">${term} (before interest)</th></tr>${C.YEARS_LBL.map((yy, n) => `<tr><td>${yy}</td><td class="r">${M(c.rev[n])}</td><td class="r ${c.earn[n] < 0 ? "neg" : ""}">${M(c.earn[n])}</td></tr>`).join("")}</table>
+    <div class="lbl" style="margin-top:14px">Case notes</div><ul class="notes">${c.notes.map((n, j) => `<li><b>${j + 1}</b><span>${esc(n)}</span></li>`).join("")}</ul>
+    <div class="tiny">Use 2026 for the math. Dollar figures in millions. Not every note matters.</div></div></div>`;
+}
+function rateIt() {
+  const y = C.YEARS[st.i], R = myRate(st.i), done = allScored(st.i), tot = myTotal(st.i);
+  setBar("");
+  $("#view").innerHTML = header(y, 0) + `<div class="cols">${caseFile(y.issuer)}
+    <div class="panel"><div class="phead"><span class="t">Your scorecard</span><span class="r">Tap 0 to 4 for each</span></div><div class="pbody">
+      ${C.FACTORS.map(f => `<div class="frow"><div class="fname">${f.name}</div><div class="fq">${f.kind === "ratio" ? `<b>${f.formula}</b> (do it on your worksheet)` : esc(f.q)}</div>
+        <div class="levels">${[4, 3, 2, 1, 0].map(l => `<button class="lv ${R.s[f.key] === l ? "on" : ""}" data-k="${f.key}" data-l="${l}"><b>${l}</b>${f.short[l]}</button>`).join("")}</div></div>`).join("")}
+      <div class="totals"><div class="tbox"><div class="k">Your points</div><div class="v">${done ? tot : "–"}<span style="font-size:17px"> / 24</span></div></div>
+        <div class="tbox red"><div class="k">Your rating</div><div class="v">${done ? myRating(st.i) : "?"}</div></div></div>
+      <div class="scale">${C.LADDER.map(r => `<div class="${C.isJunk(r) ? "j" : ""} ${done && r === myRating(st.i) ? "me" : ""}">${r}<small>${C.bandText(r)}</small></div>`).join("")}</div>
+      <div class="controls"><button class="btn" id="lockRate" ${done ? "" : "disabled"}>Lock in my rating</button><span class="left">${done ? "You can't change it after this, so check your math." : `${C.FACTORS.filter(f => R.s[f.key] !== undefined).length} of 6 scored`}</span></div></div></div></div>`;
+  $$(".lv").forEach(b => b.onclick = () => { R.s[b.dataset.k] = +b.dataset.l; save(); keepY(rateIt); });
+  $("#lockRate").onclick = () => { R.rating = myRating(st.i); R.total = myTotal(st.i); st.phase = "price"; st.draft = 0; save(); render(); scrollTo(0, 0); };
+}
+
+/* ---------- 2. price it ---------- */
+function priceIt() {
+  const y = C.YEARS[st.i], b = y.bond, mine = myRate(st.i).rating, sv = fundBefore(st.i), fairMine = C.fairYield(y.t0, mine);
+  const typed = st.fair[st.i], checked = typed !== undefined && typed !== null && typed !== "";
+  const ok = checked && Math.abs(parseFloat(typed) - fairMine) < 0.051;
+  const junk = C.isJunk(b.posted);
+  $("#view").innerHTML = header(y, 1) + `<div class="cols"><div class="stack">
+      <div class="panel"><div class="phead"><span class="t">Rate news</span></div><div class="pbody"><p style="margin:0;font-size:18px"><b>${esc(y.rateNews)}</b></p>
+        <div class="tiny">Rates up → bond prices down. Rates down → prices up. Long bonds move the most.</div></div></div>
+      <div class="panel"><div class="pbody"><div class="lbl">Spreads (add to the Treasury rate)</div><div class="scale">${C.LADDER.map(r => `<div class="${C.isJunk(r) ? "j" : ""} ${r === mine ? "me" : ""}">${r}<small>+${C.SPREADS[r].toFixed(1)}%</small></div>`).join("")}</div>
+        <div class="tiny">Money you don't buy bonds with earns ${y.t0.toFixed(1)}% in Treasuries. No more than $200K in a bond posted as junk (BB or lower), or a $25,000 fine.</div></div></div></div>
+    <div class="stack"><div class="bond"><h3>${esc(y.issuer.name)}</h3>
+      <div class="stats"><div class="stat mine"><div class="v">${mine}</div><div class="k">Your rating</div></div><div class="stat ${junk ? "j" : ""}"><div class="v">${b.posted}</div><div class="k">Agency's posted</div></div>
+        <div class="stat"><div class="v">${b.yld.toFixed(1)}%</div><div class="k">Bond pays</div></div><div class="stat"><div class="v">${b.years} yr</div><div class="k">Matures</div></div></div>
+      ${mine !== b.posted ? `<div class="hint"><b>Your rating and the agency's don't match.</b> The posted rating may be out of date. Trust your scorecard, or rethink it.</div>` : `<div class="hint">Your rating matches the agency's posted rating.</div>`}
+      <div class="hint">If rates rise 1%, its price falls about <b>${b.sens}%</b>. If rates fall 1%, it rises about ${b.sens}%.</div>
+      <div><div class="lbl">Your fair yield (use YOUR rating)</div>
+        <div class="calc">${y.t0.toFixed(1)}% + spread for ${mine} = <input id="fair" inputmode="decimal" placeholder="?" value="${esc(typed ?? "")}" aria-label="Your fair yield"> % <button class="btn ghost" id="checkFair">Check</button></div>
+        ${checked ? (ok ? `<div class="fb ok" style="margin-top:10px"><div class="fh">Right: ${fairMine.toFixed(1)}%</div><div>It pays ${b.yld.toFixed(1)}% vs. your fair yield of ${fairMine.toFixed(1)}%: <b>${C.verdict(b.yld, fairMine)}</b> (by your rating).</div></div>`
+          : `<div class="fb no" style="margin-top:10px"><div class="fh">Check it: ${y.t0.toFixed(1)}% + ${C.SPREADS[mine].toFixed(1)}% = ${fairMine.toFixed(1)}%</div><div>It pays ${b.yld.toFixed(1)}% vs. your fair yield of ${fairMine.toFixed(1)}%: <b>${C.verdict(b.yld, fairMine)}</b> (by your rating).</div></div>`) : ""}</div>
+      <div><div class="lbl">How much will you buy?</div><div class="seg">${C.AMOUNTS.map(a => `<button data-a="${a}" class="${st.draft === a ? "on" : ""} ${a ? "" : "pass"}" ${checked ? "" : "disabled"}>${a ? "Buy " + k(a) : "Pass"}</button>`).join("")}</div>
+        ${checked ? "" : `<div class="tiny">Find your fair yield first.</div>`}</div></div></div></div>`;
+  const fi = $("#fair");
+  $("#checkFair").onclick = () => { if (!fi.value.trim()) return fi.focus(); st.fair[st.i] = fi.value.trim(); save(); keepY(priceIt); };
+  fi.onkeydown = e => { if (e.key === "Enter") $("#checkFair").click(); };
+  $$(".seg button").forEach(x => x.onclick = () => { st.draft = +x.dataset.a; save(); keepY(priceIt); });
+  const over = junk && st.draft > C.JUNK_LIMIT;
+  setBar(`<div class="bar"><div class="nums"><div><div class="v">${C.money(st.draft)}</div><div class="k">In the bond</div></div><div><div class="v">${C.money(sv - st.draft)}</div><div class="k">In cash</div></div>
+    <div class="${over ? "over" : ""}"><div class="v">${junk ? C.money(st.draft) : "$0"}</div><div class="k">Posted junk · limit $200K</div></div></div><button class="btn" id="lock" ${checked ? "" : "disabled"}>Lock in</button></div>`);
+  $("#lock").onclick = () => {
+    if (over && !confirm("This bond is posted as junk and you're putting in more than $200K. That breaks the fund rule: $25,000 fine. Lock in anyway?")) return;
+    st.picks[st.i] = st.draft; st.phase = "reveal"; save(); render(); scrollTo(0, 0);
+  };
+}
+
+/* ---------- 3. see what happened ---------- */
+function mathLine(c, t, key) {
+  const r = t.ratios, e = c.earn[4];
+  if (key === "debt") return r.debt === null ? `No earnings in 2026, so 0 points` : `${M(c.debt)} ÷ ${M(e)} = ${r.debt.toFixed(2)} years`;
+  if (key === "coverage") return `${M(e)} ÷ ${M(c.interest)} = ${r.cov.toFixed(2)}x`;
+  if (key === "cash") return `${M(c.cash)} ÷ ${M(c.due)} = ${r.cash.toFixed(2)}`;
+  if (key === "stability") return `Profit in ${r.P} of 5 years; revenue ${r.R >= 0 ? "+" : ""}${r.R.toFixed(1)}%${r.P === 5 && r.R > 0 ? (r.rising ? ", up every year" : ", with a dip") : ""}`;
+  if (key === "history") return c.historyText;
+  return c.backingText;
+}
+function reveal() {
+  setBar("");
+  const i = st.i, y = C.YEARS[i], t = y.truth, R = myRate(i), b = y.bond, start = fundBefore(i), pick = st.picks[i] || 0;
+  const s = C.scoreYear(i, pick, start), cashY = C.scoreYear(i, 0, cashBefore(i)), best = C.bestPick(i, start), ret = s.ret;
+  const steps = Math.abs(C.LADDER.indexOf(R.rating) - C.LADDER.indexOf(t.rating));
+  const fT = C.fairYield(y.t0, t.rating);
+  $("#view").innerHTML = header(y, 2) + `<div class="cols"><div class="stack">
+    <div class="panel"><div class="phead"><span class="t">Your rating vs. the true rating</span></div><div class="pbody">
+      <div class="fb ${steps === 0 ? "ok" : "no"}"><div class="fh">${steps === 0 ? `Nailed it: ${t.rating}` : `True rating: ${t.rating}. You said ${R.rating} (${steps} step${steps > 1 ? "s" : ""} off)`}</div>
+        <div>Posted by the agency: <b>${b.posted}</b>. True rating from the numbers: <b>${t.rating}</b> (${t.total} points).</div></div>
+      <div style="overflow-x:auto;margin-top:10px"><table class="cmp"><tr><th>Factor</th><th class="r">You</th><th class="r">True</th><th>Why</th></tr>
+        ${C.FACTORS.map(f => `<tr class="${R.s[f.key] === t.scores[f.key] ? "ok" : "bad"}"><td><b>${f.name}</b></td><td class="r">${R.s[f.key]}</td><td class="r"><b>${t.scores[f.key]}</b></td><td>${esc(mathLine(y.issuer, t, f.key))}</td></tr>`).join("")}
+        <tr><td><b>Total</b></td><td class="r">${R.total}</td><td class="r"><b>${t.total}</b></td><td>${t.total} points = ${t.rating}</td></tr></table></div></div></div>
+    <div class="panel"><div class="pbody"><div class="lbl">Your desk this year</div><div class="big ${s.gain < 0 ? "neg" : ""}">${C.signed(s.gain)}</div>
+      <div style="margin-top:4px">Fund value now: <b>${C.money(s.end)}</b>. You chose: <b>${pick ? "Buy " + k(pick) : "Pass"}</b>.</div>
+      <div class="versus"><div class="me"><div class="k">You</div><div class="v ${s.gain < 0 ? "neg" : ""}">${C.signed(s.gain)}</div></div><div><div class="k">All cash</div><div class="v">${C.signed(cashY.gain)}</div></div><div><div class="k">Best choice (${best.a ? k(best.a) : "Pass"})</div><div class="v">${C.signed(best.s.gain)}</div></div></div></div></div></div>
+    <div class="stack"><div class="panel"><div class="phead"><span class="t">What happened to the bond</span></div><div class="pbody">
+      <div class="math">
+        ${ret.isDefault ? `<div><b>DEFAULT.</b> ${esc(y.issuer.name)} couldn't pay. No interest, and bondholders got back $40 per $100: <b>−60%</b>.</div>`
+          : `<div>1. Interest (what it pays): <b>${C.pct(ret.coupon)}</b></div>
+             <div>2. Rating move: ${esc(ret.move.label)}${ret.move.steps ? ` = ${Math.abs(ret.move.steps)} step${Math.abs(ret.move.steps) > 1 ? "s" : ""} × 4%${ret.move.crossed ? " + 4% for crossing the junk line" : ""}` : ""}: <b class="${ret.credit < 0 ? "neg" : ret.credit > 0 ? "pos" : ""}">${C.pct(ret.credit)}</b></div>
+             <div>3. Rate move: ${y.t0.toFixed(1)}% → ${y.t1.toFixed(1)}%${y.t1 !== y.t0 ? ` = ${Math.abs(y.t1 - y.t0).toFixed(1)}% × ${b.sens} ${y.t1 > y.t0 ? "(rates up, price down)" : "(rates down, price up)"}` : " (no change)"}: <b class="${ret.rate < 0 ? "neg" : ret.rate > 0 ? "pos" : ""}">${C.pct(ret.rate)}</b></div>
+             <div style="border-top:2px solid var(--ink);margin-top:6px;padding-top:6px">Total return: ${C.pct(ret.coupon)} ${ret.credit < 0 ? "−" : "+"} ${Math.abs(ret.credit).toFixed(1)}% ${ret.rate < 0 ? "−" : "+"} ${Math.abs(ret.rate).toFixed(1)}% = <b class="${ret.total < 0 ? "neg" : "pos"}">${C.pct(ret.total)}</b></div>`}
+      </div>
+      <div class="fb" style="margin-top:12px;border-color:var(--ink);background:var(--bg)"><div class="fh">The price check with the TRUE rating</div><div>${y.t0.toFixed(1)}% + ${C.SPREADS[t.rating].toFixed(1)}% (${t.rating}) = ${fT.toFixed(1)}% fair yield. It paid ${b.yld.toFixed(1)}%: <b>${C.verdict(b.yld, fT)}</b>.</div></div>
+      <p style="margin:12px 0 0">${esc(y.lesson)}</p></div></div>
+    <div class="panel"><div class="pbody" style="overflow-x:auto"><table class="res"><tr><th>Your money</th><th class="r">Amount</th><th class="r">Result</th></tr>
+      <tr><td>${esc(y.issuer.name)}</td><td class="r">${pick ? k(pick) : "Pass"}</td><td class="r ${s.bondGain < 0 ? "neg" : ""}">${pick ? C.signed(s.bondGain) : "–"}</td></tr>
+      <tr><td>Cash in Treasuries (${y.t0.toFixed(1)}%)</td><td class="r">${C.money(s.cash)}</td><td class="r">${C.signed(s.cashGain)}</td></tr>
+      ${s.fine ? `<tr><td colspan="2">Junk limit fine</td><td class="r neg">−$25,000</td></tr>` : ""}
+      <tr class="tot"><td colspan="2">Total for the year</td><td class="r ${s.gain < 0 ? "neg" : ""}">${C.signed(s.gain)}</td></tr></table></div></div></div></div>
+    <div class="controls" style="justify-content:flex-end"><button class="btn ghost" id="redo">Redo this year</button><button class="btn" id="next">${i < N - 1 ? "Start Year " + (i + 2) : "See final results"}</button></div>
+    <div class="controls"><button class="btn ghost" id="restart">Start over from Year 1</button></div>`;
+  $("#redo").onclick = () => { st.rate[i] = { s: {} }; st.fair[i] = undefined; st.picks.length = i; st.phase = "rate"; st.draft = 0; save(); render(); scrollTo(0, 0); };
+  $("#next").onclick = () => { if (i < N - 1) { st.i++; st.phase = "rate"; st.draft = 0; } else st.phase = "final"; save(); render(); scrollTo(0, 0); };
+  $("#restart").onclick = () => { if (confirm("Start over? Every year will be cleared.")) { st = fresh(); save(); render(); scrollTo(0, 0); } };
+}
+
+/* ---------- final ---------- */
+function finalScreen() {
+  setBar("");
+  const f = C.runFund(st.picks), cash = C.runFund([]), best = C.bestFund();
+  const nailed = C.YEARS.filter((y, i) => myRate(i).rating === y.truth.rating).length, beat = f.value > cash.value;
+  $("#view").innerHTML = `<h1>Six years on the Credit Desk</h1>
+    <div class="cols"><div class="stack"><div class="panel"><div class="pbody"><div class="lbl">Final fund value</div><div class="big">${C.money(f.value)}</div>
+      <div class="versus"><div class="me"><div class="k">You</div><div class="v">${C.money(f.value)}</div></div><div><div class="k">All cash</div><div class="v">${C.money(cash.value)}</div></div><div><div class="k">Best possible</div><div class="v">${C.money(best.value)}</div></div></div>
+      <div class="fb ${beat ? "ok" : "no"}" style="margin-top:12px"><div class="fh">${beat ? "You beat the Play-It-Safe Fund by " + C.money(f.value - cash.value) + "." : "The Play-It-Safe Fund beat you by " + C.money(cash.value - f.value) + "."}</div>
+        <div>You rated <b>${nailed} of ${N}</b> borrowers exactly right.</div></div>
+      <div class="controls"><button class="btn" id="again">Play again</button><a class="btn ghost" href="/my-report" style="text-decoration:none">Go to My Report</a></div></div></div></div>
+    <div class="panel"><div class="phead"><span class="t">Year by year</span></div><div class="pbody" style="overflow-x:auto"><table class="res"><tr><th>Year</th><th>Your rating</th><th>True</th><th class="r">You</th><th class="r">Best</th></tr>
+      ${C.YEARS.map((y, i) => `<tr><td>${y.year}. ${esc(y.issuer.name)}</td><td>${myRate(i).rating || "–"}</td><td><b>${y.truth.rating}</b></td><td class="r ${f.years[i].gain < 0 ? "neg" : ""}">${C.signed(f.years[i].gain)}</td><td class="r muted">${best.picks[i] ? k(best.picks[i]) : "Pass"}</td></tr>`).join("")}</table>
+      <div class="lbl" style="margin-top:16px">What the desk teaches</div><ul style="margin:0;padding-left:1.1em;line-height:1.5">
+        <li>A posted rating can be out of date. Your own scorecard tells you which way it's about to move.</li>
+        <li>Scorecard lower than posted → the bond pays too little → a downgrade is coming. Higher → a hidden gem.</li>
+        <li>A high yield isn't a good deal if it's below the fair yield for the TRUE rating (Volt Scooters).</li>
+        <li>Even a perfect rating can't beat a rate hike on a 20-year bond. Check the rate news.</li>
+        <li>Follow the fund rule: a bond posted as junk gets $200K at most.</li></ul></div></div></div>`;
+  $("#again").onclick = () => { st = fresh(); save(); render(); scrollTo(0, 0); };
+}
+function render() { ({ rate: rateIt, price: priceIt, reveal, final: finalScreen }[st.phase] || intro)(); }
+render();
+window.__cd = { get st() { return st; }, render, C };
+</script>
+<script src="/site.js"></script>
+</body>
+</html>

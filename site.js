@@ -8,11 +8,14 @@
     { href: "/rating-room", ch: "3", label: "The Rating Room", page: "rating-room" },
     { group: "Practice On Your Own" },
     { sub: "Unit 3: Bonds" },
+    { href: "/practice-credit-desk", ch: "3", label: "The Credit Desk", page: "practice-credit-desk" },
     { href: "/practice-bond-desk", ch: "3", label: "Bond Desk Solo", page: "practice-bond-desk" },
     { href: "/practice-rating-room", ch: "3", label: "Rating Room Practice", page: "practice-rating-room" },
     { href: "/practice-fair-yield-sprint", ch: "3", label: "Fair Yield Sprint", page: "practice-fair-yield-sprint" },
     { href: "/practice-bond-terms", ch: "3", label: "Bond Terms", page: "practice-bond-terms" },
-    { href: "/practice-bond-short-answer", ch: "3", label: "Short Answer", page: "practice-bond-short-answer" }
+    { href: "/practice-bond-short-answer", ch: "3", label: "Short Answer", page: "practice-bond-short-answer" },
+    { group: "When You're Done" },
+    { href: "/my-report", ch: "✓", label: "My Report", page: "my-report" }
   ];
   var cur = document.body.getAttribute("data-page") || "";
   var links = NAV.map(function (n) {

@@ -169,6 +169,13 @@ function drawQuiz(){
   if (!list.length) { $("#view").innerHTML = `<p class="left">No starred terms yet. Miss one on the quiz, or tap ☆ on a flashcard, and it shows up here.</p>`; return; }
   if (qi >= list.length) {
     const pct = Math.round(qScore / list.length * 100);
+    if (!q || !q.logged) { // record this quiz once, for the report page
+      const R = store.get("d214-bond-terms-quiz") || { attempts: 0 };
+      R.attempts++; R.last = { score: qScore, of: list.length, set: group };
+      if (list.length === TERMS.length && (!R.bestFull || qScore > R.bestFull)) R.bestFull = qScore;
+      R.missed = qMiss.map(x => x.t); R.full = TERMS.length; R.at = Date.now();
+      store.set("d214-bond-terms-quiz", R); q = { logged: true };
+    }
     $("#view").innerHTML = `<div class="panel"><div class="phead"><span class="t">Quiz done</span></div><div class="pbody">
       <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap"><span class="big">${qScore}/${list.length}</span><span>${pct === 100 ? "Perfect. You know your bond terms." : pct >= 80 ? "Strong. Review the starred terms, then try again." : "Study the starred terms with flashcards, then retake the quiz."}</span></div>
       ${qMiss.length ? `<div class="lbl" style="margin-top:16px">Missed (now starred)</div><table class="list">${qMiss.map(x => `<tr><td>${esc(x.t)}</td><td>${esc(x.d)}</td></tr>`).join("")}</table>` : ""}
