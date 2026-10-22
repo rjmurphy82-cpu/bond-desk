@@ -82,6 +82,7 @@ export const CSS = `
 .rr-ylds small{font-size:12px;color:#CFCFCF;text-transform:uppercase}
 .rr-ylds div.end{background:#C1102F}.rr-ylds div.end small{color:#FFE1E5}
 .rr-clue{background:#FFF8E1;border-left:6px solid #E0B000;border-radius:0 10px 10px 0;padding:10px 14px;font-size:17px;line-height:1.4;color:#111}
+.rr-clue.big{font-size:21px;padding:12px 16px}
 .rr-clue b{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-weight:600;color:#6B5300;font-size:13px;letter-spacing:.06em;display:block}
 .rr-rule{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .rr-rule div{border-radius:8px;padding:6px 8px;font-size:14px;line-height:1.25}

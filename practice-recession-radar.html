@@ -67,9 +67,9 @@ function render() {
   if (st.r >= N) return renderToday();
   const rd = R.ROUNDS[st.r], d = st.ans[st.r], shown = st.stage === "reveal";
   const head = `<div class="board"><div class="chip"><div class="v">${st.r + 1} / ${N}</div><div class="k">Curve</div></div><div class="chip red"><div class="v">${total()}</div><div class="k">Points</div></div><div class="chip"><div class="v">${MAXSOLO}</div><div class="k">Perfect game</div></div>${st.best != null ? `<div class="chip"><div class="v">${st.best}</div><div class="k">Your best</div></div>` : ""}</div>${dots()}`;
-  const chart = `<div class="panel"><div class="lbl">Mystery Curve ${rd.tag}${shown ? " · " + esc(rd.date) : " · date unknown"}</div><div class="chartbox">${curveSVG(roundSeries(rd), chartOpts(rd, { h: 300 }))}</div>${strip(rd.ylds)}
+  const chart = `<div class="panel"><div class="lbl">Mystery Curve ${rd.tag}${shown ? " · " + esc(rd.date) : " · date unknown"}</div><div class="rr-clue" style="margin-bottom:10px"><b>Analyst clue</b>${esc(rd.clue)}</div><div class="chartbox">${curveSVG(roundSeries(rd), chartOpts(rd, { h: 300 }))}</div>${strip(rd.ylds)}
     ${rd.before ? `<p style="font-size:14px;color:var(--muted);margin:6px 0 0">Gray dashed line: the same curve 12 months earlier. Read the direction, not just the shape.</p>` : ""}
-    <div class="rr-clue" style="margin-top:10px"><b>Analyst clue</b>${esc(rd.clue)}</div></div>`;
+    </div>`;
   if (st.stage === "pick") {
     const ready = draft.shape && draft.call && draft.chips;
     $("#view").innerHTML = head + `<div class="cols">${chart}<div class="panel">

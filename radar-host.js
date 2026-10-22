@@ -155,9 +155,9 @@ function renderOpen() {
   $("#view").innerHTML = `<div class="topbar"><div class="yr"><div class="sub">Round ${S.r + 1} of ${N} · The date is a mystery</div><h2>Mystery Curve ${rd.tag}</h2></div>
       <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${codeChip()}${clock()}</div></div>${badges(rd)}
     <div class="board"><div class="grid" style="align-content:start">
-      <div class="card"><div class="label">U.S. Treasury yields · Mystery Curve ${rd.tag}</div>${curveSVG(roundSeries(rd), chartOpts(rd, { h: 330, aria: "Mystery yield curve " + rd.tag }))}${yldStrip(rd.ylds)}
-        ${rd.before ? `<div class="small" style="margin-top:6px">Gray dashed line: the same curve 12 months earlier. Spread then: ${sgn(R.spreadOf(rd.before))}.</div>` : ""}</div>
-      <div class="rr-clue"><b>Analyst clue</b>${esc(rd.clue)}</div></div>
+      <div class="rr-clue big"><b>Analyst clue</b>${esc(rd.clue)}</div>
+      <div class="card"><div class="label">U.S. Treasury yields · Mystery Curve ${rd.tag}</div>${curveSVG(roundSeries(rd), chartOpts(rd, { h: 300, aria: "Mystery yield curve " + rd.tag }))}${yldStrip(rd.ylds)}
+        ${rd.before ? `<div class="small" style="margin-top:6px">Gray dashed line: the same curve 12 months earlier. Spread then: ${sgn(R.spreadOf(rd.before))}.</div>` : ""}</div></div>
     <div class="grid" style="align-content:start">${tilesCard("Groups locked in")}
       <div class="actions" style="align-items:center">${S.locked.length && !all ? `<button class="btn ghost sm" id="anyway">${dv ? "Start the vote anyway" : "Reveal anyway"}</button>` : ""}
         <button class="btn big" id="reveal" ${all ? "" : "disabled"}>${all ? (dv ? "Everyone's in: Spot the Analyst →" : "Everyone's in: reveal") : `Waiting on ${S.groups.length - S.locked.length}...`}</button></div>
@@ -297,8 +297,8 @@ function renderToday() {
   $("#view").innerHTML = `<div class="topbar"><div class="yr"><div class="sub">The live round · not scored · no one knows the answer yet</div><h2>Today's curve: ${esc(T.date)}</h2></div>
       <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">${codeChip()}${clock()}</div></div>
     <div class="board"><div class="grid" style="align-content:start">
-      <div class="card"><div class="label">${esc(T.source)}</div>${curveSVG([{ y: T.ylds, labels: true }], { ink: "#111", h: 330, aria: "Today's yield curve" })}${yldStrip(T.ylds)}</div>
-      <div class="rr-clue"><b>Analyst clue</b>${esc(T.clue)}</div></div>
+      <div class="rr-clue big"><b>Analyst clue</b>${esc(T.clue)}</div>
+      <div class="card"><div class="label">${esc(T.source)}</div>${curveSVG([{ y: T.ylds, labels: true }], { ink: "#111", h: 300, aria: "Today's yield curve" })}${yldStrip(T.ylds)}</div></div>
     <div class="grid" style="align-content:start">${tilesCard("Forecasts locked in")}
       <div class="actions" style="align-items:center"><button class="btn big" id="fin" ${S.locked.length ? "" : "disabled"}>${all ? "Everyone's in: show the class forecast" : `Show the class forecast (${S.locked.length} of ${S.groups.length})`}</button></div>
       ${ruleCard(false)}<div class="card"><div class="label">This one counts for bragging rights</div><div style="font-size:17px;line-height:1.45">Name the shape and make your call: <b>will a recession start before ${esc(T.checkBack)}?</b> Write it on your Game Log. We'll find out together.</div></div></div></div>`;

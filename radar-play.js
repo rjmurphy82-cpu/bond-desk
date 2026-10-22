@@ -63,9 +63,9 @@ const defendNow = () => S.defend && R.isDefend(S.r);
 const yldStrip = y => `<div class="rr-ylds">${R.MATS.map((m, i) => `<div class="${i === 0 || i === 5 ? "end" : ""}"><b>${y[i].toFixed(2)}%</b><small>${m}</small></div>`).join("")}</div>`;
 const ruleBox = `<div class="rr-rule" style="margin-top:6px">${R.SHAPE_KEYS.map(k => `<div class="${k}"><b>${R.SHAPES[k].label}</b>${R.SHAPES[k].rule}</div>`).join("")}</div>`;
 function curveCard(rd, title, clue) {
-  return `<div class="grid" style="align-content:start"><div class="card"><div class="label">${esc(title)}</div>${curveSVG(roundSeries(rd), chartOpts(rd, { h: 300 }))}${yldStrip(rd.ylds)}
-    ${rd.before ? `<div class="rr-ghost">Gray dashed line: the same curve 12 months earlier. Is it getting more inverted, or flipping back?</div>` : ""}</div>
-    <div class="rr-clue"><b>Analyst clue</b>${esc(clue)}</div></div>`;
+  return `<div class="grid" style="align-content:start"><div class="rr-clue"><b>Analyst clue</b>${esc(clue)}</div>
+    <div class="card"><div class="label">${esc(title)}</div>${curveSVG(roundSeries(rd), chartOpts(rd, { h: 300 }))}${yldStrip(rd.ylds)}
+    ${rd.before ? `<div class="rr-ghost">Gray dashed line: the same curve 12 months earlier. Is it getting more inverted, or flipping back?</div>` : ""}</div></div>`;
 }
 const lockedLine = (d, today) => `${R.SHAPES[d.shape].label} · ${esc(callText(d))}${today ? "" : ` · ${d.chips} chip${d.chips > 1 ? "s" : ""}`}`;
 
