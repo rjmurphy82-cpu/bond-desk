@@ -7,6 +7,7 @@
     { href: "/credit", ch: "3", label: "Credit Desk Live", page: "credit" },
     { href: "/join", ch: "3", label: "Bond Desk Live", page: "join" },
     { href: "/radar", ch: "3", label: "Recession Radar Live", page: "radar" },
+    { href: "/curves-live", ch: "3", label: "Curves Live (quiz)", page: "curves-live" },
     { group: "Review Games" },
     { href: "/rating-room", ch: "3", label: "The Rating Room", page: "rating-room" },
     { group: "Practice On Your Own" },
