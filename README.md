@@ -8,6 +8,9 @@ The class site for Finance & Investing: a home page, live class games, review ga
 | `/credit` | Students | Join Credit Desk Live (the host QR code goes here) |
 | `/credit-host` | Teacher (projector) | Credit Desk Live host screen: groups rate each borrower on iPads, then buy; you run the reveal. Uses the same database as The Bond Desk. |
 | `/join` | Students | Join a live Bond Desk game (the host QR code goes here) |
+| `/radar` | Students | Join Recession Radar Live (the host QR code goes here) |
+| `/radar-host` | Teacher (projector) | Recession Radar Live host screen: eight real Treasury yield curves from mystery dates. Groups name the shape, call recession or not, and bet 1 to 3 chips on iPads; you reveal the date and what happened. Ends with today's curve, the class forecast and the what-if simulator. Same database as The Bond Desk. |
+| `/practice-recession-radar` | Students | Recession Radar Solo: all eight mystery curves on your own, then today's curve and the simulator. Progress saves in the browser. |
 | `/practice-credit-desk` | Students | The Credit Desk: The Rating Room and The Bond Desk combined. Six years: rate the borrower with the scorecard, use that rating to find the fair yield and decide how much to buy, then see the agency's rating change and the rate move. Pairs with the Credit Desk Analyst Worksheet. |
 | `/practice-bond-desk` | Students | Bond Desk Solo: all ten years on your own, with the why after each year. Progress saves in the browser. |
 | `/practice-rating-room` | Students | Rating Room Practice: the 5 class case files, 4 bonus case files, unlimited random issuers, and a 12-question quiz |
@@ -96,6 +99,7 @@ All companies, governments, and outcomes are made up and engineered so every cla
 | `rating-room.html`, `rating-data.js` | The Rating Room class game and its case files, scorecard and blitz questions (shared with the practice page) |
 | `credit-core.js`, `api/credit.js`, `credit-host.*`, `credit.html`, `credit-play.js`, `credit-view.js`, `credit-client.js` | Credit Desk Live: server rules, Vercel function, projector screen, iPad screen, shared pieces |
 | `credit-desk-data.js` | The Credit Desk's six issuers, their true ratings (computed by the scorecard), and the scoring math |
+| `radar-data.js`, `radar-core.js`, `api/radar.js`, `radar-host.*`, `radar.html`, `radar-play.js`, `radar-view.js`, `radar-client.js` | Recession Radar Live: curves, clues and outcomes; server rules; Vercel function; projector screen; iPad screen; shared chart and simulator |
 | `practice-*.html` | Practice-on-your-own pages. Terms and short answer questions are listed at the top of the script in their pages. |
 | `teacher/index.html`, `teacher/reports.html` | Teacher links and the student report dashboard |
 | `my-report.html`, `api/report.js` | Student report page and the function that stores reports |
@@ -103,3 +107,15 @@ All companies, governments, and outcomes are made up and engineered so every cla
 | `dev.js` | Local test server with a temporary in-memory database: `node dev.js` |
 
 QR codes are generated in the browser with "QRCode for JavaScript" by Kazuhiko Arase (MIT license). "QR Code" is a registered trademark of DENSO WAVE INCORPORATED.
+
+# Recession Radar
+
+A live yield curve game for Unit 3: Bonds. **Projector:** `/radar-host` · **iPads:** `/radar`
+
+- Eight real Treasury curves (monthly averages from FRED: 3M, 1Y, 2Y, 5Y, 7Y, 10Y), in mystery order: Dec 2003, Feb 2007, Dec 1992, Aug 2000, Jun 1998, Jun 1989, Aug 2019, Jul 2023. Four were followed by a recession within two years (NBER dates) and four were not.
+- The rule: spread = 10-year minus 3-month. Below 0 = inverted, 0 to +0.99 = flat, +1.00 or more = normal.
+- Scoring: right shape +1. Recession call (will one START within 2 years?) wins the chips bet if right, loses them if wrong (1 to 3 chips). Perfect game: 32.
+- Each round: groups lock in on iPads, then the reveal walks through 1. The shape (the math and the class split), 2. What happened (drumroll date reveal, the story and the Radar record), 3. Standings.
+- After curve H: today's curve. Groups make an unscored forecast, then the final screen shows the class forecast, the what-if simulator, final standings and the full Radar record.
+
+**Refresh "Today" before you play.** Open `radar-data.js`, find `TODAY`, and update the date, the six yields (3M, 1Y, 2Y, 5Y, 7Y, 10Y), the 30-year, the Fed's target range, and the facts list. Source: U.S. Treasury, Daily Treasury Par Yield Curve Rates (home.treasury.gov). Push to GitHub and Vercel redeploys. Last refreshed: October 21, 2026.

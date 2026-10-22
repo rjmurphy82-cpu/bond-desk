@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Recession Radar Solo | District 214 Finance &amp; Investing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<style>
+.wrap{max-width:1100px}
+.board{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.chip{background:var(--black);color:#fff;border-radius:10px;padding:6px 16px;text-align:center;min-width:110px}
+.chip.red{background:var(--red)}
+.chip .v{font-family:var(--display);font-weight:600;font-size:28px;line-height:1.1}
+.chip .k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.cols{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;align-items:start}
+@media(max-width:860px){.cols{grid-template-columns:1fr}}
+.lbl{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--redtext);margin-bottom:6px}
+.step{font-family:var(--display);font-weight:600;font-size:19px;margin:14px 0 6px}
+.step b{display:inline-block;background:var(--red);color:#fff;border-radius:50%;width:26px;height:26px;text-align:center;line-height:26px;font-size:15px;margin-right:6px}
+.chartbox{background:#fff;border-radius:10px;padding:6px;color:#111}
+.res{width:100%;border-collapse:collapse}.res td,.res th{padding:7px 8px;border-bottom:1px solid var(--line);text-align:left}.res th{font-family:var(--display);font-weight:600;font-size:14px;text-transform:uppercase}
+.res .r{text-align:right}.res tr.tot td{font-family:var(--display);font-weight:600;font-size:20px;border-top:2px solid var(--ink)}
+.neg{color:var(--bad)}.pos{color:var(--good)}
+.lesson{background:var(--redsoft);border-left:6px solid var(--red);border-radius:0 10px 10px 0;padding:8px 12px;margin-top:10px}
+.actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--ink)}
+.rr-verdict .big{font-size:36px}
+.dots{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.dots span{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;font-family:var(--display);font-weight:600;background:var(--gray)}
+.dots span.now{background:var(--black);color:#fff}.dots span.g{background:var(--good);color:#fff}.dots span.b{background:var(--bad);color:#fff}
+.facts li{margin-bottom:6px;line-height:1.4}
+.sides{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:700px){.sides{grid-template-columns:1fr}}
+.sides>div{border-radius:10px;padding:10px 12px;color:#111}.sides b{display:block;font-family:var(--display);text-transform:uppercase}
+.sides .w{background:#F8E1DE}.sides .c{background:#E3F1E7}
+</style>
+</head>
+<body data-page="practice-recession-radar">
+<div class="shell">
+  <main class="main"><div class="inner"><div class="wrap">
+    <div class="crumb"><a href="/#practices">Practice On Your Own</a> / Unit 3: Bonds</div>
+    <h1>Recession Radar Solo</h1>
+    <p class="lede">Eight real Treasury yield curves from mystery dates. Find the spread (10-year minus 3-month), name the shape, call it, and bet chips. Then see what really happened. Finish with today's curve and the what-if simulator.</p>
+    <div id="view"></div>
+  </div></div></main>
+</div>
+<script src="/site.js"></script>
+<script type="module">
+import { R, esc, sgn, pts, curveSVG, shapePill, CSS, mountSimulator } from "/radar-view.js";
+document.head.insertAdjacentHTML("beforeend", `<style>${CSS}</style>`);
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const KEY = "d214-recession-radar", N = R.N, T = R.TODAY;
+let st = load(), draft = { shape: null, call: null, chips: null };
+function load() { try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.ans)) return s; } catch (e) {} return { ans: [], r: 0, revealed: false, best: null, forecast: null }; }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
+const total = () => st.ans.reduce((a, d, i) => a + R.scoreRound(d, R.ROUNDS[i]).total, 0);
+const strip = y => `<div class="rr-ylds">${R.MATS.map((m, i) => `<div class="${i === 0 || i === 5 ? "end" : ""}"><b>${y[i].toFixed(2)}%</b><small>${m}</small></div>`).join("")}</div>`;
+const rule = `<div class="rr-rule">${R.SHAPE_KEYS.map(k => `<div class="${k}"><b>${R.SHAPES[k].label}</b>${R.SHAPES[k].rule}</div>`).join("")}</div>`;
+function dots() { return `<div class="dots">${R.ROUNDS.map((rd, i) => { const d = st.ans[i], sc = d ? R.scoreRound(d, rd) : null; return `<span class="${i === st.r && !(st.r >= N) ? "now" : sc ? (sc.callOK ? "g" : "b") : ""}" title="Curve ${rd.tag}">${rd.tag}</span>`; }).join("")}<span class="${st.r >= N ? "now" : ""}" title="Today">★</span></div>`; }
+function render() {
+  if (st.r >= N) return renderToday();
+  const rd = R.ROUNDS[st.r], d = st.ans[st.r];
+  const head = `<div class="board"><div class="chip"><div class="v">${st.r + 1} / ${N}</div><div class="k">Curve</div></div><div class="chip red"><div class="v">${total()}</div><div class="k">Points</div></div><div class="chip"><div class="v">${R.MAX_GAME}</div><div class="k">Perfect game</div></div>${st.best != null ? `<div class="chip"><div class="v">${st.best}</div><div class="k">Your best</div></div>` : ""}</div>${dots()}`;
+  const chart = `<div class="panel"><div class="lbl">Mystery Curve ${rd.tag}${st.revealed ? " · " + esc(rd.date) : " · date unknown"}</div><div class="chartbox">${curveSVG([{ y: rd.ylds, labels: true }], { ink: "#111", h: 300 })}</div>${strip(rd.ylds)}<div class="rr-clue" style="margin-top:10px"><b>Analyst clue</b>${esc(rd.clue)}</div></div>`;
+  if (!st.revealed) {
+    const ready = draft.shape && draft.call && draft.chips;
+    $("#view").innerHTML = head + `<div class="cols">${chart}<div class="panel">
+      <div class="step"><b>1</b>Spread = 10Y − 3M. What shape?</div>${rule}
+      <div class="rr-pick" style="grid-template-columns:repeat(3,1fr);margin-top:8px">${R.SHAPE_KEYS.map(k => `<button data-k="shape" data-v="${k}" class="${draft.shape === k ? "on" : ""}">${R.SHAPES[k].label}</button>`).join("")}</div>
+      <div class="step"><b>2</b>Will a recession START within 2 years?</div>
+      <div class="rr-pick" style="grid-template-columns:1fr 1fr">${[["yes", "Yes"], ["no", "No"]].map(([v, l]) => `<button data-k="call" data-v="${v}" class="${draft.call === v ? "on" : ""} ${v === "no" ? "no" : ""}">${l}</button>`).join("")}</div>
+      <div class="step"><b>3</b>How sure? Bet chips</div>
+      <div class="rr-pick" style="grid-template-columns:repeat(3,1fr)">${R.CHIPS.map(c => `<button data-k="chips" data-v="${c}" class="${draft.chips === c ? "on" : ""}">${"●".repeat(c)}<small>±${c}</small></button>`).join("")}</div>
+      <p class="lede" style="font-size:14px;margin:8px 0 0">Right shape +1. Right call wins your chips; wrong call loses them.</p>
+      <div class="actions"><button class="btn" id="lock" ${ready ? "" : "disabled"} style="width:100%">Lock it in and reveal</button></div></div></div>`;
+    $$(".rr-pick button").forEach(b => b.onclick = () => { const k = b.dataset.k; draft[k] = k === "chips" ? +b.dataset.v : b.dataset.v; render(); });
+    $("#lock").onclick = () => { st.ans[st.r] = { ...draft }; st.revealed = true; save(); render(); };
+    return;
+  }
+  const sp = R.spreadOf(rd.ylds), sh = R.shapeOf(sp), sc = R.scoreRound(d, rd);
+  $("#view").innerHTML = head + `<div class="cols">${chart}<div>
+    <div class="rr-verdict ${rd.recession ? "yes" : "no"}"><div class="big">${rd.recession ? "Recession" : "No recession"}${rd.asterisk ? "*" : ""}</div><div>Curve ${rd.tag} was <b>${esc(rd.date)}</b>. ${esc(rd.headline)}.</div></div>
+    <div class="panel" style="margin-top:12px"><div style="font-family:var(--display);font-size:24px">${rd.ylds[5].toFixed(2)} − ${rd.ylds[0].toFixed(2)} = ${sgn(sp)} → ${shapePill(sh)}</div>
+      <p>${esc(rd.story)}</p><div class="lesson"><b>The lesson:</b> ${esc(rd.lesson)}</div>
+      <table class="res" style="margin-top:10px"><tr><td>Shape: you said ${R.SHAPES[d.shape].label}</td><td class="r">${sc.shapeOK ? "+1" : "0"}</td></tr>
+        <tr><td>Call: you said ${d.call === "yes" ? "Yes" : "No"} with ${d.chips} chip${d.chips > 1 ? "s" : ""}</td><td class="r ${sc.call < 0 ? "neg" : "pos"}">${pts(sc.call)}</td></tr>
+        <tr class="tot"><td>This curve</td><td class="r">${pts(sc.total)}</td></tr></table>
+      <div class="actions"><button class="btn" id="next">${st.r < N - 1 ? `Next: Mystery Curve ${R.ROUNDS[st.r + 1].tag} →` : "Today's curve →"}</button></div></div></div></div>`;
+  $("#next").onclick = () => { st.r++; st.revealed = false; draft = { shape: null, call: null, chips: null }; if (st.r >= N) st.best = Math.max(st.best ?? -99, total()); save(); render(); scrollTo(0, 0); };
+}
+function renderToday() {
+  const sp = R.spreadOf(T.ylds), sh = R.shapeOf(sp), rec = R.record();
+  $("#view").innerHTML = `<div class="board"><div class="chip red"><div class="v">${total()}</div><div class="k">Final points</div></div><div class="chip"><div class="v">${R.MAX_GAME}</div><div class="k">Perfect game</div></div><div class="chip"><div class="v">${st.best}</div><div class="k">Your best</div></div></div>${dots()}
+    <div class="panel"><div class="lbl">Your scorecard</div><table class="res"><tr><th>Curve</th><th>Date</th><th>Spread</th><th>Shape</th><th>Outcome</th><th class="r">Points</th></tr>
+      ${R.ROUNDS.map((rd, i) => { const s2 = R.spreadOf(rd.ylds), p = R.scoreRound(st.ans[i], rd); return `<tr><td>${rd.tag}</td><td>${esc(rd.date)}</td><td>${sgn(s2)}</td><td>${shapePill(R.shapeOf(s2))}</td><td>${rd.recession ? "Recession" + (rd.asterisk ? "*" : "") : "No recession"}</td><td class="r ${p.total < 0 ? "neg" : ""}">${pts(p.total)}</td></tr>`; }).join("")}
+      <tr class="tot"><td colspan="5">Total</td><td class="r">${total()}</td></tr></table>
+      <p style="font-size:14px;color:var(--muted)">*Caused by the COVID-19 pandemic. Inverted: ${rec.inverted[1]} of ${rec.inverted[0]} came before a recession. Flat: ${rec.flat[1]} of ${rec.flat[0]}. Normal: ${rec.normal[1]} of ${rec.normal[0]}.</p></div>
+    <h2 style="font-family:var(--display);margin:26px 0 8px">Today's curve · ${esc(T.date)}</h2>
+    <div class="panel"><div class="lbl">Your forecast: will a recession start before ${esc(T.checkBack)}?</div>
+      <div class="rr-pick" style="grid-template-columns:1fr 1fr;max-width:420px">${[["yes", "Yes"], ["no", "No"]].map(([v, l]) => `<button data-f="${v}" class="${st.forecast === v ? "on" : ""} ${v === "no" ? "no" : ""}">${l}</button>`).join("")}</div>
+      <div style="margin-top:10px">${T.ylds[5].toFixed(2)} − ${T.ylds[0].toFixed(2)} = <b>${sgn(sp)}</b> → ${shapePill(sh)}</div>
+      <ul class="facts">${T.facts.map(f => `<li>${esc(f)}</li>`).join("")}</ul>
+      <div class="sides">${T.sides.map(([h, t], i) => `<div class="${i ? "c" : "w"}"><b>${esc(h)}</b>${esc(t)}</div>`).join("")}</div></div>
+    <div class="panel" style="margin-top:14px"><div class="lbl">What-if simulator</div><div id="sim"></div></div>
+    <div class="actions"><button class="btn ghost" id="again">Play again</button></div>`;
+  $$("[data-f]").forEach(b => b.onclick = () => { st.forecast = b.dataset.f; save(); renderToday(); });
+  mountSimulator($("#sim"));
+  $("#again").onclick = () => { if (!confirm("Start over? Your best score stays.")) return; st = { ans: [], r: 0, revealed: false, best: st.best, forecast: null }; save(); render(); scrollTo(0, 0); };
+}
+render();
+</script>
+</body>
+</html>
