@@ -62,7 +62,7 @@ export const ROUNDS = [
     story: "Seven months later a recession began as the dot-com bubble burst and businesses cut back on spending.",
     lesson: "Short rates above long rates: the bond market expected rate cuts ahead, and cuts come when the economy weakens.",
     analystCall: "no",
-    analyst: "The Fed's rate hikes are slowing things down just enough, so the economy should keep growing with no recession.",
+    analyst: "The Fed is slowing things down just enough, so no recession.",
     decoys: ["Tech stocks are crashing and the curve is upside down, so a recession is coming soon.", "Short rates are higher than long rates, which means investors expect cuts, so we say recession within a year.", "Unemployment is still low and people keep spending, so the economy will keep growing."] },
   { tag: "F", date: "June 1998", year: 1998, ylds: [5.12, 5.41, 5.52, 5.52, 5.56, 5.50],
     clue: "Unemployment is the lowest in nearly 30 years and inflation is low. The Fed has kept its key rate steady for more than a year.",
@@ -89,7 +89,7 @@ export const ROUNDS = [
     story: "Only three months later the Great Recession began. The curve looked flat and calm, but a year earlier it had been inverted. It was flipping back because the Fed had started cutting in a hurry.",
     lesson: "Watch the direction, not just the shape. When an inverted curve 'un-inverts' because the Fed is rushing to cut, the recession is often right around the corner.",
     analystCall: "no",
-    analyst: "Bad home loans are a problem, but the Fed is cutting rates now, so we should dodge a recession.",
+    analyst: "Home loans are a mess, but the Fed is cutting rates, so we'll be fine.",
     decoys: ["The curve already flipped back to normal, so the danger is over and growth continues.", "Last year it was inverted and now the Fed is cutting in a hurry, which is what happens right before a recession.", "Home loans going bad will hit the banks hard, so a recession is close."] },
   { tag: "J", date: "July 2023", year: 2023, ylds: [5.49, 5.37, 4.83, 4.14, 4.03, 3.90], before: [2.30, 3.02, 3.04, 2.96, 2.97, 2.90],
     clue: "Inflation hit a 40-year high last year. The Fed has raised rates 11 times since March 2022, its fastest pace in four decades.",
@@ -98,7 +98,7 @@ export const ROUNDS = [
     story: "One of the deepest inversions in more than 40 years, and the curve stayed inverted for about two years. No recession followed. Economists point to extra household savings from the pandemic, a strong job market, and inflation cooling without mass layoffs.",
     lesson: "The yield curve is a pattern, not a law. Every forecasting tool can be wrong, and 'this time is different' is sometimes true.",
     analystCall: "yes",
-    analyst: "The Fed raised rates way too fast and the curve is upside down, so a recession is coming within a year.",
+    analyst: "The Fed raised rates too fast, so a recession is coming soon.",
     decoys: ["The job market is too strong for a recession, so the economy keeps growing.", "This is the most inverted curve in 40 years, so a recession is basically guaranteed.", "People still have pandemic savings to spend, so any slowdown will be mild with no recession."] }
 ];
 export const N = ROUNDS.length;
