@@ -9,8 +9,8 @@ The class site for Finance & Investing: a home page, live class games, review ga
 | `/credit-host` | Teacher (projector) | Credit Desk Live host screen: groups rate each borrower on iPads, then buy; you run the reveal. Uses the same database as The Bond Desk. |
 | `/join` | Students | Join a live Bond Desk game (the host QR code goes here) |
 | `/radar` | Students | Join Recession Radar Live (the host QR code goes here) |
-| `/radar-host` | Teacher (projector) | Recession Radar Live host screen: eight real Treasury yield curves from mystery dates. Groups name the shape, call recession or not, and bet 1 to 3 chips on iPads; you reveal the date and what happened. Ends with today's curve, the class forecast and the what-if simulator. Same database as The Bond Desk. |
-| `/practice-recession-radar` | Students | Recession Radar Solo: all eight mystery curves on your own, then today's curve and the simulator. Progress saves in the browser. |
+| `/radar-host` | Teacher (projector) | Recession Radar Live host screen: ten real Treasury yield curves from mystery dates (two traps). Groups name the shape, call the timing, and bet 1 to 3 chips on iPads, with three Spot the Analyst rounds; you reveal the date and what happened. Ends with today's curve, the class forecast and the what-if simulator. Same database as The Bond Desk. |
+| `/practice-recession-radar` | Students | Recession Radar Solo: all ten mystery curves on your own, then today's curve and the simulator. Progress saves in the browser. |
 | `/practice-credit-desk` | Students | The Credit Desk: The Rating Room and The Bond Desk combined. Six years: rate the borrower with the scorecard, use that rating to find the fair yield and decide how much to buy, then see the agency's rating change and the rate move. Pairs with the Credit Desk Analyst Worksheet. |
 | `/practice-bond-desk` | Students | Bond Desk Solo: all ten years on your own, with the why after each year. Progress saves in the browser. |
 | `/practice-rating-room` | Students | Rating Room Practice: the 5 class case files, 4 bonus case files, unlimited random issuers, and a 12-question quiz |
@@ -112,10 +112,12 @@ QR codes are generated in the browser with "QRCode for JavaScript" by Kazuhiko A
 
 A live yield curve game for Unit 3: Bonds. **Projector:** `/radar-host` · **iPads:** `/radar`
 
-- Eight real Treasury curves (monthly averages from FRED: 3M, 1Y, 2Y, 5Y, 7Y, 10Y), in mystery order: Dec 2003, Feb 2007, Dec 1992, Aug 2000, Jun 1998, Jun 1989, Aug 2019, Jul 2023. Four were followed by a recession within two years (NBER dates) and four were not.
+- Ten real Treasury curves (monthly averages from FRED: 3M, 1Y, 2Y, 5Y, 7Y, 10Y), in mystery order: Dec 2003, Feb 2007, Dec 1992, Jun 1999 (trap), Aug 2000, Jun 1998, Jun 1989, Aug 2019, Sep 2007 (trap), Jul 2023. Recession dates are NBER's.
 - The rule: spread = 10-year minus 3-month. Below 0 = inverted, 0 to +0.99 = flat, +1.00 or more = normal.
-- Scoring: right shape +1. Recession call (will one START within 2 years?) wins the chips bet if right, loses them if wrong (1 to 3 chips). Perfect game: 32.
-- Each round: groups lock in on iPads, then the reveal walks through 1. The shape (the math and the class split), 2. What happened (drumroll date reveal, the story and the Radar record), 3. Standings.
-- After curve H: today's curve. Groups make an unscored forecast, then the final screen shows the class forecast, the what-if simulator, final standings and the full Radar record.
+- Each round groups pick the shape, a call (no recession, or a recession starting in 0 to 6, 7 to 12, or 13 to 24 months) and 1 to 3 chips. Scoring: right shape +1; right yes/no wins the chips, wrong loses them; exact timing band when a recession comes +1. Perfect read of all ten: 46.
+- Levels: Rookie (A to C), Analyst (D to G), Senior (H to J). Senior rounds also show the same curve 12 months earlier (gray dashed line), so groups can read whether it is inverting or un-inverting.
+- Traps: D (Jun 1999) looks healthy but the Fed was starting a string of hikes; I (Sep 2007) looks flat and calm but had un-inverted because the Fed was rushing to cut.
+- Spot the Analyst (E, I and J; toggle in the lobby): each group writes a one-sentence case with its answer. The board shows every case plus one analyst line, unsigned, and groups vote on iPads for the real analyst. +1 for finding the analyst; +1 for every group that picks your sentence. The analyst lines are paraphrased composites of common forecasts at the time, not quotes from one person. Off automatically in "Play without iPads."
+- After curve J: today's curve. Groups make an unscored forecast, then the final screen shows the class forecast, the what-if simulator, final standings and the full Radar record.
 
 **Refresh "Today" before you play.** Open `radar-data.js`, find `TODAY`, and update the date, the six yields (3M, 1Y, 2Y, 5Y, 7Y, 10Y), the 30-year, the Fed's target range, and the facts list. Source: U.S. Treasury, Daily Treasury Par Yield Curve Rates (home.treasury.gov). Push to GitHub and Vercel redeploys. Last refreshed: October 21, 2026.

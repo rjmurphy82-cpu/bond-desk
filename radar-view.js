@@ -35,20 +35,42 @@ export function curveSVG(series, o = {}) {
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria || "Yield curve chart")}" style="width:100%;height:auto;display:block">${g}</svg>`;
 }
 
+// Series for a round's chart: the curve, plus the faded curve from 12 months earlier on Senior rounds.
+export function roundSeries(rd) {
+  const out = [];
+  if (rd.before) out.push({ y: rd.before, color: "#9A9A9A", dash: "4 6", width: 3, r: 4, label: "12 months earlier" });
+  out.push({ y: rd.ylds, labels: true, color: "#C1102F", label: rd.before ? "This curve" : undefined });
+  return out;
+}
+export const chartOpts = (rd, o = {}) => ({ ink: "#111", legend: !!rd.before, ...o });
 export const shapePill = s => `<span class="rr-shape ${s}">${R.SHAPES[s].label}</span>`;
 export const answerFor = rd => { const sp = R.spreadOf(rd.ylds); return { sp, shape: R.shapeOf(sp) }; };
 
+// Spot-the-Analyst points for one group in round r: +1 for picking the analyst, +1 for every group it fooled.
+export function defendPoints(S, r, gid) {
+  const m = (S.maps || {})[r], d = S.decisions[r] || {};
+  if (!m) return { found: false, fooled: 0, pts: 0, voted: false };
+  const mine = d[gid] || {}, found = m[mine.vote] === "analyst";
+  const fooled = Object.keys(d).filter(h => h !== gid && d[h] && m[d[h].vote] === gid).length;
+  return { found, fooled, pts: (found ? 1 : 0) + fooled, voted: !!mine.vote };
+}
 // Totals for every group through round `upto`
 export function standings(S, upto) {
   const rows = S.groups.map(g => {
-    let total = 0, shapes = 0, calls = 0;
-    const per = R.ROUNDS.slice(0, upto + 1).map((rd, r) => { const sc = R.scoreRound(((S.decisions[r] || {})[g.gid]), rd); total += sc.total; shapes += sc.shapeOK ? 1 : 0; calls += sc.callOK ? 1 : 0; return sc; });
-    return { g, total, shapes, calls, per };
+    let total = 0, shapes = 0, calls = 0, analyst = 0;
+    const per = R.ROUNDS.slice(0, upto + 1).map((rd, r) => {
+      const sc = R.scoreRound(((S.decisions[r] || {})[g.gid]), rd), dp = defendPoints(S, r, g.gid);
+      const t = sc.total + dp.pts; total += t; analyst += dp.pts; shapes += sc.shapeOK ? 1 : 0; calls += sc.callOK ? 1 : 0;
+      return { ...sc, defend: dp, total: t };
+    });
+    return { g, total, shapes, calls, analyst, per };
   });
   rows.sort((a, b) => b.total - a.total || b.calls - a.calls);
   rows.forEach(r => r.place = rows.filter(o => o.total > r.total).length + 1);
   return rows;
 }
+export const bandLabel = k => (R.BANDS.find(b => b.key === k) || {}).label || "";
+export const callText = d => !d || !d.call ? "" : d.call === "yes" ? "Yes" : d.call === "no" ? "No" : d.call === "none" ? "No recession" : "Recession in " + bandLabel(d.call).toLowerCase();
 
 // Styles shared by the live screens (style.css look) and the practice page (site.css look)
 export const CSS = `
@@ -70,6 +92,11 @@ export const CSS = `
 .rr-pick button small{display:block;font:600 12.5px Barlow,Arial,sans-serif;text-transform:none;color:#5C5C5C;margin-top:2px}
 .rr-pick button.on{background:#C1102F;border-color:#C1102F;color:#fff}.rr-pick button.on small{color:#FFE1E5}
 .rr-pick button.on.no{background:#111;border-color:#111}
+.rr-case{display:block;width:100%;text-align:left;border:2px solid #D9D9D9;background:#fff;border-radius:10px;padding:12px 14px;font:600 18px/1.35 Barlow,Arial,sans-serif;color:#111;margin-bottom:8px;text-transform:none}
+.rr-case.on{border-color:#C1102F;background:#FBE7EA}.rr-case.mine{opacity:.55;border-style:dashed}.rr-case .who{display:block;font:700 12px Oswald,Arial,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:#B00E2A;margin-top:4px}
+.rr-case.analyst{border-color:#2E7D4F;background:#E3F1E7}
+.rr-ta{width:100%;min-height:84px;font:600 18px/1.35 Barlow,Arial,sans-serif;padding:10px 12px;border:2px solid #D9D9D9;border-radius:10px;resize:vertical}
+.rr-ghost{font-size:13px;color:#5C5C5C;margin-top:4px}
 .rr-pick button:disabled{opacity:.45}
 .rr-verdict{border-radius:12px;padding:14px 18px;color:#fff;display:flex;gap:6px 16px;align-items:center;flex-wrap:wrap}
 .rr-verdict.yes{background:#B3261E}.rr-verdict.no{background:#1E6B3E}
@@ -119,7 +146,7 @@ export function mountSimulator(el, o = {}) {
     q("[data-read]").innerHTML = `<div><b class="${sp < 0 ? "neg" : ""}">${sgn(sp)}</b><small>10Y minus 3M</small></div><div><b>${R.SHAPES[sh].label}</b><small>${R.SHAPES[sh].light}</small></div>
       <div><b class="${cls(p2)}">${pts(p2)}%</b><small>2-yr bond price</small></div><div><b class="${cls(p10)}">${pts(p10)}%</b><small>10-yr bond price</small></div>`;
     const [n, k] = rec[sh];
-    q("[data-radar]").innerHTML = `📡 <b>Radar reading:</b> ${n} of our 8 mystery curves ${n === 1 ? "was" : "were"} ${R.SHAPES[sh].label.toLowerCase()}, and ${k} of those ${n} ${k === 1 ? "was" : "were"} followed by a recession within two years.`;
+    q("[data-radar]").innerHTML = `📡 <b>Radar reading:</b> ${n} of our ${R.N} mystery curves ${n === 1 ? "was" : "were"} ${R.SHAPES[sh].label.toLowerCase()}, and ${k} of those ${n} ${k === 1 ? "was" : "were"} followed by a recession within two years.`;
     R.LEVERS.forEach(L => { q(`[data-val="${L.key}"]`).textContent = L.level ? ["None", "Low", "Medium", "High", "Panic"][Math.round(v[L.key] / 0.5)] || "" : (v[L.key] > 0 ? "+" : v[L.key] < 0 ? "−" : "+") + Math.abs(v[L.key]).toFixed(2) + "%"; q(`input[data-k="${L.key}"]`).value = v[L.key]; });
   }
   el.querySelectorAll("input[type=range]").forEach(i => i.addEventListener("input", () => { v[i.dataset.k] = +i.value; draw(); }));

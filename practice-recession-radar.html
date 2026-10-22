@@ -44,59 +44,74 @@
   <main class="main"><div class="inner"><div class="wrap">
     <div class="crumb"><a href="/#practices">Practice On Your Own</a> / Unit 3: Bonds</div>
     <h1>Recession Radar Solo</h1>
-    <p class="lede">Eight real Treasury yield curves from mystery dates. Find the spread (10-year minus 3-month), name the shape, call it, and bet chips. Then see what really happened. Finish with today's curve and the what-if simulator.</p>
+    <p class="lede">Ten real Treasury yield curves from mystery dates, with two traps. Find the spread (10-year minus 3-month), name the shape, call it, and bet chips. Then see what really happened. Finish with today's curve and the what-if simulator.</p>
     <div id="view"></div>
   </div></div></main>
 </div>
 <script src="/site.js"></script>
 <script type="module">
-import { R, esc, sgn, pts, curveSVG, shapePill, CSS, mountSimulator } from "/radar-view.js";
+import { R, esc, sgn, pts, curveSVG, shapePill, CSS, mountSimulator, roundSeries, chartOpts, bandLabel } from "/radar-view.js";
 document.head.insertAdjacentHTML("beforeend", `<style>${CSS}</style>`);
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
-const KEY = "d214-recession-radar", N = R.N, T = R.TODAY;
+const KEY = "d214-recession-radar-v2", N = R.N, T = R.TODAY;
 let st = load(), draft = { shape: null, call: null, chips: null };
-function load() { try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.ans)) return s; } catch (e) {} return { ans: [], r: 0, revealed: false, best: null, forecast: null }; }
+function load() { try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.ans) && s.stage) return s; } catch (e) {} return { ans: [], r: 0, stage: "pick", best: null, forecast: null }; }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }
-const total = () => st.ans.reduce((a, d, i) => a + R.scoreRound(d, R.ROUNDS[i]).total, 0);
+const roundPts = i => { const d = st.ans[i]; return d ? R.scoreRound(d, R.ROUNDS[i]).total + (d.spot ? 1 : 0) : 0; };
+const total = () => st.ans.reduce((a, d, i) => a + roundPts(i), 0);
+const MAXSOLO = R.MAX_GAME + R.ROUNDS.filter(rd => rd.analyst).length;
 const strip = y => `<div class="rr-ylds">${R.MATS.map((m, i) => `<div class="${i === 0 || i === 5 ? "end" : ""}"><b>${y[i].toFixed(2)}%</b><small>${m}</small></div>`).join("")}</div>`;
 const rule = `<div class="rr-rule">${R.SHAPE_KEYS.map(k => `<div class="${k}"><b>${R.SHAPES[k].label}</b>${R.SHAPES[k].rule}</div>`).join("")}</div>`;
 function dots() { return `<div class="dots">${R.ROUNDS.map((rd, i) => { const d = st.ans[i], sc = d ? R.scoreRound(d, rd) : null; return `<span class="${i === st.r && !(st.r >= N) ? "now" : sc ? (sc.callOK ? "g" : "b") : ""}" title="Curve ${rd.tag}">${rd.tag}</span>`; }).join("")}<span class="${st.r >= N ? "now" : ""}" title="Today">★</span></div>`; }
 function render() {
   if (st.r >= N) return renderToday();
-  const rd = R.ROUNDS[st.r], d = st.ans[st.r];
-  const head = `<div class="board"><div class="chip"><div class="v">${st.r + 1} / ${N}</div><div class="k">Curve</div></div><div class="chip red"><div class="v">${total()}</div><div class="k">Points</div></div><div class="chip"><div class="v">${R.MAX_GAME}</div><div class="k">Perfect game</div></div>${st.best != null ? `<div class="chip"><div class="v">${st.best}</div><div class="k">Your best</div></div>` : ""}</div>${dots()}`;
-  const chart = `<div class="panel"><div class="lbl">Mystery Curve ${rd.tag}${st.revealed ? " · " + esc(rd.date) : " · date unknown"}</div><div class="chartbox">${curveSVG([{ y: rd.ylds, labels: true }], { ink: "#111", h: 300 })}</div>${strip(rd.ylds)}<div class="rr-clue" style="margin-top:10px"><b>Analyst clue</b>${esc(rd.clue)}</div></div>`;
-  if (!st.revealed) {
+  const rd = R.ROUNDS[st.r], d = st.ans[st.r], shown = st.stage === "reveal";
+  const head = `<div class="board"><div class="chip"><div class="v">${st.r + 1} / ${N}</div><div class="k">Curve</div></div><div class="chip red"><div class="v">${total()}</div><div class="k">Points</div></div><div class="chip"><div class="v">${MAXSOLO}</div><div class="k">Perfect game</div></div>${st.best != null ? `<div class="chip"><div class="v">${st.best}</div><div class="k">Your best</div></div>` : ""}</div>${dots()}`;
+  const chart = `<div class="panel"><div class="lbl">Mystery Curve ${rd.tag}${shown ? " · " + esc(rd.date) : " · date unknown"}</div><div class="chartbox">${curveSVG(roundSeries(rd), chartOpts(rd, { h: 300 }))}</div>${strip(rd.ylds)}
+    ${rd.before ? `<p style="font-size:14px;color:var(--muted);margin:6px 0 0">Gray dashed line: the same curve 12 months earlier. Read the direction, not just the shape.</p>` : ""}
+    <div class="rr-clue" style="margin-top:10px"><b>Analyst clue</b>${esc(rd.clue)}</div></div>`;
+  if (st.stage === "pick") {
     const ready = draft.shape && draft.call && draft.chips;
     $("#view").innerHTML = head + `<div class="cols">${chart}<div class="panel">
       <div class="step"><b>1</b>Spread = 10Y − 3M. What shape?</div>${rule}
       <div class="rr-pick" style="grid-template-columns:repeat(3,1fr);margin-top:8px">${R.SHAPE_KEYS.map(k => `<button data-k="shape" data-v="${k}" class="${draft.shape === k ? "on" : ""}">${R.SHAPES[k].label}</button>`).join("")}</div>
-      <div class="step"><b>2</b>Will a recession START within 2 years?</div>
-      <div class="rr-pick" style="grid-template-columns:1fr 1fr">${[["yes", "Yes"], ["no", "No"]].map(([v, l]) => `<button data-k="call" data-v="${v}" class="${draft.call === v ? "on" : ""} ${v === "no" ? "no" : ""}">${l}</button>`).join("")}</div>
+      <div class="step"><b>2</b>Will a recession START within 2 years? When?</div>
+      <div class="rr-pick" style="grid-template-columns:1fr 1fr">${R.BANDS.map(b => `<button data-k="call" data-v="${b.key}" class="${draft.call === b.key ? "on" : ""} ${b.key === "none" ? "no" : ""}">${b.key === "none" ? "No recession" : b.label}</button>`).join("")}</div>
       <div class="step"><b>3</b>How sure? Bet chips</div>
       <div class="rr-pick" style="grid-template-columns:repeat(3,1fr)">${R.CHIPS.map(c => `<button data-k="chips" data-v="${c}" class="${draft.chips === c ? "on" : ""}">${"●".repeat(c)}<small>±${c}</small></button>`).join("")}</div>
-      <p class="lede" style="font-size:14px;margin:8px 0 0">Right shape +1. Right call wins your chips; wrong call loses them.</p>
-      <div class="actions"><button class="btn" id="lock" ${ready ? "" : "disabled"} style="width:100%">Lock it in and reveal</button></div></div></div>`;
+      <p class="lede" style="font-size:14px;margin:8px 0 0">Right shape +1. Right yes/no wins your chips; wrong loses them. Exact timing band when a recession comes: +1.${rd.analyst ? " Then: spot the real analyst for +1." : ""}</p>
+      <div class="actions"><button class="btn" id="lock" ${ready ? "" : "disabled"} style="width:100%">${rd.analyst ? "Lock it in: spot the analyst →" : "Lock it in and reveal"}</button></div></div></div>`;
     $$(".rr-pick button").forEach(b => b.onclick = () => { const k = b.dataset.k; draft[k] = k === "chips" ? +b.dataset.v : b.dataset.v; render(); });
-    $("#lock").onclick = () => { st.ans[st.r] = { ...draft }; st.revealed = true; save(); render(); };
+    $("#lock").onclick = () => { st.ans[st.r] = { shape: draft.shape, call: draft.call, chips: draft.chips }; st.stage = rd.analyst ? "spot" : "reveal"; if (rd.analyst) st.order = [rd.analyst, ...rd.decoys].map((t, i) => [Math.random(), i]).sort((x, y) => x[0] - y[0]).map(x => x[1]); save(); render(); };
+    return;
+  }
+  if (st.stage === "spot") {
+    const lines = [rd.analyst, ...rd.decoys];
+    $("#view").innerHTML = head + `<div class="cols">${chart}<div class="panel"><div class="lbl">🕵️ Spot the Analyst</div>
+      <p style="margin:0 0 10px">One of these was written by a real Wall Street analyst at the time. The other three are what students wrote. Which is the analyst? (+1)</p>
+      ${st.order.map((i, n) => `<button class="rr-case" data-i="${i}"><b style="color:#C1102F;margin-right:8px">${n + 1}</b>${esc(lines[i])}</button>`).join("")}</div></div>`;
+    $$(".rr-case[data-i]").forEach(b => b.onclick = () => { st.ans[st.r].spot = b.dataset.i === "0"; st.ans[st.r].spotPick = +b.dataset.i; st.stage = "reveal"; save(); render(); });
     return;
   }
   const sp = R.spreadOf(rd.ylds), sh = R.shapeOf(sp), sc = R.scoreRound(d, rd);
   $("#view").innerHTML = head + `<div class="cols">${chart}<div>
-    <div class="rr-verdict ${rd.recession ? "yes" : "no"}"><div class="big">${rd.recession ? "Recession" : "No recession"}${rd.asterisk ? "*" : ""}</div><div>Curve ${rd.tag} was <b>${esc(rd.date)}</b>. ${esc(rd.headline)}.</div></div>
+    <div class="rr-verdict ${rd.recession ? "yes" : "no"}"><div class="big">${rd.recession ? "Recession" : "No recession"}${rd.asterisk ? "*" : ""}</div><div>Curve ${rd.tag} was <b>${esc(rd.date)}</b>. ${esc(rd.headline)}${rd.recession ? ` (${rd.months} months later)` : ""}.</div></div>
     <div class="panel" style="margin-top:12px"><div style="font-family:var(--display);font-size:24px">${rd.ylds[5].toFixed(2)} − ${rd.ylds[0].toFixed(2)} = ${sgn(sp)} → ${shapePill(sh)}</div>
-      <p>${esc(rd.story)}</p><div class="lesson"><b>The lesson:</b> ${esc(rd.lesson)}</div>
+      <p>${esc(rd.story)}</p><div class="lesson"><b>${rd.trap ? "Why it was a trap:" : "The lesson:"}</b> ${esc(rd.lesson)}</div>
+      ${rd.analyst ? `<div class="lesson" style="background:var(--gray);border-left-color:var(--ink)"><b>🕵️ The real analyst</b> wrote: "${esc(rd.analyst)}" ${(rd.analystCall === "yes") === rd.recession ? "They were right." : "They were wrong. Professionals miss too."}</div>` : ""}
       <table class="res" style="margin-top:10px"><tr><td>Shape: you said ${R.SHAPES[d.shape].label}</td><td class="r">${sc.shapeOK ? "+1" : "0"}</td></tr>
-        <tr><td>Call: you said ${d.call === "yes" ? "Yes" : "No"} with ${d.chips} chip${d.chips > 1 ? "s" : ""}</td><td class="r ${sc.call < 0 ? "neg" : "pos"}">${pts(sc.call)}</td></tr>
-        <tr class="tot"><td>This curve</td><td class="r">${pts(sc.total)}</td></tr></table>
+        <tr><td>Call: you said ${esc(d.call === "none" ? "no recession" : "recession in " + bandLabel(d.call).toLowerCase())} with ${d.chips} chip${d.chips > 1 ? "s" : ""}</td><td class="r ${sc.call < 0 ? "neg" : "pos"}">${pts(sc.call)}</td></tr>
+        ${rd.recession ? `<tr><td>Timing bonus (${esc(bandLabel(R.bandOf(rd)))})</td><td class="r">${sc.timingOK ? "+1" : "0"}</td></tr>` : ""}
+        ${rd.analyst ? `<tr><td>Spot the Analyst</td><td class="r">${d.spot ? "+1" : "0"}</td></tr>` : ""}
+        <tr class="tot"><td>This curve</td><td class="r">${pts(roundPts(st.r))}</td></tr></table>
       <div class="actions"><button class="btn" id="next">${st.r < N - 1 ? `Next: Mystery Curve ${R.ROUNDS[st.r + 1].tag} →` : "Today's curve →"}</button></div></div></div></div>`;
-  $("#next").onclick = () => { st.r++; st.revealed = false; draft = { shape: null, call: null, chips: null }; if (st.r >= N) st.best = Math.max(st.best ?? -99, total()); save(); render(); scrollTo(0, 0); };
+  $("#next").onclick = () => { st.r++; st.stage = "pick"; draft = { shape: null, call: null, chips: null }; if (st.r >= N) st.best = Math.max(st.best ?? -99, total()); save(); render(); scrollTo(0, 0); };
 }
 function renderToday() {
   const sp = R.spreadOf(T.ylds), sh = R.shapeOf(sp), rec = R.record();
-  $("#view").innerHTML = `<div class="board"><div class="chip red"><div class="v">${total()}</div><div class="k">Final points</div></div><div class="chip"><div class="v">${R.MAX_GAME}</div><div class="k">Perfect game</div></div><div class="chip"><div class="v">${st.best}</div><div class="k">Your best</div></div></div>${dots()}
+  $("#view").innerHTML = `<div class="board"><div class="chip red"><div class="v">${total()}</div><div class="k">Final points</div></div><div class="chip"><div class="v">${MAXSOLO}</div><div class="k">Perfect game</div></div><div class="chip"><div class="v">${st.best}</div><div class="k">Your best</div></div></div>${dots()}
     <div class="panel"><div class="lbl">Your scorecard</div><table class="res"><tr><th>Curve</th><th>Date</th><th>Spread</th><th>Shape</th><th>Outcome</th><th class="r">Points</th></tr>
-      ${R.ROUNDS.map((rd, i) => { const s2 = R.spreadOf(rd.ylds), p = R.scoreRound(st.ans[i], rd); return `<tr><td>${rd.tag}</td><td>${esc(rd.date)}</td><td>${sgn(s2)}</td><td>${shapePill(R.shapeOf(s2))}</td><td>${rd.recession ? "Recession" + (rd.asterisk ? "*" : "") : "No recession"}</td><td class="r ${p.total < 0 ? "neg" : ""}">${pts(p.total)}</td></tr>`; }).join("")}
+      ${R.ROUNDS.map((rd, i) => { const s2 = R.spreadOf(rd.ylds), p = R.scoreRound(st.ans[i], rd); return `<tr><td>${rd.tag}</td><td>${esc(rd.date)}</td><td>${sgn(s2)}</td><td>${shapePill(R.shapeOf(s2))}</td><td>${rd.recession ? "Recession" + (rd.asterisk ? "*" : "") : "No recession"}</td><td class="r ${roundPts(i) < 0 ? "neg" : ""}">${pts(roundPts(i))}</td></tr>`; }).join("")}
       <tr class="tot"><td colspan="5">Total</td><td class="r">${total()}</td></tr></table>
       <p style="font-size:14px;color:var(--muted)">*Caused by the COVID-19 pandemic. Inverted: ${rec.inverted[1]} of ${rec.inverted[0]} came before a recession. Flat: ${rec.flat[1]} of ${rec.flat[0]}. Normal: ${rec.normal[1]} of ${rec.normal[0]}.</p></div>
     <h2 style="font-family:var(--display);margin:26px 0 8px">Today's curve · ${esc(T.date)}</h2>
@@ -109,7 +124,7 @@ function renderToday() {
     <div class="actions"><button class="btn ghost" id="again">Play again</button></div>`;
   $$("[data-f]").forEach(b => b.onclick = () => { st.forecast = b.dataset.f; save(); renderToday(); });
   mountSimulator($("#sim"));
-  $("#again").onclick = () => { if (!confirm("Start over? Your best score stays.")) return; st = { ans: [], r: 0, revealed: false, best: st.best, forecast: null }; save(); render(); scrollTo(0, 0); };
+  $("#again").onclick = () => { if (!confirm("Start over? Your best score stays.")) return; st = { ans: [], r: 0, stage: "pick", best: st.best, forecast: null }; save(); render(); scrollTo(0, 0); };
 }
 render();
 </script>

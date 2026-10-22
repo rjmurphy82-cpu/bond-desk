@@ -17,7 +17,19 @@ export const SHAPES = {
 export const SHAPE_KEYS = ["normal", "flat", "inverted"];
 export const CHIPS = [1, 2, 3];
 
-// Mystery order is not chronological on purpose.
+// Timing bands for the recession call. "none" = no recession starts within 2 years.
+export const BANDS = [
+  { key: "0-6", label: "0 to 6 months", short: "0-6 mo" },
+  { key: "7-12", label: "7 to 12 months", short: "7-12 mo" },
+  { key: "13-24", label: "13 to 24 months", short: "13-24 mo" },
+  { key: "none", label: "No recession in 2 years", short: "None" }
+];
+export const BAND_KEYS = BANDS.map(b => b.key);
+export const bandOf = rd => !rd.recession ? "none" : rd.months <= 6 ? "0-6" : rd.months <= 12 ? "7-12" : "13-24";
+
+// Mystery order is not chronological on purpose. The last three rounds (Senior) also show the curve 12 months earlier.
+// Rounds with `analyst` are Spot-the-Analyst rounds: the analyst line is a paraphrased composite of common forecasts
+// at the time (not a quote from one person). `decoys` are used only on the solo practice page.
 export const ROUNDS = [
   { tag: "A", date: "December 2003", year: 2003, ylds: [0.91, 1.31, 1.91, 3.27, 3.79, 4.27],
     clue: "The economy is recovering from a recession that ended two years ago. The Fed has cut its key rate to 1%, its lowest level in about 45 years.",
@@ -37,38 +49,60 @@ export const ROUNDS = [
     headline: "No recession for more than eight years",
     story: "The expansion that followed ran until March 2001, the longest in U.S. history at the time.",
     lesson: "A very steep curve right after a recession is a classic early-recovery signal." },
-  { tag: "D", date: "August 2000", year: 2000, ylds: [6.28, 6.18, 6.23, 6.06, 6.05, 5.83],
+  { tag: "D", date: "June 1999", year: 1999, ylds: [4.72, 5.10, 5.62, 5.81, 6.05, 5.90], trap: true,
+    clue: "Internet stocks are soaring and unemployment is very low. This month the Fed raised rates for the first time since early 1997.",
+    recession: true, months: 21, next: "March 2001",
+    headline: "TRAP: Recession began March 2001",
+    story: "The curve looked healthy, but the Fed kept raising rates six times in a year, the curve inverted in 2000, and a recession began 21 months later.",
+    lesson: "A normal curve today is not a promise for two years. When the Fed starts a string of rate hikes, the curve can flip fast. The clue was the signal." },
+  { tag: "E", date: "August 2000", year: 2000, ylds: [6.28, 6.18, 6.23, 6.06, 6.05, 5.83],
     clue: "Tech stocks soared for years, then started falling this spring. The Fed has raised rates six times since mid-1999 to cool things down.",
     recession: true, months: 7, next: "March 2001",
     headline: "Recession began March 2001",
     story: "Seven months later a recession began as the dot-com bubble burst and businesses cut back on spending.",
-    lesson: "Short rates above long rates: the bond market expected rate cuts ahead, and cuts come when the economy weakens." },
-  { tag: "E", date: "June 1998", year: 1998, ylds: [5.12, 5.41, 5.52, 5.52, 5.56, 5.50],
+    lesson: "Short rates above long rates: the bond market expected rate cuts ahead, and cuts come when the economy weakens.",
+    analystCall: "no",
+    analyst: "The Fed's rate hikes are cooling the economy right on schedule, so we expect a soft landing with solid growth next year and no recession.",
+    decoys: ["Tech stocks are crashing and the curve is upside down, so a recession is coming soon.", "Short rates are higher than long rates, which means investors expect cuts, so we say recession within a year.", "Unemployment is still low and people keep spending, so the economy will keep growing."] },
+  { tag: "F", date: "June 1998", year: 1998, ylds: [5.12, 5.41, 5.52, 5.52, 5.56, 5.50],
     clue: "Unemployment is the lowest in nearly 30 years and inflation is low. The Fed has kept its key rate steady for more than a year.",
     recession: false, months: 33, next: "March 2001",
     headline: "No recession within two years",
     story: "The Fed cut rates three times that fall and the boom kept going. The next recession didn't start until March 2001, 33 months later, outside our two-year window.",
     lesson: "Flat is a yellow light, not a red one. Flat curves are common and often pass without a recession." },
-  { tag: "F", date: "June 1989", year: 1989, ylds: [8.43, 8.44, 8.41, 8.29, 8.31, 8.28],
+  { tag: "G", date: "June 1989", year: 1989, ylds: [8.43, 8.44, 8.41, 8.29, 8.31, 8.28],
     clue: "The Fed raised rates sharply over the past year to fight rising inflation.",
     recession: true, months: 13, next: "July 1990",
     headline: "Recession began July 1990",
     story: "Thirteen months later a recession began, made worse when an oil price spike hit in the summer of 1990.",
     lesson: "The inversion was tiny (just -0.15), but the signal still worked. The sign matters more than the size." },
-  { tag: "G", date: "August 2019", year: 2019, ylds: [1.99, 1.77, 1.57, 1.49, 1.55, 1.63],
+  { tag: "H", date: "August 2019", year: 2019, ylds: [1.99, 1.77, 1.57, 1.49, 1.55, 1.63], before: [2.07, 2.45, 2.64, 2.77, 2.84, 2.89],
     clue: "A trade war is worrying businesses. The Fed just cut rates for the first time in more than 10 years.",
     recession: true, months: 6, next: "February 2020", asterisk: true,
     headline: "Recession began February 2020",
     story: "Six months later a recession began, but it was caused by the COVID-19 pandemic, something no bond market could have predicted. Scored as a correct YES, with an asterisk.",
     lesson: "Did the curve really call it, or was it luck? Economists still argue. A signal is only as good as its reason." },
-  { tag: "H", date: "July 2023", year: 2023, ylds: [5.49, 5.37, 4.83, 4.14, 4.03, 3.90],
+  { tag: "I", date: "September 2007", year: 2007, ylds: [3.99, 4.14, 4.01, 4.20, 4.33, 4.52], before: [4.93, 4.97, 4.77, 4.67, 4.68, 4.72], trap: true,
+    clue: "Problems with risky home loans (subprime mortgages) spread to Wall Street this summer. This month the Fed cut rates by half a point, its first cut in four years.",
+    recession: true, months: 3, next: "December 2007",
+    headline: "TRAP: Recession began December 2007",
+    story: "Only three months later the Great Recession began. The curve looked flat and calm, but a year earlier it had been inverted. It was flipping back because the Fed had started cutting in a hurry.",
+    lesson: "Watch the direction, not just the shape. When an inverted curve 'un-inverts' because the Fed is rushing to cut, the recession is often right around the corner.",
+    analystCall: "no",
+    analyst: "Housing and subprime loans are hurting, but with the Fed now cutting rates the economy should slow down without falling into a recession.",
+    decoys: ["The curve already flipped back to normal, so the danger is over and growth continues.", "Last year it was inverted and now the Fed is cutting in a hurry, which is what happens right before a recession.", "Home loans going bad will hit the banks hard, so a recession is close."] },
+  { tag: "J", date: "July 2023", year: 2023, ylds: [5.49, 5.37, 4.83, 4.14, 4.03, 3.90], before: [2.30, 3.02, 3.04, 2.96, 2.97, 2.90],
     clue: "Inflation hit a 40-year high last year. The Fed has raised rates 11 times since March 2022, its fastest pace in four decades.",
     recession: false, months: null, next: "None declared as of October 2026",
     headline: "NO recession. The radar missed.",
     story: "One of the deepest inversions in more than 40 years, and the curve stayed inverted for about two years. No recession followed. Economists point to extra household savings from the pandemic, a strong job market, and inflation cooling without mass layoffs.",
-    lesson: "The yield curve is a pattern, not a law. Every forecasting tool can be wrong, and 'this time is different' is sometimes true." }
+    lesson: "The yield curve is a pattern, not a law. Every forecasting tool can be wrong, and 'this time is different' is sometimes true.",
+    analystCall: "yes",
+    analyst: "With the Fed raising rates this fast and the curve this deeply inverted, a recession is likely within the next 12 months.",
+    decoys: ["The job market is too strong for a recession, so the economy keeps growing.", "This is the most inverted curve in 40 years, so a recession is basically guaranteed.", "People still have pandemic savings to spend, so any slowdown will be mild with no recession."] }
 ];
 export const N = ROUNDS.length;
+export const isDefend = r => !!(ROUNDS[r] && ROUNDS[r].analyst);
 
 // TODAY: refresh from https://home.treasury.gov (Daily Treasury Par Yield Curve Rates) before class.
 export const TODAY = {
@@ -81,7 +115,7 @@ export const TODAY = {
     "10-year minus 3-month = 5.13 - 4.25 = +0.88. Under our rule that is FLAT, near the top of the range.",
     "10-year minus 2-year (the spread on the news) = +0.32.",
     "The 3-month bill (4.25%) pays more than the Fed's key rate (3.75% to 4.00%). That suggests investors expect the Fed may raise rates again.",
-    "The curve is NOT inverted. It was inverted from late 2022 until late 2024, and no recession followed."
+    "The curve is NOT inverted. It was inverted from late 2022 until late 2024, and no recession followed. Remember Curve I: un-inverting can be a warning, but there the Fed was cutting. Today it is raising."
   ],
   sides: [
     ["Reasons to worry", "Recessions have often started AFTER an inverted curve flips back to normal. Rates are rising again, and higher borrowing costs slow home buying and business spending."],
@@ -89,17 +123,19 @@ export const TODAY = {
   ]
 };
 
-// Scoring: +1 for the right shape; the recession call wins or loses the chips you bet (1 to 3).
+// Scoring: +1 right shape; the recession call (yes = any timing band) wins or loses the chips bet (1 to 3);
+// +1 timing bonus for the exact band when a recession did start. Spot-the-Analyst points are added in standings.
 export function scoreRound(d, rd) {
-  if (!d || !rd) return { shape: 0, call: 0, total: 0, shapeOK: false, callOK: false, answered: false };
-  const truthShape = shapeOf(spreadOf(rd.ylds));
-  const shapeOK = d.shape === truthShape, answered = !!d.call;
-  const callOK = answered && (d.call === "yes") === rd.recession;
+  if (!d || !rd) return { shape: 0, call: 0, timing: 0, total: 0, shapeOK: false, callOK: false, timingOK: false, answered: false };
+  const truthShape = shapeOf(spreadOf(rd.ylds)), band = d.call;
+  const shapeOK = d.shape === truthShape, answered = BAND_KEYS.includes(band);
+  const callOK = answered && (band !== "none") === rd.recession;
+  const timingOK = answered && rd.recession && band === bandOf(rd);
   const chips = CHIPS.includes(+d.chips) ? +d.chips : 1;
-  const shape = shapeOK ? 1 : 0, call = answered ? (callOK ? chips : -chips) : 0;
-  return { shape, call, total: shape + call, shapeOK, callOK, answered, chips };
+  const shape = shapeOK ? 1 : 0, call = answered ? (callOK ? chips : -chips) : 0, timing = timingOK ? 1 : 0;
+  return { shape, call, timing, total: shape + call + timing, shapeOK, callOK, timingOK, answered, chips };
 }
-export const MAX_ROUND = 4, MAX_GAME = N * MAX_ROUND;
+export const MAX_ROUND = 5, MAX_GAME = ROUNDS.reduce((a, rd) => a + 4 + (rd.recession ? 1 : 0), 0);
 
 // The Radar record: for each shape, how many rounds and how many recessions followed within 2 years.
 export function record(upto = N - 1) {
