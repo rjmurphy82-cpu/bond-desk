@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bond Feud | District 214 Finance &amp; Investing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--brown:#1E1E1E;--brown2:#111111;--orange:#C1102F;--cream:#F7F6F6;--ink:#111111;--gold:#FFC23D;--line:rgba(17,17,17,.14);--good:#1E9E5A;--bad:#D7263D}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:"Barlow",Arial,Helvetica,sans-serif;background:var(--brown2);color:#fff;overflow-x:hidden}
+.disp{font-family:"Oswald","Arial Narrow",sans-serif;font-weight:700;letter-spacing:.5px}
+.mono{font-family:Consolas,"Arial Narrow",monospace}
+header{display:flex;align-items:center;gap:16px;padding:12px 24px;background:var(--brown);border-bottom:4px solid var(--orange)}
+header .logo{font-family:"Oswald","Arial Narrow",sans-serif;font-weight:700;font-size:26px}
+header .logo b{color:var(--orange)}
+header .sub{font-size:14px;opacity:.8}
+header nav{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:10px 16px;font-weight:700}
+.btn{background:var(--orange);color:#fff}
+.btn:hover{filter:brightness(1.08)}
+.ghost{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.35)}
+.ghost.on{background:#fff;color:var(--brown);border-color:#fff}
+.bad{background:var(--bad);color:#fff}
+main{padding:20px 24px 140px;max-width:1400px;margin:0 auto}
+.hidden{display:none!important}
+/* setup */
+.card{background:#fff;color:var(--ink);border-radius:18px;padding:28px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.setup h1{margin:0 0 6px;font-size:40px;color:var(--brown)}
+.setup p{margin:0 0 18px;color:#5C5C5C}
+.teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin:16px 0}
+.teams input{width:100%;padding:12px;border:2px solid var(--line);border-radius:10px;font-size:18px;font-weight:700}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.how{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+.how div{background:var(--cream);border-radius:14px;padding:16px}
+.how h3{margin:0 0 8px;color:var(--brown)}
+.how ul{margin:0;padding-left:18px;line-height:1.5}
+/* board */
+.q{display:flex;align-items:center;gap:16px;background:var(--brown);border:3px solid var(--orange);border-radius:18px;padding:18px 24px;margin-bottom:16px}
+.q .num{font-family:"Oswald","Arial Narrow",sans-serif;font-weight:700;background:var(--orange);border-radius:12px;padding:8px 14px;font-size:20px;white-space:nowrap}
+.q h2{margin:0;font-size:clamp(22px,2.6vw,36px);line-height:1.2;flex:1}
+.mult{font-family:"Oswald","Arial Narrow",sans-serif;font-weight:700;color:var(--gold);font-size:22px;white-space:nowrap}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{position:relative;height:82px;border-radius:14px;background:linear-gradient(#2b2b2b,#1a1a1a);border:3px solid #3a3a3a;display:flex;align-items:center;justify-content:center;cursor:pointer;perspective:800px;user-select:none}
+.tile .n{font-family:"Oswald","Arial Narrow",sans-serif;font-weight:700;font-size:34px;width:60px;height:60px;border-radius:50%;background:var(--brown2);display:flex;align-items:center;justify-content:center;border:3px solid var(--orange)}
+.tile.open{background:#fff;color:var(--ink);border-color:var(--orange);justify-content:space-between;padding:0 22px;animation:flip .45s ease}
+.tile.open .n{display:none}
+.tile .a{display:none;font-size:clamp(18px,1.8vw,26px);font-weight:700}
+.tile .pts{display:none;font-family:"Oswald","Arial Narrow",sans-serif;font-weight:700;font-size:30px;background:var(--orange);color:#fff;border-radius:10px;padding:4px 14px}
+.tile.open .a,.tile.open .pts{display:block}
+.tile.missed{background:#E9E7E7}
+.tile.missed .pts{background:#8a8a8a}
+@keyframes flip{from{transform:rotateX(90deg)}to{transform:rotateX(0)}}
+.controls{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px}
+.panel{background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.15);border-radius:16px;padding:16px}
+.panel h4{margin:0 0 10px;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;opacity:.75}
+.guess{display:flex;gap:8px}
+.guess input{flex:1;font-size:20px;padding:12px;border-radius:10px;border:0}
+.bank{display:flex;align-items:center;gap:16px;justify-content:space-between}
+.bank .big{font-family:"Oswald","Arial Narrow",sans-serif;font-weight:700;font-size:46px;color:var(--gold)}
+.strikes{display:flex;gap:8px}
+.strikes span{font-family:"Oswald","Arial Narrow",sans-serif;font-weight:700;font-size:34px;color:rgba(255,255,255,.18)}
+.strikes span.on{color:var(--bad)}
+.award{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.award button{background:#fff;color:var(--brown)}
+.msg{margin-top:10px;min-height:22px;font-weight:700;color:var(--gold)}
+/* X overlay */
+#bigX{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:50}
+#bigX div{font-family:"Oswald","Arial Narrow",sans-serif;font-weight:700;font-size:40vh;color:var(--bad);text-shadow:0 0 40px rgba(0,0,0,.6);animation:pop .7s ease forwards}
+@keyframes pop{0%{transform:scale(.3);opacity:0}25%{transform:scale(1.1);opacity:1}80%{opacity:1}100%{transform:scale(1);opacity:0}}
+/* lightning */
+.lq{background:#fff;color:var(--ink);border-radius:18px;padding:26px 30px;display:flex;gap:20px;align-items:center}
+.lq h2{margin:0;flex:1;font-size:clamp(24px,2.6vw,38px);line-height:1.25}
+.topic{display:inline-block;background:var(--cream);color:var(--brown);border-radius:999px;padding:4px 12px;font-weight:700;font-size:14px;margin-bottom:8px}
+.timer{font-family:"Oswald","Arial Narrow",sans-serif;font-weight:700;font-size:44px;width:100px;height:100px;border-radius:50%;background:var(--brown);color:#fff;display:flex;align-items:center;justify-content:center;flex:none;border:5px solid var(--orange)}
+.timer.low{background:var(--bad)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+.opt{display:flex;align-items:center;gap:16px;border-radius:14px;padding:22px;font-size:clamp(18px,1.9vw,28px);font-weight:700;color:#fff;min-height:96px;transition:opacity .3s}
+.opt .shape{font-size:34px;width:40px;text-align:center}
+.o0{background:#C5283D}.o1{background:#1F6FB2}.o2{background:#D89E00}.o3{background:#26890C}
+.opt.dim{opacity:.22}
+.opt.right{outline:6px solid #fff;box-shadow:0 0 0 10px var(--good)}
+.explain{margin-top:14px;background:var(--cream);color:var(--ink);border-radius:14px;padding:14px 18px;font-size:20px}
+.lbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:16px;flex-wrap:wrap}
+/* scoreboard */
+#score{position:fixed;left:0;right:0;bottom:0;background:var(--brown);border-top:4px solid var(--orange);display:flex;gap:8px;padding:8px 12px;justify-content:center;flex-wrap:wrap;z-index:20}
+.team{background:var(--brown2);border-radius:12px;padding:6px 10px;min-width:120px;flex:0 1 160px;text-align:center;border:2px solid transparent;position:relative}
+.team.lead{border-color:var(--gold)}
+.team .tn{font-size:14px;font-weight:700;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.team .ts{font-family:"Oswald","Arial Narrow",sans-serif;font-weight:700;font-size:30px}
+.team .adj{position:absolute;top:4px;right:6px;display:none;gap:2px}
+.team:hover .adj{display:flex}
+.team .adj button{padding:0 6px;font-size:12px;border-radius:6px;background:#fff;color:var(--brown)}
+/* final */
+.final{text-align:center;padding:40px 0}
+.final h1{font-size:64px;margin:0;color:var(--gold)}
+.podium{display:flex;justify-content:center;gap:16px;margin-top:30px;flex-wrap:wrap}
+.podium div{background:#fff;color:var(--ink);border-radius:16px;padding:14px 20px;min-width:150px}
+.podium .place{font-family:"Oswald","Arial Narrow",sans-serif;font-weight:700;color:var(--orange);font-size:28px}
+.podium .pts{font-family:"Oswald","Arial Narrow",sans-serif;font-weight:700;font-size:40px}
+.keys{font-size:12px;opacity:.6;margin-top:10px}
+canvas#conf{position:fixed;inset:0;pointer-events:none;z-index:40}
+@media (max-width:800px){.grid,.opts,.controls,.how{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div><div class="logo">BOND <b>FEUD</b></div><div class="sub"><a href="/" style="color:inherit">District 214 Finance &amp; Investing</a> &middot; Unit 3 Review</div></div>
+  <nav id="nav" class="hidden">
+    <button class="ghost" data-go="feud">Feud Boards</button>
+    <button class="ghost" data-go="light">Lightning Round</button>
+    <button class="ghost" data-go="final">Final Scores</button>
+  </nav>
+</header>
+<main>
+  <!-- SETUP -->
+  <section id="setup" class="card setup">
+    <h1>Bond Feud</h1>
+    <p>The Bond Desk, The Rating Room and the Yield Curve in one review game. Name your teams and go.</p>
+    <div class="row"><b>Number of teams:</b>
+      <select id="nTeams" style="font-size:18px;padding:8px;border-radius:8px">
+        <option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option selected>8</option>
+      </select>
+    </div>
+    <div class="teams" id="teamInputs"></div>
+    <div class="row"><button class="btn" id="start" style="font-size:20px;padding:14px 28px">Start the Feud</button></div>
+    <div class="how">
+      <div><h3>Part 1: Feud Boards (6)</h3><ul>
+        <li>Two teams face off each board (rotate pairs so all 8 teams play). First good answer controls the board.</li>
+        <li>Type a guess (or click a tile) to reveal it. Wrong guess = a strike.</li>
+        <li>Three strikes: the other team gets one steal for the whole bank.</li>
+        <li>Boards 4 and 5 are worth double. Board 6 is triple.</li>
+      </ul></div>
+      <div><h3>Part 2: Lightning Round</h3><ul>
+        <li>18 questions, 20 seconds each, four colored answers.</li>
+        <li>Every team answers on a whiteboard or by holding up a color.</li>
+        <li>Reveal, then click every team that got it right (+10).</li>
+        <li>Keys: Space = reveal / next, 1 to 6 = flip tile, X = strike.</li>
+      </ul></div>
+    </div>
+  </section>
+
+  <!-- FEUD -->
+  <section id="feud" class="hidden">
+    <div class="q"><div class="num" id="bNum">Board 1 of 6</div><h2 id="bQ"></h2><div class="mult" id="bMult"></div></div>
+    <div class="grid" id="tiles"></div>
+    <div class="controls">
+      <div class="panel">
+        <h4>Type the team's answer</h4>
+        <div class="guess"><input id="guess" placeholder="e.g. debt" autocomplete="off"><button class="btn" id="check">Survey says!</button></div>
+        <div class="msg" id="msg"></div>
+        <div class="row" style="margin-top:8px">
+          <button class="bad" id="strike">&#10006; Strike</button>
+          <button class="ghost" id="clearStrikes">Reset strikes</button>
+          <button class="ghost" id="revealAll">Show remaining answers</button>
+          <button class="btn" id="nextB">Next board &rarr;</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="bank"><div><h4>Board bank</h4><div class="big" id="bank">0</div></div><div class="strikes" id="strikes"><span>X</span><span>X</span><span>X</span></div></div>
+        <h4 style="margin-top:12px">Award the bank to</h4>
+        <div class="award" id="award"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LIGHTNING -->
+  <section id="light" class="hidden">
+    <div class="lq">
+      <div style="flex:1"><div class="topic" id="lTopic"></div><h2 id="lQ"></h2></div>
+      <div class="timer" id="timer">20</div>
+    </div>
+    <div class="opts" id="opts"></div>
+    <div class="explain hidden" id="lx"></div>
+    <div class="lbar">
+      <div><b id="lCount"></b></div>
+      <div class="award" id="lAward" style="margin:0"></div>
+      <div class="row">
+        <button class="ghost" id="lPause">Pause</button>
+        <button class="btn" id="lNext">Reveal</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL -->
+  <section id="final" class="hidden final">
+    <h1 class="disp" id="winner"></h1>
+    <p style="font-size:20px;opacity:.85">Unit 3 Review Champions</p>
+    <div class="podium" id="podium"></div>
+  </section>
+</main>
+<div id="score" class="hidden"></div>
+<div id="bigX" class="hidden"><div>X</div></div>
+<canvas id="conf"></canvas>
+
+<script>
+const DATA = {"FEUD":[{"q":"Name something a bond rater checks before giving a rating","mult":1,"ans":[["Paying bills on time",34,["time","history","pay","late","miss"]],["Earnings / making money",26,["earn","profit","money","income","revenue"]],["Debt load",18,["debt","owe","borrow","leverage"]],["Who's behind it (backing)",10,["back","behind","govern","tax","support"]],["Interest coverage",7,["coverage","cover","interest"]],["Cash cushion",5,["cash","cushion","savings"]]]},{"q":"Name a part of a bond's terms printed on the deal","mult":1,"ans":[["Face (par) value",32,["face","par","1000","1,000","principal"]],["Coupon rate",28,["coupon","rate","interest"]],["Maturity date",24,["matur","date","length","term","years"]],["Issuer",12,["issuer","who","company","borrower"]],["Credit rating",4,["rating","grade","aaa"]]]},{"q":"Name something that can make a bond's price FALL","mult":1,"ans":[["Interest rates rise",36,["rate","rise","fed"]],["A downgrade",28,["downgrade","rating","lower"]],["Fear of default",18,["default","miss","bankrupt","can't pay"]],["Inflation goes up",10,["inflation","prices"]],["Bad earnings news",8,["earning","profit","loss","news"]]]},{"q":"Name a bond rating that is INVESTMENT GRADE","mult":2,"ans":[["AAA",35,["aaa","triple a"]],["AA",25,["aa","double a"]],["A",22,["a","single a"]],["BBB",18,["bbb","triple b"]]],"exact":true},{"q":"Name something that happens when interest rates go UP","mult":2,"ans":[["Existing bond prices fall",34,["price","fall","drop","worth less"]],["New bonds pay higher coupons",24,["new bond","coupon","new issue","higher yield"]],["Mortgage rates rise",18,["mortgage","house","home","loan"]],["Borrowing costs more for companies",14,["borrow","compan","business","cost"]],["Savings accounts pay more",10,["saving","bank","cd"]]]},{"q":"Name something the yield curve can warn you about","mult":3,"ans":[["A recession",40,["recession","slow","economy"]],["Where interest rates are headed",25,["rate","headed","future"]],["What the Fed might do",15,["fed","cut","hike"]],["Investor fear / confidence",12,["fear","confiden","worr","panic"]],["Inflation expectations",8,["inflation"]]]}],"BANK":[{"t":"Bond Basics","p":"A bond is best described as:","o":["A loan you make to a government or company","Part ownership of a company","A savings account at a bank","A type of insurance policy"],"x":"You lend money; the issuer pays interest and returns the face value at maturity."},{"t":"Bond Basics","p":"A $1,000 bond has a 6% coupon. How much interest does it pay per year?","o":["$60","$6","$600","$106"],"x":"$1,000 x 6% = $60 per year."},{"t":"Bond Basics","p":"When interest rates RISE, prices of existing bonds:","o":["Fall","Rise","Stay the same","Double"],"x":"The seesaw: older bonds pay less than new ones, so their prices drop."},{"t":"Bond Basics","p":"A $1,000 face-value bond now sells for $1,050. It trades at a:","o":["Premium","Discount","Default","Par"],"x":"Above face value = premium. Below = discount."},{"t":"Bond Basics","p":"Rates rise 1%. Which bond's price falls the MOST?","o":["A 10-year bond","A 2-year bond","A 3-month T-bill","They all fall the same"],"x":"Longer maturity = more interest rate risk = bigger price swings."},{"t":"Rating Room","p":"What is the LOWEST investment grade rating?","o":["BBB","BB","A","B"],"x":"BBB and up is investment grade. BB and below is junk."},{"t":"Rating Room","p":"Which rating is a junk (high-yield) bond?","o":["BB","A","AA","BBB"],"x":"BB is the top of junk territory."},{"t":"Rating Room","p":"Which of these is a credit rating agency?","o":["Moody's","Nasdaq","The FDIC","The IRS"],"x":"The big three are S&P, Moody's and Fitch."},{"t":"Rating Room","p":"Debt $800M, earnings $200M. What is the debt load (debt / earnings)?","o":["4.0x","0.25x","1,000","2.5x"],"x":"$800M / $200M = 4.0x. Lower is safer."},{"t":"Rating Room","p":"Interest coverage = earnings / yearly interest. Which company is SAFER?","o":["Coverage of 12x","Coverage of 2x","Coverage of 1x","Coverage of 0.5x"],"x":"Higher coverage means earnings pay the interest bill many times over."},{"t":"Rating Room","p":"A company's bond gets DOWNGRADED. Its bond price usually:","o":["Falls","Rises","Stays the same","Resets to $1,000"],"x":"More risk means investors want a higher yield, so the price drops."},{"t":"Bond Desk","p":"Treasury rate 4.0%. Credit spread for the rating: +2.0%. Fair yield?","o":["6.0%","2.0%","4.0%","8.0%"],"x":"Fair yield = Treasury rate + spread = 4.0% + 2.0%."},{"t":"Bond Desk","p":"A bond's fair yield is 5.5%, but it only pays 5.0%. The call:","o":["Overpriced","Good deal","Fair price","Can't tell"],"x":"It pays less than it should for its risk."},{"t":"Bond Desk","p":"Why does a CCC bond pay a much higher yield than a AAA bond?","o":["Investors need more pay to take default risk","CCC bonds are always longer","The government sets it higher","CCC bonds are newer"],"x":"More risk of not getting paid back means a bigger spread."},{"t":"Bond Desk","p":"A bond earned 5% interest, but its price fell 2%. Total return?","o":["+3%","+7%","-2%","+5%"],"x":"Total return = interest + price change = 5% - 2%."},{"t":"Yield Curve","p":"An INVERTED yield curve means:","o":["Short-term yields are higher than long-term","Long-term yields are higher than short-term","All yields are zero","Bond prices are rising"],"x":"Inverted = the curve slopes down. It has often come before a recession."},{"t":"Yield Curve","p":"Oct 2026: 10-year 5.13%, 3-month 4.25%. What is the 10Y minus 3M spread?","o":["+0.88","-0.88","+9.38","+1.88"],"x":"5.13 - 4.25 = +0.88. Positive but under 1: flat by our class rule."},{"t":"Yield Curve","p":"July 2023: one of the deepest inversions in 40 years. What came next?","o":["No recession (as of Oct 2026)","A recession within 6 months","The 2008 financial crisis","The Fed shut down"],"x":"The yield curve is a warning sign, not a law."}]};
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const S = { teams: [], board: 0, open: [], bank: 0, strikes: 0, scored: true, li: 0, lRevealed: false, lOrder: [], lOpts: [], t: 20, paused: false, timerId: null, lGot: new Set() };
+
+/* ---------- sound */
+let AC;
+function tone(freqs, dur, type) {
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    freqs.forEach((f, i) => {
+      const o = AC.createOscillator(), g = AC.createGain(), t0 = AC.currentTime + i * dur;
+      o.type = type || "sine"; o.frequency.value = f;
+      g.gain.setValueAtTime(0.18, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + dur * 0.95);
+      o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0 + dur);
+    });
+  } catch (e) {}
+}
+const ding = () => tone([880, 1320], 0.14);
+const buzz = () => tone([110, 98], 0.32, "sawtooth");
+
+/* ---------- setup */
+function drawInputs() {
+  const n = +$("#nTeams").value, old = $$("#teamInputs input").map(i => i.value);
+  $("#teamInputs").innerHTML = Array.from({ length: n }, (_, i) =>
+    `<input value="${(old[i] || "Team " + (i + 1)).replace(/"/g, "&quot;")}" maxlength="22">`).join("");
+}
+$("#nTeams").onchange = drawInputs; drawInputs();
+$("#start").onclick = () => {
+  S.teams = $$("#teamInputs input").map((i, k) => ({ name: i.value.trim() || "Team " + (k + 1), pts: 0 }));
+  $("#setup").classList.add("hidden"); $("#nav").classList.remove("hidden"); $("#score").classList.remove("hidden");
+  S.lOrder = shuffle(DATA.BANK.map((_, i) => i));
+  drawScore(); loadBoard(0); go("feud");
+};
+function go(id) {
+  ["feud", "light", "final"].forEach(s => $("#" + s).classList.toggle("hidden", s !== id));
+  $$("#nav button").forEach(b => b.classList.toggle("on", b.dataset.go === id));
+  if (id === "light") { if (!S.lStarted) { S.lStarted = true; loadQ(0); } }
+  else stopTimer();
+  if (id === "final") showFinal();
+}
+$$("#nav button").forEach(b => b.onclick = () => go(b.dataset.go));
+
+/* ---------- scoreboard */
+function drawScore() {
+  const max = Math.max(...S.teams.map(t => t.pts));
+  $("#score").innerHTML = S.teams.map((t, i) => `<div class="team ${t.pts === max && max > 0 ? "lead" : ""}">
+    <div class="adj"><button data-adj="${i}" data-v="-10">-10</button><button data-adj="${i}" data-v="10">+10</button></div>
+    <div class="tn">${esc(t.name)}</div><div class="ts">${t.pts}</div></div>`).join("");
+  $$("[data-adj]").forEach(b => b.onclick = () => { S.teams[+b.dataset.adj].pts += +b.dataset.v; drawScore(); });
+  $("#award").innerHTML = S.teams.map((t, i) => `<button data-aw="${i}">${esc(t.name)}</button>`).join("");
+  $$("[data-aw]").forEach(b => b.onclick = () => awardBank(+b.dataset.aw));
+  drawLAward();
+}
+
+/* ---------- feud */
+function loadBoard(i) {
+  S.board = i; const B = DATA.FEUD[i];
+  S.open = B.ans.map(() => 0); S.bank = 0; S.strikes = 0; S.scored = true;
+  $("#bNum").textContent = `Board ${i + 1} of ${DATA.FEUD.length}`;
+  $("#bQ").textContent = B.q;
+  $("#bMult").textContent = B.mult > 1 ? (B.mult === 2 ? "DOUBLE" : "TRIPLE") + " POINTS" : "";
+  $("#nextB").textContent = i < DATA.FEUD.length - 1 ? "Next board →" : "Lightning Round →";
+  $("#tiles").innerHTML = B.ans.map((a, k) => `<div class="tile" data-k="${k}"><div class="n">${k + 1}</div>
+    <div class="a">${esc(a[0])}</div><div class="pts">${a[1]}</div></div>`).join("");
+  $$(".tile").forEach(t => t.onclick = () => flip(+t.dataset.k, true));
+  $("#msg").textContent = ""; $("#guess").value = ""; drawBank();
+}
+function flip(k, score) {
+  if (S.open[k]) return;
+  const B = DATA.FEUD[S.board], t = $(`.tile[data-k="${k}"]`);
+  S.open[k] = score ? 1 : 2; t.classList.add("open"); if (!score) t.classList.add("missed");
+  if (score) { S.bank += B.ans[k][1] * B.mult; ding(); }
+  drawBank();
+  if (S.open.every(x => x)) $("#msg").textContent = "Board cleared! Award the bank.";
+}
+function drawBank() {
+  $("#bank").textContent = S.bank;
+  $$("#strikes span").forEach((s, i) => s.classList.toggle("on", i < S.strikes));
+}
+function strike() {
+  S.strikes = Math.min(3, S.strikes + 1); drawBank(); buzz();
+  const x = $("#bigX"); x.classList.remove("hidden"); x.innerHTML = "<div>" + "X".repeat(S.strikes) + "</div>";
+  setTimeout(() => x.classList.add("hidden"), 750);
+  if (S.strikes === 3) $("#msg").textContent = "Three strikes! Other team: one guess to steal the bank.";
+}
+function norm(s) { return s.toLowerCase().replace(/[^a-z0-9, ']/g, " ").replace(/\s+/g, " ").trim(); }
+function check() {
+  const g = norm($("#guess").value); if (!g) return;
+  const B = DATA.FEUD[S.board];
+  let hit = -1;
+  B.ans.forEach((a, k) => {
+    if (hit >= 0 || S.open[k]) return;
+    const ok = B.exact ? a[2].some(w => g === w || g.replace(/ /g, "") === w.replace(/ /g, ""))
+                       : a[2].some(w => g.includes(w));
+    if (ok) hit = k;
+  });
+  if (hit < 0 && B.exact) {
+    const already = B.ans.findIndex((a, k) => S.open[k] && a[2].some(w => g === w));
+    if (already >= 0) { $("#msg").textContent = `"${$("#guess").value}" is already on the board.`; $("#guess").value = ""; return; }
+  }
+  if (hit >= 0) { flip(hit, true); $("#msg").textContent = `Survey says... ${B.ans[hit][0]}!`; }
+  else { $("#msg").textContent = `Survey says... no match for "${$("#guess").value}". (Teacher can still click a tile.)`; strike(); }
+  $("#guess").value = "";
+}
+function awardBank(i) {
+  if (!S.bank) { $("#msg").textContent = "The bank is empty."; return; }
+  S.teams[i].pts += S.bank; $("#msg").textContent = `${S.teams[i].name} takes ${S.bank} points!`;
+  S.bank = 0; drawBank(); drawScore(); ding(); burst(60);
+}
+$("#check").onclick = check;
+$("#guess").addEventListener("keydown", e => { if (e.key === "Enter") check(); e.stopPropagation(); });
+$("#strike").onclick = strike;
+$("#clearStrikes").onclick = () => { S.strikes = 0; drawBank(); $("#msg").textContent = ""; };
+$("#revealAll").onclick = () => DATA.FEUD[S.board].ans.forEach((_, k) => flip(k, false));
+$("#nextB").onclick = () => S.board < DATA.FEUD.length - 1 ? loadBoard(S.board + 1) : go("light");
+
+/* ---------- lightning */
+const SHAPES = ["▲", "◆", "●", "■"];
+function loadQ(i) {
+  S.li = i; S.lRevealed = false; S.lGot = new Set();
+  const q = DATA.BANK[S.lOrder[i]];
+  S.lOpts = shuffle([0, 1, 2, 3]);
+  $("#lTopic").textContent = q.t; $("#lQ").textContent = q.p;
+  $("#opts").innerHTML = S.lOpts.map((oi, k) => `<div class="opt o${k}" data-oi="${oi}"><span class="shape">${SHAPES[k]}</span><span>${esc(q.o[oi])}</span></div>`).join("");
+  $("#lx").classList.add("hidden");
+  $("#lCount").textContent = `Question ${i + 1} of ${DATA.BANK.length}`;
+  $("#lNext").textContent = "Reveal"; drawLAward();
+  S.t = 20; S.paused = false; $("#lPause").textContent = "Pause"; startTimer();
+}
+function startTimer() {
+  stopTimer(); drawTimer();
+  S.timerId = setInterval(() => {
+    if (S.paused) return;
+    S.t--; drawTimer();
+    if (S.t <= 5 && S.t > 0) tone([660], 0.08);
+    if (S.t <= 0) { stopTimer(); buzz(); }
+  }, 1000);
+}
+function stopTimer() { if (S.timerId) clearInterval(S.timerId); S.timerId = null; }
+function drawTimer() { $("#timer").textContent = Math.max(0, S.t); $("#timer").classList.toggle("low", S.t <= 5); }
+function revealQ() {
+  S.lRevealed = true; stopTimer();
+  const q = DATA.BANK[S.lOrder[S.li]];
+  $$(".opt").forEach(o => o.classList.add(+o.dataset.oi === 0 ? "right" : "dim"));
+  $("#lx").innerHTML = `<b>${esc(q.o[0])}.</b> ${esc(q.x)}`; $("#lx").classList.remove("hidden");
+  $("#lNext").textContent = S.li < DATA.BANK.length - 1 ? "Next question →" : "Final scores →";
+  drawLAward(); ding();
+}
+function drawLAward() {
+  const el = $("#lAward"); if (!el) return;
+  if (!S.lRevealed) { el.innerHTML = '<span style="opacity:.7">Teams lock in answers before the reveal.</span>'; return; }
+  el.innerHTML = '<span style="opacity:.8;align-self:center">Got it right (+10):</span>' + S.teams.map((t, i) =>
+    `<button data-lg="${i}" style="${S.lGot.has(i) ? "background:var(--good);color:#fff" : ""}">${S.lGot.has(i) ? "✓ " : ""}${esc(t.name)}</button>`).join("");
+  $$("[data-lg]").forEach(b => b.onclick = () => {
+    const i = +b.dataset.lg;
+    if (S.lGot.has(i)) { S.lGot.delete(i); S.teams[i].pts -= 10; } else { S.lGot.add(i); S.teams[i].pts += 10; ding(); }
+    drawScore();
+  });
+}
+$("#lNext").onclick = () => {
+  if (!S.lRevealed) revealQ();
+  else if (S.li < DATA.BANK.length - 1) loadQ(S.li + 1);
+  else go("final");
+};
+$("#lPause").onclick = () => { S.paused = !S.paused; $("#lPause").textContent = S.paused ? "Resume" : "Pause"; };
+
+/* ---------- final */
+function showFinal() {
+  const r = S.teams.map((t, i) => ({ ...t, i })).sort((a, b) => b.pts - a.pts);
+  const top = r.filter(t => t.pts === r[0].pts);
+  $("#winner").textContent = top.length > 1 ? "It's a tie: " + top.map(t => t.name).join(" & ") : r[0].name + " wins!";
+  const places = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"];
+  let place = 0;
+  $("#podium").innerHTML = r.map((t, k) => { if (k > 0 && t.pts < r[k - 1].pts) place = k;
+    return `<div><div class="place">${places[place]}</div><div style="font-weight:700;font-size:20px">${esc(t.name)}</div><div class="pts">${t.pts}</div></div>`; }).join("");
+  burst(220); tone([523, 659, 784, 1047], 0.16, "triangle");
+}
+
+/* ---------- keys */
+document.addEventListener("keydown", e => {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+  if (!$("#feud").classList.contains("hidden")) {
+    if (/^[1-6]$/.test(e.key)) { const k = +e.key - 1; if (k < DATA.FEUD[S.board].ans.length) flip(k, true); }
+    if (e.key === "x" || e.key === "X") strike();
+  }
+  if (!$("#light").classList.contains("hidden") && e.key === " ") { e.preventDefault(); $("#lNext").click(); }
+});
+
+/* ---------- utils + confetti */
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+const cv = $("#conf"), cx = cv.getContext("2d"); let bits = [], raf = null;
+function burst(n) {
+  cv.width = innerWidth; cv.height = innerHeight;
+  for (let i = 0; i < n; i++) bits.push({ x: innerWidth / 2 + (Math.random() - .5) * 300, y: innerHeight * .45, vx: (Math.random() - .5) * 16, vy: -Math.random() * 16 - 4, s: 6 + Math.random() * 8, c: ["#C1102F", "#FFC23D", "#ffffff", "#888888"][i % 4], r: Math.random() * 6 });
+  if (!raf) tick();
+}
+function tick() {
+  cx.clearRect(0, 0, cv.width, cv.height);
+  bits.forEach(b => { b.vy += .45; b.x += b.vx; b.y += b.vy; b.r += .2; cx.save(); cx.translate(b.x, b.y); cx.rotate(b.r); cx.fillStyle = b.c; cx.fillRect(-b.s / 2, -b.s / 4, b.s, b.s / 2); cx.restore(); });
+  bits = bits.filter(b => b.y < cv.height + 40);
+  raf = bits.length ? requestAnimationFrame(tick) : (cx.clearRect(0, 0, cv.width, cv.height), null);
+}
+</script>
+</body>
+</html>

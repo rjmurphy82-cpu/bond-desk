@@ -8,6 +8,7 @@ The class site for Finance & Investing: a home page, live class games, review ga
 | `/credit` | Students | Join Credit Desk Live (the host QR code goes here) |
 | `/credit-host` | Teacher (projector) | Credit Desk Live host screen: groups rate each borrower on iPads, then buy; you run the reveal. Uses the same database as The Bond Desk. |
 | `/join` | Students | Join a live Bond Desk game (the host QR code goes here) |
+| `/bond-feud` | Projector | Bond Feud: Unit 3 review game. Six Family Feud boards plus an 18-question Lightning Round, 2 to 8 teams. Self-contained, no database. |
 | `/curves-live` | Students | Curves Live: the Kahoot-style yield curve wrap-up quiz (host at `/teacher/curves-live`). Same engine and database as Bonds Live, separate game codes. Questions are listed at the top of the script in `curves-live.html` (keep `teacher/curves-live.html` in sync). |
 | `/radar` | Students | Join Recession Radar Live (the host QR code goes here) |
 | `/radar-host` | Teacher (projector) | Recession Radar Live host screen: ten real Treasury yield curves from mystery dates (two traps). Groups name the shape, call the timing, and bet 1 to 3 chips on iPads, with three Spot the Analyst rounds; you reveal the date and what happened. Ends with today's curve, the class forecast and the what-if simulator. Same database as The Bond Desk. |
