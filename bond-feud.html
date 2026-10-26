@@ -102,6 +102,16 @@ main{padding:20px 24px 140px;max-width:1400px;margin:0 auto}
 .podium .place{font-family:"Oswald","Arial Narrow",sans-serif;font-weight:700;color:var(--orange);font-size:28px}
 .podium .pts{font-family:"Oswald","Arial Narrow",sans-serif;font-weight:700;font-size:40px}
 .keys{font-size:12px;opacity:.6;margin-top:10px}
+.ctrl{display:flex;align-items:center;justify-content:space-between;gap:16px;background:rgba(255,255,255,.08);border:2px dashed rgba(255,255,255,.3);border-radius:16px;padding:12px 18px;margin-bottom:14px;min-height:70px}
+.ctrl #ctrlTxt{font-size:clamp(20px,2vw,28px);font-weight:700}
+.ctrl #ctrlTxt b{color:var(--gold)}
+.ctrl.play{border:2px solid var(--gold);background:rgba(255,194,61,.12)}
+.ctrl.steal{border:2px solid var(--bad);background:rgba(215,38,61,.18);animation:pulse 1s ease-in-out infinite alternate}
+@keyframes pulse{from{box-shadow:0 0 0 0 rgba(215,38,61,.0)}to{box-shadow:0 0 0 8px rgba(215,38,61,.35)}}
+#spin{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:60}
+#spin .lab{font-size:26px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:18px}
+#spin .nm{font-family:"Oswald","Arial Narrow",sans-serif;font-weight:700;font-size:clamp(48px,9vw,120px);background:var(--orange);color:#fff;border-radius:24px;padding:20px 50px;min-width:50vw;text-align:center;border:6px solid #fff;transition:transform .15s}
+#spin .nm.land{transform:scale(1.12);background:var(--gold);color:var(--brown2)}
 canvas#conf{position:fixed;inset:0;pointer-events:none;z-index:40}
 @media (max-width:800px){.grid,.opts,.controls,.how{grid-template-columns:1fr}}
 </style>
@@ -129,16 +139,17 @@ canvas#conf{position:fixed;inset:0;pointer-events:none;z-index:40}
     <div class="row"><button class="btn" id="start" style="font-size:20px;padding:14px 28px">Start the Feud</button></div>
     <div class="how">
       <div><h3>Part 1: Feud Boards (6)</h3><ul>
-        <li>Two teams face off each board (rotate pairs so all 8 teams play). First good answer controls the board.</li>
+        <li>A random pick decides who starts each board. No team starts twice until every team has gone.</li>
+        <li>That team keeps guessing until the board is cleared (they win the bank) or they get three strikes.</li>
         <li>Type a guess (or click a tile) to reveal it. Wrong guess = a strike.</li>
-        <li>Three strikes: the other team gets one steal for the whole bank.</li>
+        <li>Three strikes: a random pick chooses another team for one steal guess. Right = they take the bank. Wrong = the starting team keeps it.</li>
         <li>Boards 4 and 5 are worth double. Board 6 is triple.</li>
       </ul></div>
       <div><h3>Part 2: Lightning Round</h3><ul>
         <li>18 questions, 20 seconds each, four colored answers.</li>
         <li>Every team answers on a whiteboard or by holding up a color.</li>
         <li>Reveal, then click every team that got it right (+10).</li>
-        <li>Keys: Space = reveal / next, 1 to 6 = flip tile, X = strike.</li>
+        <li>Keys: P = pick who starts, 1 to 6 = flip tile, X = strike, Space = Lightning reveal / next.</li>
       </ul></div>
     </div>
   </section>
@@ -146,6 +157,10 @@ canvas#conf{position:fixed;inset:0;pointer-events:none;z-index:40}
   <!-- FEUD -->
   <section id="feud" class="hidden">
     <div class="q"><div class="num" id="bNum">Board 1 of 6</div><h2 id="bQ"></h2><div class="mult" id="bMult"></div></div>
+    <div class="ctrl" id="ctrl">
+      <div id="ctrlTxt">Who starts this board?</div>
+      <button class="btn" id="pickBtn">&#127922; Pick who starts</button>
+    </div>
     <div class="grid" id="tiles"></div>
     <div class="controls">
       <div class="panel">
@@ -154,14 +169,14 @@ canvas#conf{position:fixed;inset:0;pointer-events:none;z-index:40}
         <div class="msg" id="msg"></div>
         <div class="row" style="margin-top:8px">
           <button class="bad" id="strike">&#10006; Strike</button>
-          <button class="ghost" id="clearStrikes">Reset strikes</button>
+          <button class="ghost" id="clearStrikes">Undo a strike</button>
           <button class="ghost" id="revealAll">Show remaining answers</button>
           <button class="btn" id="nextB">Next board &rarr;</button>
         </div>
       </div>
       <div class="panel">
         <div class="bank"><div><h4>Board bank</h4><div class="big" id="bank">0</div></div><div class="strikes" id="strikes"><span>X</span><span>X</span><span>X</span></div></div>
-        <h4 style="margin-top:12px">Award the bank to</h4>
+        <h4 style="margin-top:12px">Manual override: give the bank to</h4>
         <div class="award" id="award"></div>
       </div>
     </div>
@@ -194,6 +209,7 @@ canvas#conf{position:fixed;inset:0;pointer-events:none;z-index:40}
 </main>
 <div id="score" class="hidden"></div>
 <div id="bigX" class="hidden"><div>X</div></div>
+<div id="spin" class="hidden"><div class="lab" id="spinLab"></div><div class="nm" id="spinNm"></div></div>
 <canvas id="conf"></canvas>
 
 <script>
@@ -252,39 +268,110 @@ function drawScore() {
 }
 
 /* ---------- feud */
+// mode: "pick" (no team yet) -> "play" (starter guessing) -> "steal" (one guess) -> "done"
+S.mode = "pick"; S.ctrl = -1; S.stealer = -1; S.startQ = []; S.steals = []; S.spinning = false;
 function loadBoard(i) {
   S.board = i; const B = DATA.FEUD[i];
-  S.open = B.ans.map(() => 0); S.bank = 0; S.strikes = 0; S.scored = true;
+  S.open = B.ans.map(() => 0); S.bank = 0; S.strikes = 0;
+  S.mode = "pick"; S.ctrl = -1; S.stealer = -1;
   $("#bNum").textContent = `Board ${i + 1} of ${DATA.FEUD.length}`;
   $("#bQ").textContent = B.q;
   $("#bMult").textContent = B.mult > 1 ? (B.mult === 2 ? "DOUBLE" : "TRIPLE") + " POINTS" : "";
   $("#nextB").textContent = i < DATA.FEUD.length - 1 ? "Next board →" : "Lightning Round →";
   $("#tiles").innerHTML = B.ans.map((a, k) => `<div class="tile" data-k="${k}"><div class="n">${k + 1}</div>
     <div class="a">${esc(a[0])}</div><div class="pts">${a[1]}</div></div>`).join("");
-  $$(".tile").forEach(t => t.onclick = () => flip(+t.dataset.k, true));
-  $("#msg").textContent = ""; $("#guess").value = ""; drawBank();
+  $$(".tile").forEach(t => t.onclick = () => teacherFlip(+t.dataset.k));
+  $("#msg").textContent = ""; $("#guess").value = ""; drawBank(); drawCtrl();
+}
+function drawCtrl() {
+  const c = $("#ctrl"), btn = $("#pickBtn"), t = $("#ctrlTxt");
+  c.classList.toggle("play", S.mode === "play"); c.classList.toggle("steal", S.mode === "steal");
+  btn.classList.toggle("hidden", S.mode !== "pick");
+  if (S.mode === "pick") t.innerHTML = "Who starts this board?";
+  if (S.mode === "play") t.innerHTML = `<b>${esc(S.teams[S.ctrl].name)}</b> has the board. Keep guessing!`;
+  if (S.mode === "steal") t.innerHTML = `STEAL! <b>${esc(S.teams[S.stealer].name)}</b>: one guess to take ${S.bank} points from ${esc(S.teams[S.ctrl].name)}`;
+  if (S.mode === "done") t.innerHTML = "Board over. Show the rest, then go to the next board.";
+}
+// Random pick with a name-spinner. pool = team indexes; lands on a fair choice.
+function spinPick(label, pool, choice, done) {
+  S.spinning = true;
+  const box = $("#spin"), nm = $("#spinNm");
+  $("#spinLab").textContent = label; nm.classList.remove("land"); box.classList.remove("hidden");
+  let n = 0; const steps = 18 + Math.floor(Math.random() * 6);
+  (function step() {
+    n++;
+    const show = n >= steps ? choice : pool[Math.floor(Math.random() * pool.length)];
+    nm.textContent = S.teams[show].name; tone([500 + (n % 4) * 90], 0.05);
+    if (n < steps) setTimeout(step, 50 + n * n * 0.6);
+    else {
+      nm.classList.add("land"); tone([660, 880, 1100], 0.13, "triangle");
+      setTimeout(() => { box.classList.add("hidden"); S.spinning = false; done(choice); }, 1300);
+    }
+  })();
+}
+function pickStarter() {
+  if (S.mode !== "pick" || S.spinning) return;
+  const all = S.teams.map((_, i) => i);
+  if (!S.startQ.length) S.startQ = shuffle(all);   // every team starts once before anyone repeats
+  const choice = S.startQ.shift();
+  spinPick("Starting this board...", all, choice, i => { S.ctrl = i; S.mode = "play"; drawCtrl(); $("#msg").textContent = ""; $("#guess").focus(); });
+}
+function pickStealer() {
+  const others = S.teams.map((_, i) => i).filter(i => i !== S.ctrl);
+  if (!others.length) return;
+  const fewest = Math.min(...others.map(i => S.steals[i] || 0));
+  const fair = others.filter(i => (S.steals[i] || 0) === fewest);   // teams with the fewest steals so far
+  const choice = fair[Math.floor(Math.random() * fair.length)];
+  spinPick("Steal chance goes to...", others, choice, i => { S.stealer = i; S.steals[i] = (S.steals[i] || 0) + 1; S.mode = "steal"; drawCtrl(); $("#guess").focus(); });
 }
 function flip(k, score) {
-  if (S.open[k]) return;
+  if (S.open[k]) return false;
   const B = DATA.FEUD[S.board], t = $(`.tile[data-k="${k}"]`);
   S.open[k] = score ? 1 : 2; t.classList.add("open"); if (!score) t.classList.add("missed");
   if (score) { S.bank += B.ans[k][1] * B.mult; ding(); }
-  drawBank();
-  if (S.open.every(x => x)) $("#msg").textContent = "Board cleared! Award the bank.";
+  drawBank(); return true;
+}
+// A correct answer (typed or clicked by the teacher)
+function correct(k) {
+  const B = DATA.FEUD[S.board];
+  if (!flip(k, true)) return;
+  if (S.mode === "steal") { finish(S.stealer, `Steal! ${S.teams[S.stealer].name} said "${B.ans[k][0]}" and takes`); return; }
+  $("#msg").textContent = `Survey says... ${B.ans[k][0]}!`;
+  if (S.mode === "play" && S.open.every(x => x)) finish(S.ctrl, `Board cleared! ${S.teams[S.ctrl].name} takes`);
+}
+function teacherFlip(k) {
+  if (S.mode === "pick") { $("#msg").textContent = "Pick who starts first."; return; }
+  if (S.mode === "done") { flip(k, false); return; }
+  correct(k);
+}
+function finish(team, text) {
+  const pts = S.bank; S.mode = "done";
+  if (team >= 0 && pts) { S.teams[team].pts += pts; S.bank = 0; drawScore(); burst(80); }
+  $("#msg").textContent = `${text} ${pts} points!`;
+  drawBank(); drawCtrl();
 }
 function drawBank() {
   $("#bank").textContent = S.bank;
   $$("#strikes span").forEach((s, i) => s.classList.toggle("on", i < S.strikes));
 }
 function strike() {
-  S.strikes = Math.min(3, S.strikes + 1); drawBank(); buzz();
+  if (S.mode === "pick") { $("#msg").textContent = "Pick who starts first."; return; }
+  if (S.mode === "done") return;
+  buzz();
+  if (S.mode === "steal") { finish(S.ctrl, `Steal missed! ${S.teams[S.ctrl].name} keeps`); return; }
+  S.strikes = Math.min(3, S.strikes + 1); drawBank();
   const x = $("#bigX"); x.classList.remove("hidden"); x.innerHTML = "<div>" + "X".repeat(S.strikes) + "</div>";
   setTimeout(() => x.classList.add("hidden"), 750);
-  if (S.strikes === 3) $("#msg").textContent = "Three strikes! Other team: one guess to steal the bank.";
+  if (S.strikes === 3) {
+    $("#msg").textContent = "Three strikes!";
+    if (S.teams.length > 1) setTimeout(pickStealer, 900); else finish(-1, "Three strikes. Nobody takes the");
+  }
 }
 function norm(s) { return s.toLowerCase().replace(/[^a-z0-9, ']/g, " ").replace(/\s+/g, " ").trim(); }
 function check() {
-  const g = norm($("#guess").value); if (!g) return;
+  const raw = $("#guess").value, g = norm(raw); if (!g) return;
+  if (S.mode === "pick") { $("#msg").textContent = "Pick who starts first."; return; }
+  if (S.mode === "done" || S.spinning) return;
   const B = DATA.FEUD[S.board];
   let hit = -1;
   B.ans.forEach((a, k) => {
@@ -295,22 +382,23 @@ function check() {
   });
   if (hit < 0 && B.exact) {
     const already = B.ans.findIndex((a, k) => S.open[k] && a[2].some(w => g === w));
-    if (already >= 0) { $("#msg").textContent = `"${$("#guess").value}" is already on the board.`; $("#guess").value = ""; return; }
+    if (already >= 0) { $("#msg").textContent = `"${raw}" is already on the board.`; $("#guess").value = ""; return; }
   }
-  if (hit >= 0) { flip(hit, true); $("#msg").textContent = `Survey says... ${B.ans[hit][0]}!`; }
-  else { $("#msg").textContent = `Survey says... no match for "${$("#guess").value}". (Teacher can still click a tile.)`; strike(); }
   $("#guess").value = "";
+  if (hit >= 0) correct(hit);
+  else { strike(); if (S.mode !== "done") $("#msg").textContent = `Survey says... no match for "${raw}". (Teacher can still click a tile.)` + (S.strikes === 3 && S.mode === "play" ? " Three strikes!" : ""); }
 }
 function awardBank(i) {
   if (!S.bank) { $("#msg").textContent = "The bank is empty."; return; }
   S.teams[i].pts += S.bank; $("#msg").textContent = `${S.teams[i].name} takes ${S.bank} points!`;
-  S.bank = 0; drawBank(); drawScore(); ding(); burst(60);
+  S.bank = 0; S.mode = "done"; drawBank(); drawScore(); drawCtrl(); ding(); burst(60);
 }
+$("#pickBtn").onclick = pickStarter;
 $("#check").onclick = check;
 $("#guess").addEventListener("keydown", e => { if (e.key === "Enter") check(); e.stopPropagation(); });
 $("#strike").onclick = strike;
-$("#clearStrikes").onclick = () => { S.strikes = 0; drawBank(); $("#msg").textContent = ""; };
-$("#revealAll").onclick = () => DATA.FEUD[S.board].ans.forEach((_, k) => flip(k, false));
+$("#clearStrikes").onclick = () => { if (S.mode === "play") { S.strikes = Math.max(0, S.strikes - 1); drawBank(); $("#msg").textContent = "Took back a strike."; } };
+$("#revealAll").onclick = () => { if (S.mode !== "done" && S.mode !== "pick" && !confirm("The board isn't finished. Show the answers anyway?")) return; S.mode = S.mode === "pick" ? "pick" : "done"; DATA.FEUD[S.board].ans.forEach((_, k) => flip(k, false)); drawCtrl(); };
 $("#nextB").onclick = () => S.board < DATA.FEUD.length - 1 ? loadBoard(S.board + 1) : go("light");
 
 /* ---------- lightning */
@@ -379,8 +467,9 @@ function showFinal() {
 document.addEventListener("keydown", e => {
   if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
   if (!$("#feud").classList.contains("hidden")) {
-    if (/^[1-6]$/.test(e.key)) { const k = +e.key - 1; if (k < DATA.FEUD[S.board].ans.length) flip(k, true); }
+    if (/^[1-6]$/.test(e.key)) { const k = +e.key - 1; if (k < DATA.FEUD[S.board].ans.length) teacherFlip(k); }
     if (e.key === "x" || e.key === "X") strike();
+    if (e.key === "p" || e.key === "P") pickStarter();
   }
   if (!$("#light").classList.contains("hidden") && e.key === " ") { e.preventDefault(); $("#lNext").click(); }
 });
