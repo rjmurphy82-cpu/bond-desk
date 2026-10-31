@@ -1,6 +1,6 @@
 // Unit 5 Derivatives Live: student (iPad) screen for all eight games
 import { call, $, $$, store } from "./deriv-client.js";
-import { GAMES, Q_SECS, fmt, esc, SHAPES, ord, game, round, dec, deskResult, standings, show, deltaText, roundLabel, secsLeft, briefHTML, resultTable, storyCardHTML, needed, settle, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML, mmQuote, pitFrac, pitNow, pitLeft, clockText, bookSide, lastPrice, tapeHTML, pitUsed } from "./deriv-view.js";
+import { GAMES, Q_SECS, fmt, esc, SHAPES, ord, game, round, dec, deskResult, standings, show, deltaText, roundLabel, secsLeft, briefHTML, resultTable, storyCardHTML, needed, settle, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML, mmQuote, pitFrac, pitNow, pitLeft, clockText, bookSide, lastPrice, tapeHTML, pitUsed, activeComms, exIntelHTML, exMeterHTML, pitMine } from "./deriv-view.js";
 
 const SK = "dv_play";
 let me = store.get(SK);          // {code, gid, key, name, pin}
@@ -151,6 +151,7 @@ function renderDesk(G) {
 }
 
 /* ---------- the live trading pit (iPad) ---------- */
+let lastNews = null, breaking = "", breakT = null;
 const myCode = () => (S && S.me && S.me.code) || "";
 let pit = { k: "wheat", side: null, qty: 1, price: null, msg: "", bad: false }, pitTick = null, pitBusy = false;
 function myPos(G, R, k) { const ts = (S.trades[S.r] || []).filter(t => t.k === k); return ts.reduce((a, t) => a + (t.b === me.gid ? t.qty : t.s === me.gid ? -t.qty : 0), 0); }
@@ -159,19 +160,23 @@ function renderPit(G) {
   clearInterval(pitTick);
   if (!S.tradeAt) {
     $("#view").innerHTML = exHead(G, R) + `<div class="lockedcard" style="margin-bottom:14px"><div class="label" style="color:var(--light)">Trading opens soon · you are Desk ${esc(myCode())}</div><div style="font-size:18px;margin-top:4px">Read the market report and your cost sheet now. Decide what to hedge and what price you'd accept. Other desks only see your codename.</div></div>
-      <div class="cols">${exSheetHTML(G, R, role)}${exReportHTML(R)}</div>${status()}`;
-    return;
+      <div class="cols"><div class="grid" style="align-content:start">${exIntelHTML(R, role)}${exSheetHTML(G, R, role)}</div>${exReportHTML(R, false, S.news)}</div>${status()}`;
+    lastNews = S.news; return;
   }
+  if (lastNews != null && S.news > lastNews) { breaking = R.report[S.news - 1]; clearTimeout(breakT); breakT = setTimeout(() => { breaking = ""; if (S && S.mode === "pit" && S.phase === "open") keepY(() => renderPit(G)); }, 12000); }
+  lastNews = S.news;
   const frac = pitFrac({ tradeAt: S.tradeAt, win: S.win }, pitNow(skew)), used = pitUsed({ trades: (S.trades[S.r] || []).map(t => ({ ...t })), orders: ((S.book || {}).orders || []).filter(o => o.mine).map(o => ({ ...o, gid: me.gid })) }, me.gid);
-  const c = G.comms.find(x => x.k === pit.k), r = R.r[c.k], q = mmQuote(c, r, frac), nat = role === "sell" ? 1 : -1;
+  if (!activeComms(R).some(x => x.k === pit.k)) pit.k = activeComms(R)[0].k;
+  const c = activeComms(R).find(x => x.k === pit.k), r = R.r[c.k], q = mmQuote(c, r, frac), nat = role === "sell" ? 1 : -1;
   const offers = bookSide(S, c.k, "sell"), bids = bookSide(S, c.k, "buy"), last = lastPrice(S, c.k);
   if (pit.price == null || pit.priceK !== c.k) { pit.price = last ?? r; pit.priceK = c.k; }
   if (!pit.side) pit.side = role;
-  const tabs = G.comms.map(x => { const pos = myPos(G, R, x.k), need = R.N[x.k], hedged = nat < 0 ? Math.max(0, pos) : Math.max(0, -pos); return `<button class="ptab ${x.k === c.k ? "on" : ""}" data-tab="${x.k}"><b>${x.name}</b><span>${hedged} of ${need} hedged${(nat < 0 && pos < 0) || (nat > 0 && pos > 0) ? " ⚠" : ""}</span></button>`; }).join("");
+  const tabs = activeComms(R).map(x => { const pos = myPos(G, R, x.k), need = R.N[x.k], hedged = nat < 0 ? Math.max(0, pos) : Math.max(0, -pos); const wrong = (nat < 0 && pos < 0) || (nat > 0 && pos > 0); return `<button class="ptab ${x.k === c.k ? "on" : ""}" data-tab="${x.k}"><b>${x.name}</b><span>${wrong ? `⚠ wrong side by ${Math.abs(pos)}` : hedged > need ? `⚠ over-hedged by ${hedged - need}` : `${hedged} of ${need} hedged`}</span></button>`; }).join("");
   const row = (o, act) => o.mine ? `<div class="orow mine"><span>You · ${o.qty} @ <b>${px(o.price)}</b></span><button class="btn ghost sm" data-cancel="${o.id}">Cancel</button></div>`
     : `<div class="orow"><span>${esc(o.code)} · ${o.qty} @ <b>${px(o.price)}</b></span><span><button class="btn sm ${act === "Buy" ? "bbuy" : "bsell"}" data-take="${o.id}" data-q="1" ${open ? "" : "disabled"}>${act} 1</button>${o.qty > 1 ? ` <button class="btn sm ${act === "Buy" ? "bbuy" : "bsell"}" data-take="${o.id}" data-q="${o.qty}" ${open ? "" : "disabled"}>${act} ${o.qty}</button>` : ""}</span></div>`;
   $("#view").innerHTML = `<div class="pitbar ${open && left <= 30 ? "low" : ""}"><span>Desk <b>${esc(myCode())}</b> · ${role === "sell" ? "Seller" : "Buyer"}</span><span id="pclock">${open ? clockText(left) : "CLOSED"}</span><span>Contracts <b>${used} of ${R.margin}</b></span></div>
-    ${pit.msg ? `<div class="pmsg ${pit.bad ? "bad" : ""}">${esc(pit.msg)}</div>` : ""}
+    ${breaking ? `<div class="breaking"><b>Breaking</b> ${esc(breaking)}</div>` : ""}${pit.msg ? `<div class="pmsg ${pit.bad ? "bad" : ""}">${esc(pit.msg)}</div>` : ""}
+    ${(m => exMeterHTML(R, role, m.pos, m.gain, "live"))(pitMine(R, S.trades[S.r], me.gid))}
     ${open ? "" : `<div class="lockedcard" style="margin:10px 0"><h2>Trading is closed</h2><div style="color:#E6E6E6">Watch the board for delivery prices.</div></div>`}
     <div class="ptabs">${tabs}</div>
     <div class="cols"><div class="card"><div class="label">${c.name} · posted ${px(r)} · last trade ${last == null ? "none yet" : px(last)}</div>
@@ -186,7 +191,8 @@ function renderPit(G) {
         <div class="small">If your price matches an order already on the board, you trade right away at that order's price.</div>
         <div class="label" style="margin-top:12px">Your position in ${c.name.toLowerCase()}</div><div style="font-size:16px">You ${role === "buy" ? "need" : "will sell"} ${R.N[c.k]} contracts. Futures: ${(p => p > 0 ? "long " + p : p < 0 ? "short " + -p : "none yet")(myPos(G, R, c.k))}.</div></div></div>
     <div class="card" style="margin-top:12px"><div class="label">Trade tape</div>${tapeHTML(S, G, 8, me.gid)}</div>
-    <details style="margin-top:12px"><summary class="label" style="cursor:pointer">Market report and cost sheet</summary><div class="cols" style="margin-top:8px">${exReportHTML(R)}${exSheetHTML(G, R, role)}</div></details>${status()}`;
+    <div class="cols" style="margin-top:12px">${exReportHTML(R, false, S.news)}${exIntelHTML(R, role)}</div>
+    <details style="margin-top:12px"><summary class="label" style="cursor:pointer">Your cost sheet</summary><div style="margin-top:8px">${exSheetHTML(G, R, role)}</div></details>${status()}`;
   const act = async a => { if (pitBusy) return; pitBusy = true; try { const x = await call("pit", { code: me.code, gid: me.gid, key: me.key, r: S.r, a }); pit.bad = false; pit.msg = a.op === "cancel" ? "Order cancelled." : x.filled && x.rested ? `Traded ${x.filled}, and ${x.rested} posted on the board.` : x.filled ? `Done: ${a.op === "mm" ? (a.side === "buy" ? "bought" : "sold") : a.op === "take" ? "traded" : "traded"} ${x.filled} @ ${px(x.price || pit.price)}.` : `Posted. Waiting for someone to take it.`; S = null; await refresh(true); } catch (e) { pit.bad = true; pit.msg = e.message; renderPit(G); } finally { pitBusy = false; } };
   $$("[data-tab]").forEach(b => b.onclick = () => { pit.k = b.dataset.tab; pit.msg = ""; keepY(() => renderPit(G)); });
   $$("[data-pside]").forEach(b => b.onclick = () => { pit.side = b.dataset.pside; keepY(() => renderPit(G)); });
@@ -222,7 +228,8 @@ function renderExchange(G) {
     }
     if (!draft.orders) draft = { orders: {} };
     const used = exUsed(draft), over = used > R.margin;
-    $("#view").innerHTML = exHead(G, R) + `<div class="cols"><div class="grid" style="align-content:start">${exSheetHTML(G, R, role)}${exReportHTML(R)}</div>
+    const dp = {}; let dg = 0; for (const c of activeComms(R)) { const o = draft.orders[c.k]; if (!o) continue; const sg = o.side === "buy" ? 1 : -1; dp[c.k] = sg * o.qty; dg += (R.r[c.k] - o.lim) * c.size * sg * o.qty; }
+    $("#view").innerHTML = exHead(G, R) + exMeterHTML(R, role, dp, dg, "if your orders fill") + `<div class="cols"><div class="grid" style="align-content:start">${exIntelHTML(R, role)}${exSheetHTML(G, R, role)}${exReportHTML(R)}</div>
       <div class="card"><div class="label">Your orders · ${role === "sell" ? "you SELL these goods" : "you BUY these goods"}</div>${exTicketHTML(G, R, draft)}
         <div class="small" style="margin-top:8px">Orders are matched with other desks at one price per commodity. If nobody takes your price, the market maker may fill it at its price. You won't know who's on the other side.</div>
         <div class="actions"><button class="btn big" id="lock" ${over ? "disabled" : ""} style="width:100%">${used ? "Send our orders" : "Lock in: no trades this quarter"}</button></div>${status()}</div></div>`;

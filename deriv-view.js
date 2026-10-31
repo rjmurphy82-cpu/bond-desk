@@ -1,6 +1,6 @@
 // Unit 5 Derivatives Live: pieces shared by the projector (deriv-host.js) and the iPads (deriv-play.js).
-import { GAMES, ORDER, UNIT, Q_SECS, fmt, needed, exSettle, exBudget, exAsk, exBid, exSettleTrades, mmQuote, pitFrac, pitOpen, pitUsed } from "./deriv-data.js";
-export { GAMES, ORDER, UNIT, Q_SECS, fmt, needed, exSettle, exBudget, exAsk, exBid, exSettleTrades, mmQuote, pitFrac, pitOpen, pitUsed };
+import { GAMES, ORDER, UNIT, Q_SECS, fmt, needed, exSettle, exBudget, exAsk, exBid, exSettleTrades, mmQuote, pitFrac, pitOpen, pitUsed, activeComms } from "./deriv-data.js";
+export { activeComms, GAMES, ORDER, UNIT, Q_SECS, fmt, needed, exSettle, exBudget, exAsk, exBid, exSettleTrades, mmQuote, pitFrac, pitOpen, pitUsed };
 export const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 export const SHAPES = ["▲", "◆", "●", "■"];
 export const ord = n => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
@@ -67,18 +67,41 @@ export function exSheetHTML(G, R, role, big) {
   const co = G.roles[role], B = exBudget(R);
   return `<div class="card brief ${big ? "big" : ""}"><div class="label">${esc(co.short)} · ${esc(co.name)}</div><p class="bline">${esc(co.what)}</p>
     <div class="tblwrap"><table class="exsheet"><tr><th>Commodity</th><th class="r">You ${role === "buy" ? "need" : "will sell"}</th><th class="r">Posted futures price</th><th class="r">Budget</th></tr>
-    ${G.comms.map(c => `<tr><td><b>${c.name}</b><div class="small">1 contract = ${fmt.num(c.size)} ${c.unit}s</div></td><td class="r">${R.N[c.k]} contract${R.N[c.k] > 1 ? "s" : ""}</td><td class="r">${px(R.r[c.k])} / ${c.unit}</td><td class="r">${fmt.usd(R.r[c.k] * c.size * R.N[c.k])}</td></tr>`).join("")}
-    <tr class="tot"><td>Total</td><td class="r">${Object.values(R.N).reduce((a, b) => a + b, 0)} contracts</td><td></td><td class="r">${fmt.usd(B)}</td></tr></table></div>
+    ${activeComms(R).map(c => `<tr><td><b>${c.name}</b><div class="small">1 contract = ${fmt.num(c.size)} ${c.unit}s</div></td><td class="r">${R.N[c.k]} contract${R.N[c.k] > 1 ? "s" : ""}</td><td class="r">${px(R.r[c.k])} / ${c.unit}</td><td class="r">${fmt.usd(R.r[c.k] * c.size * R.N[c.k])}</td></tr>`).join("")}
+    <tr class="tot"><td>Total</td><td class="r">${activeComms(R).reduce((a, c) => a + R.N[c.k], 0)} contracts</td><td></td><td class="r">${fmt.usd(B)}</td></tr></table></div>
     <div class="small" style="margin-top:6px">Your bank lets you trade up to <b>${R.margin} contracts</b> this quarter, so you can't hedge everything. Pick what matters most.</div></div>`;
 }
-export function exReportHTML(R, big) {
-  return `<div class="card brief ${big ? "big" : ""}"><div class="label">Market report · ${esc(R.season)}</div><ol class="newsl report">${R.report.map(n => `<li>${esc(n)}</li>`).join("")}</ol>
-    <div class="small" style="margin-top:6px">Not every item matters. Some clues only make sense together.</div></div>`;
+// shown = how many headlines are out (null = all). The newest one is flagged.
+export function exReportHTML(R, big, shown) {
+  const n = shown == null ? R.report.length : Math.min(shown, R.report.length), more = R.report.length - n;
+  return `<div class="card brief ${big ? "big" : ""}"><div class="label">Market report · ${esc(R.season)}</div><ol class="newsl report">${R.report.slice(0, n).map((h, i) => `<li class="${shown != null && i === n - 1 && n > (R.pre ?? 2) ? "newest" : ""}">${shown != null && i === n - 1 && n > (R.pre ?? 2) ? '<span class="brkg">Breaking</span> ' : ""}${esc(h)}</li>`).join("")}</ol>
+    <div class="small" style="margin-top:6px">${more ? `${more} more headline${more > 1 ? "s" : ""} will drop during trading. ` : ""}Not every item matters. Some clues only make sense together.</div></div>`;
+}
+// Intel only this side of the market can see
+export function exIntelHTML(R, role) {
+  const items = (R.priv || {})[role] || []; if (!items.length) return "";
+  return `<div class="card intel"><div class="label">Private intel · only ${role === "sell" ? "sellers" : "buyers"} see this</div><ul class="newsl">${items.map(t => `<li>${esc(t)}</li>`).join("")}</ul><div class="small">The other side has its own intel that you can't see. Their prices may tell you what they know.</div></div>`;
+}
+// Live risk meter. pos = {k: net futures contracts (long +)}, fillGain = $ gained vs posted on trades so far
+export function exMeterHTML(R, role, pos, fillGain, note) {
+  const nat = role === "sell" ? 1 : -1, B = exBudget(R); let open = 0, dollars = 0;
+  for (const c of activeComms(R)) { const u = nat * R.N[c.k] + (pos[c.k] || 0); open += Math.abs(u); dollars += Math.abs(u) * c.size * R.r[c.k] * 0.10; }
+  const atRisk = Math.round(4000 * dollars / B), fp = Math.round(4000 * (fillGain || 0) / B), est = Math.max(0, Math.min(1100, 1000 - atRisk + fp));
+  const tone = est >= 800 ? "g" : est >= 550 ? "y" : "r";
+  return `<div class="meter ${tone}"><div class="mtop"><span class="label">Risk meter${note ? " · " + esc(note) : ""}</span><b>${fmt.num(est)}</b></div>
+    <div class="mbar"><i style="width:${Math.min(100, est / 10)}%"></i></div>
+    <div class="small">If prices move 10%, you'd score about <b>${fmt.num(est)}</b>. Unhedged: ${open} contract${open === 1 ? "" : "s"} (−${fmt.num(atRisk)}). Your trade prices vs posted: ${fp >= 0 ? "+" : "−"}${fmt.num(Math.abs(fp))}.</div></div>`;
+}
+// A desk's net futures position and price gain from its own trades in the pit
+export function pitMine(R, trades, gid) {
+  const pos = {}; let gain = 0; const cs = activeComms(R);
+  for (const t of trades || []) { if (t.b !== gid && t.s !== gid) continue; const c = cs.find(x => x.k === t.k); if (!c) continue; const sg = t.b === gid ? 1 : -1; pos[t.k] = (pos[t.k] || 0) + sg * t.qty; gain += (R.r[t.k] - t.price) * c.size * sg * t.qty; }
+  return { pos, gain };
 }
 // The order ticket. d = {orders:{k:{side,qty,lim}}}. Buttons carry data-act for the page to wire up.
 export function exTicketHTML(G, R, d) {
-  const o = (d && d.orders) || {}, used = G.comms.reduce((a, c) => a + (o[c.k] && o[c.k].side && o[c.k].side !== "none" ? +o[c.k].qty || 0 : 0), 0);
-  return `<div class="ticket">${G.comms.map(c => { const x = o[c.k] || {}, on = x.side === "buy" || x.side === "sell", r = R.r[c.k];
+  const o = (d && d.orders) || {}, used = activeComms(R).reduce((a, c) => a + (o[c.k] && o[c.k].side && o[c.k].side !== "none" ? +o[c.k].qty || 0 : 0), 0);
+  return `<div class="ticket">${activeComms(R).map(c => { const x = o[c.k] || {}, on = x.side === "buy" || x.side === "sell", r = R.r[c.k];
     return `<div class="trow ${on ? "on" : ""}"><div class="tname"><b>${c.name}</b><span>Posted ${px(r)} · market maker buys at ${px(exBid(c, r))}, sells at ${px(exAsk(c, r))}</span></div>
       <div class="tseg">${[["buy", "Buy"], ["sell", "Sell"], ["none", "No trade"]].map(([v, l]) => `<button type="button" class="${(x.side || "none") === v ? "sel" : ""}" data-act="side" data-k="${c.k}" data-v="${v}">${l}</button>`).join("")}</div>
       <div class="tstep ${on ? "" : "off"}"><span class="tl">Contracts</span><button type="button" data-act="qty" data-k="${c.k}" data-v="-1" ${on ? "" : "disabled"}>−</button><b>${on ? x.qty : "–"}</b><button type="button" data-act="qty" data-k="${c.k}" data-v="1" ${on ? "" : "disabled"}>+</button></div>

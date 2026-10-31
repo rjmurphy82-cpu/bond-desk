@@ -1,7 +1,7 @@
 // Unit 5 Derivatives Live: host (projector) screen for all eight games
 import { call, offlineCaller, $, $$, store } from "./deriv-client.js";
 import { qrSVG } from "./qr.js";
-import { GAMES, ORDER, Q_SECS, fmt, esc, SHAPES, game, round, dec, answerable, deskResult, standings, bench, show, deltaText, roundLabel, secsLeft, briefHTML, resultTable, storyCardHTML, needed, settle, exBudget, exAsk, exBid, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML, mmQuote, pitFrac, pitNow, pitLeft, clockText, bookSide, lastPrice, tapeHTML } from "./deriv-view.js";
+import { GAMES, ORDER, Q_SECS, fmt, esc, SHAPES, game, round, dec, answerable, deskResult, standings, bench, show, deltaText, roundLabel, secsLeft, briefHTML, resultTable, storyCardHTML, needed, settle, exBudget, exAsk, exBid, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML, mmQuote, pitFrac, pitNow, pitLeft, clockText, bookSide, lastPrice, tapeHTML, activeComms } from "./deriv-view.js";
 const PIT_MM_START = 0.03, PIT_MM_END = 0.09;
 
 let api = call, offline = false, S = null, sess = null, pollT = null, netErr = "", skew = 0;
@@ -19,7 +19,7 @@ async function boot() {
   if (sess) { try { S = await api("state", { code: sess.code, hostKey: sess.hostKey }); if (!S.host) throw 0; skew = S.now - Date.now(); startPoll(); } catch { store.del(SKEY); sess = null; S = null; } }
   renderMenu();
 }
-const kindLine = G => G.kind === "exchange" ? "Exchange · buyers trade with sellers · one iPad per group · about 20 minutes per quarter" : G.kind === "story" ? "Story game · one player per iPad · about 20 minutes" : `Trading desk · one iPad per group · ${G.rounds.length} rounds · about 40 minutes`;
+const kindLine = G => G.kind === "exchange" ? "Exchange · buyers trade with sellers · one iPad per pair · about 20 minutes per quarter" : G.kind === "story" ? "Story game · one player per iPad · about 20 minutes" : `Trading desk · one iPad per group · ${G.rounds.length} rounds · about 40 minutes`;
 function renderMenu(msg = "") {
   ui.menu = true; $("#menuBtn").style.display = "none"; clearInterval(qTick);
   const live = !!(sess && S), P = GAMES[ui.pick];
@@ -107,7 +107,7 @@ function renderLobby(G) {
     : `<div class="card dark"><div class="label">Join ${esc(G.title)}</div>
       <div class="joinbox"><div class="qr">${qrSVG(joinUrl())}</div>
         <div><div class="url">Scan the code, or go to<br><b>${esc(location.host)}/deriv</b></div><div class="small" style="font-size:16px">Game code</div><div class="code">${sess.code}</div></div></div>
-      <div class="small" style="margin-top:12px;font-size:15px">${G.kind === "story" ? "One iPad each. Join with your first name and last initial." : "One iPad per group. Join with your group's first names, like \"Maya, Jake &amp; Ava.\""} Write down your 3-digit PIN in case an iPad restarts.</div></div>`}
+      <div class="small" style="margin-top:12px;font-size:15px">${G.kind === "story" ? "One iPad each. Join with your first name and last initial." : G.kind === "exchange" ? "One iPad per pair. Join with both first names, like \"Maya &amp; Jake.\"" : "One iPad per group. Join with your group's first names, like \"Maya, Jake &amp; Ava.\""} Write down your 3-digit PIN in case an iPad restarts.</div></div>`}
     <div class="card"><div class="label">Joined: ${S.groups.length} ${who}</div>
       ${G.kind === "exchange" ? exLobbyTiles(G) : `<div class="tiles">${S.groups.map(g => `<div class="tile"><div style="min-width:0"><div class="nm">${esc(g.name)}</div><div class="st">PIN ${g.pin}${g.manual ? " · by hand" : ""}</div></div><button class="x" data-g="${g.gid}" title="Remove">✕</button></div>`).join("") || `<div class="small">Waiting for ${who} to join...</div>`}</div>`}
       <div style="display:flex;gap:8px;margin-top:12px"><input id="addName" maxlength="24" placeholder="Add by hand" style="flex:1;font-size:17px;padding:8px 10px;border:1px solid var(--rule);border-radius:8px"><button class="btn dk sm" id="addBtn">Add</button></div>
@@ -306,8 +306,8 @@ function renderPit(G) {
   const frac = pitFrac({ tradeAt: S.tradeAt, win: S.win }, pitNow(skew));
   const ctrl = !S.tradeAt
     ? `<div class="nrpick light"><span>Trading window</span>${[3, 4, 5, 6, 8].map(m => `<button class="${ui_win === m * 60 ? "on" : ""}" data-win="${m * 60}">${m}</button>`).join("")}<span class="small">minutes</span></div><button class="btn big" id="tradeBtn">Open trading</button>`
-    : `<div class="pitclock ${open && left <= 30 ? "low" : ""}" id="pitClock">${open ? clockText(left) : "CLOSED"}</div>${open ? `<button class="btn ghost sm" id="extBtn">+1 min</button>` : `<button class="btn ghost sm" id="extBtn">Reopen +1 min</button>`}<button class="btn ${closed ? "big" : "ghost sm"}" id="closeBtn">${closed ? "Settle the quarter →" : "Close the market now"}</button>`;
-  const tiles = G.comms.map(c => {
+    : `<div class="pitclock ${open && left <= 30 ? "low" : ""}" id="pitClock">${open ? clockText(left) : "CLOSED"}</div>${open ? `<button class="btn ghost sm" id="newsBtn" ${(S.news || 0) >= R.report.length ? "disabled" : ""}>Next headline (${Math.max(0, R.report.length - (S.news || 0))} left)</button><button class="btn ghost sm" id="extBtn">+1 min</button>` : `<button class="btn ghost sm" id="extBtn">Reopen +1 min</button>`}<button class="btn ${closed ? "big" : "ghost sm"}" id="closeBtn">${closed ? "Settle the quarter →" : "Close the market now"}</button>`;
+  const tiles = activeComms(R).map(c => {
     const r = R.r[c.k], last = lastPrice(S, c.k), bb = bookSide(S, c.k, "buy")[0], ba = bookSide(S, c.k, "sell")[0], q = mmQuote(c, r, frac);
     const vol = (S.trades[S.r] || []).filter(t => t.k === c.k).reduce((a, t) => a + t.qty, 0), ch = last == null ? 0 : last - r;
     return `<div class="ptile"><div class="pn">${c.name}</div><div class="pl ${ch > 0 ? "up" : ch < 0 ? "dn" : ""}">${last == null ? px(r) : px(last)}${last == null ? "" : ch > 0 ? " ▲" : ch < 0 ? " ▼" : ""}</div>
@@ -317,16 +317,19 @@ function renderPit(G) {
   }).join("");
   $("#view").innerHTML = exTop(G, R, codeChip() + ctrl) + (S.tradeAt
     ? `<div class="pitgrid"><div class="ptiles">${tiles}</div><div class="card"><div class="label">Trade tape · codenames only</div>${tapeHTML(S, G, 14)}</div></div>
-       <div class="board" style="margin-top:14px">${exReportHTML(R)}<div class="card"><div class="label">How the pit works</div><div style="font-size:16px;line-height:1.5">Desks post bids (to buy) and offers (to sell) on their iPads, or tap someone else's to trade on the spot. The market maker always trades, but its prices get worse every minute: ${Math.round(100 * PIT_MM_START)}% from posted at the open, ${Math.round(100 * PIT_MM_END)}% at the close. Each desk can trade up to ${R.margin} contracts.</div></div></div>`
-    : `<div class="board"><div class="grid" style="align-content:start">${exReportHTML(R, true)}</div><div class="grid" style="align-content:start">${exPostedHTML(G, R)}
+       <div class="board" style="margin-top:14px">${exReportHTML(R, true, S.news)}<div class="card"><div class="label">How the pit works</div><div style="font-size:16px;line-height:1.5">Desks post bids (to buy) and offers (to sell) on their iPads, or tap someone else's to trade on the spot. The market maker always trades, but its prices get worse every minute: ${Math.round(100 * PIT_MM_START)}% from posted at the open, ${Math.round(100 * PIT_MM_END)}% at the close. Each desk can trade up to ${R.margin} contracts.</div></div></div>`
+    : `<div class="board"><div class="grid" style="align-content:start">${exReportHTML(R, true, S.news)}<div class="card"><div class="label">Private intel</div><div style="font-size:17px;line-height:1.45">Buyers and sellers each see two private clues on their iPads. The other side can't see them.</div></div></div><div class="grid" style="align-content:start">${exPostedHTML(G, R)}
        <div class="card"><div class="label">Before trading opens</div><div style="font-size:18px;line-height:1.5">Give desks a few minutes to read the market report and their cost sheet. When you open trading, the clock starts and the iPads switch to the trading screen.</div></div>
        <div class="card"><div class="label">Desks: ${S.groups.length}</div><div class="tiles">${S.groups.map(g => `<div class="tile"><span class="nm">${esc(g.name)}</span><span class="st">${roleTag(g.role || "buy")}</span></div>`).join("")}</div></div></div></div>`)
     + `<div class="small" id="netErr">${esc(netErr)}</div>`;
   $$("[data-win]").forEach(b => b.onclick = () => { ui_win = +b.dataset.win; renderPit(G); });
   if ($("#tradeBtn")) $("#tradeBtn").onclick = () => op("trade", { secs: ui_win });
   if ($("#extBtn")) $("#extBtn").onclick = () => op("extend", { secs: 60 });
+  if ($("#newsBtn")) $("#newsBtn").onclick = () => op("news");
   if ($("#closeBtn")) $("#closeBtn").onclick = async () => { if (open && !confirm("Close the market now? Open orders are cancelled.")) return; await op("reveal"); };
-  if (open) pitTick = setInterval(() => { const el = $("#pitClock"); if (!el) return clearInterval(pitTick); const l = pitLeft(S, skew); el.textContent = l > 0 ? clockText(l) : "CLOSED"; el.classList.toggle("low", l > 0 && l <= 30); if (l <= 0) { clearInterval(pitTick); renderPit(G); } }, 250);
+  const pre = Math.min(R.pre ?? 2, R.report.length), total = R.report.length;
+  if (open) pitTick = setInterval(() => { const el = $("#pitClock"); if (!el) return clearInterval(pitTick); const l = pitLeft(S, skew);
+    const f = pitFrac({ tradeAt: S.tradeAt, win: S.win }, pitNow(skew)), target = pre + Math.min(total - pre, Math.floor(f * (total - pre + 1) + 0.15)); if ((S.news || 0) < target && !opBusy) op("news"); el.textContent = l > 0 ? clockText(l) : "CLOSED"; el.classList.toggle("low", l > 0 && l <= 30); if (l <= 0) { clearInterval(pitTick); renderPit(G); } }, 250);
 }
 
 /* ---------- the Futures Exchange ---------- */
@@ -343,8 +346,8 @@ function exTop(G, R, extra = "") {
   return `<div class="topbar"><div class="yr"><div class="sub">${esc(G.title)} · Quarter ${S.r + 1} of ${G.rounds.length} · ${esc(R.season)}</div><h2>${esc(R.title)}</h2></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${extra}</div></div>`;
 }
 function exPostedHTML(G, R) {
-  return `<div class="card"><div class="label">Posted futures prices · contracts each desk needs or sells</div><div class="facts">${G.comms.map(c => `<div class="fact"><div class="v">${px(R.r[c.k])}</div><div class="k">${c.name} · ${R.N[c.k]} contract${R.N[c.k] > 1 ? "s" : ""}</div></div>`).join("")}</div>
-    <div class="small" style="margin-top:8px">Each desk can trade up to <b>${R.margin}</b> of its ${Object.values(R.N).reduce((a, b) => a + b, 0)} contracts. The market maker buys 4% below and sells 4% above the posted price.</div></div>`;
+  return `<div class="card"><div class="label">Posted futures prices · contracts each desk needs or sells</div><div class="facts">${activeComms(R).map(c => `<div class="fact"><div class="v">${px(R.r[c.k])}</div><div class="k">${c.name} · ${R.N[c.k]} contract${R.N[c.k] > 1 ? "s" : ""}</div></div>`).join("")}</div>
+    <div class="small" style="margin-top:8px">Each desk can trade up to <b>${R.margin}</b> of its ${activeComms(R).reduce((a, c) => a + R.N[c.k], 0)} contracts.${R.open && R.open.length < G.comms.length ? ` <b>This quarter: ${activeComms(R).map(c => c.name.toLowerCase()).join(", ")} only.</b>` : ""} The market maker buys 4% below and sells 4% above the posted price.</div></div>`;
 }
 function renderExchange(G) {
   const R = round(S);
@@ -370,14 +373,14 @@ function renderExchange(G) {
   let body;
   if (step === "fills") {
     body = `<div class="card"><div class="label">${S.mode === "pit" ? "The market closed. Here is where desks traded." : "The market closed. One price per commodity, set by the orders desks sent."}</div><div class="tblwrap"><table class="standings"><tr><th>Commodity</th><th class="r">Posted</th><th class="r">Where desks traded</th><th class="r">Contracts between desks</th><th class="r">Market maker</th><th class="r">${S.mode === "pit" ? "Trades" : "Orders not filled"}</th></tr>
-      ${S.mode === "pit" ? G.comms.map(c => { const m = X.market[c.k]; return `<tr><td class="nm">${c.name}</td><td class="r">${px(R.r[c.k])}</td><td class="r val">${m.p == null ? "No desk trades" : px(m.p)}${m.p != null ? `<div class="small">average · range ${px(m.lo)} to ${px(m.hi)}</div>` : ""}</td><td class="r val">${m.vol}</td><td class="r">${m.mmSell ? `Sold ${m.mmSell}` : ""}${m.mmSell && m.mmBuy ? "<br>" : ""}${m.mmBuy ? `Bought ${m.mmBuy}` : ""}${!m.mmSell && !m.mmBuy ? "–" : ""}</td><td class="r">${m.n} trade${m.n === 1 ? "" : "s"}</td></tr>`; }).join("") : G.comms.map(c => { const m = X.market[c.k]; return `<tr><td class="nm">${c.name}</td><td class="r">${px(R.r[c.k])}</td><td class="r val">${m.p == null ? "No match" : px(m.p)}${m.p != null && m.p !== R.r[c.k] ? `<div class="small">${m.p > R.r[c.k] ? "above" : "below"} posted</div>` : ""}</td><td class="r val">${m.vol}</td><td class="r">${m.mmSell ? `Sold ${m.mmSell} @ ${px(m.ask)}` : ""}${m.mmSell && m.mmBuy ? "<br>" : ""}${m.mmBuy ? `Bought ${m.mmBuy} @ ${px(m.bid)}` : ""}${!m.mmSell && !m.mmBuy ? "–" : ""}</td><td class="r">${m.unfilled || "–"}</td></tr>`; }).join("")}</table></div>
+      ${S.mode === "pit" ? activeComms(R).map(c => { const m = X.market[c.k]; return `<tr><td class="nm">${c.name}</td><td class="r">${px(R.r[c.k])}</td><td class="r val">${m.p == null ? "No desk trades" : px(m.p)}${m.p != null ? `<div class="small">average · range ${px(m.lo)} to ${px(m.hi)}</div>` : ""}</td><td class="r val">${m.vol}</td><td class="r">${m.mmSell ? `Sold ${m.mmSell}` : ""}${m.mmSell && m.mmBuy ? "<br>" : ""}${m.mmBuy ? `Bought ${m.mmBuy}` : ""}${!m.mmSell && !m.mmBuy ? "–" : ""}</td><td class="r">${m.n} trade${m.n === 1 ? "" : "s"}</td></tr>`; }).join("") : activeComms(R).map(c => { const m = X.market[c.k]; return `<tr><td class="nm">${c.name}</td><td class="r">${px(R.r[c.k])}</td><td class="r val">${m.p == null ? "No match" : px(m.p)}${m.p != null && m.p !== R.r[c.k] ? `<div class="small">${m.p > R.r[c.k] ? "above" : "below"} posted</div>` : ""}</td><td class="r val">${m.vol}</td><td class="r">${m.mmSell ? `Sold ${m.mmSell} @ ${px(m.ask)}` : ""}${m.mmSell && m.mmBuy ? "<br>" : ""}${m.mmBuy ? `Bought ${m.mmBuy} @ ${px(m.bid)}` : ""}${!m.mmSell && !m.mmBuy ? "–" : ""}</td><td class="r">${m.unfilled || "–"}</td></tr>`; }).join("")}</table></div>
       <div class="small" style="margin-top:8px">A price above posted means buyers wanted protection more than sellers did. Desks see their own fills on their iPads, but not who was on the other side.</div></div>
       <div class="actions"><button class="btn dk big" id="toMarket">Reveal delivery prices →</button></div>`;
   } else if (step === "market") {
     const rows = S.groups.map(g => ({ g, x: X.byGid[g.gid] })), fut = rows.reduce((a, o) => a + o.x.fut, 0);
     const win = rows.filter(o => o.x.fut > 0).reduce((a, o) => a + o.x.fut, 0), lose = rows.filter(o => o.x.fut < 0).reduce((a, o) => a + o.x.fut, 0);
     body = `<div class="card"><div class="tblwrap"><table class="standings"><tr><th>Commodity</th><th class="r">Posted</th><th class="r">Traded</th><th class="r">Delivery</th><th>What happened</th></tr>
-      ${G.comms.map(c => { const m = X.market[c.k], mv = 100 * (R.S[c.k] / R.r[c.k] - 1); return `<tr><td class="nm">${c.name}</td><td class="r">${px(R.r[c.k])}</td><td class="r">${m.p == null ? "–" : px(m.p)}</td><td class="r val">${px(R.S[c.k])}<div class="small">${mv >= 0 ? "+" : ""}${mv.toFixed(1)}%</div></td><td style="font-size:16px">${esc(R.story[c.k])}</td></tr>`; }).join("")}</table></div></div>
+      ${activeComms(R).map(c => { const m = X.market[c.k], mv = 100 * (R.S[c.k] / R.r[c.k] - 1); return `<tr><td class="nm">${c.name}</td><td class="r">${px(R.r[c.k])}</td><td class="r">${m.p == null ? "–" : px(m.p)}</td><td class="r val">${px(R.S[c.k])}<div class="small">${mv >= 0 ? "+" : ""}${mv.toFixed(1)}%</div></td><td style="font-size:16px">${esc(R.story[c.k])}</td></tr>`; }).join("")}</table></div></div>
       <div class="board" style="margin-top:14px"><div class="card"><div class="label">Desk results this quarter</div><table class="standings"><tr><th>Desk</th><th>Side</th><th class="r">Hedged</th><th class="r">Futures gain/loss</th><th class="r">Points</th></tr>
         ${rows.map(({ g, x }) => { const hedged = x.lines.reduce((a, l) => a + Math.min(Math.abs(l.x), l.N) * (l.wrong ? 0 : 1), 0), need = x.lines.reduce((a, l) => a + l.N, 0); return `<tr><td class="nm">${esc(g.name)}</td><td>${roleTag(g.role || "buy")}</td><td class="r">${hedged} of ${need}${x.lines.some(l => l.wrong) ? ' <span class="pill r">wrong side</span>' : ""}</td><td class="r ${x.fut < 0 ? "neg" : x.fut > 0 ? "pos" : ""}">${fmt.sgn(Math.round(x.fut))}</td><td class="r val">${fmt.num(x.points)}</td></tr>`; }).join("")}</table></div>
         <div class="grid" style="align-content:start"><div class="card dark"><div class="label">Every contract has two sides</div><div style="font-size:18px;line-height:1.5">Desks that gained: <b>${fmt.sgn(Math.round(win))}</b><br>Desks that lost: <b>${fmt.sgn(Math.round(lose))}</b><br>Market maker: <b>${fmt.sgn(Math.round(X.mmPnl))}</b><br>Total: <b>${fmt.usd(Math.round(fut + X.mmPnl))}</b></div>
@@ -419,7 +422,7 @@ function renderExFinal(G) {
   const per = gid => G.rounds.map((_, r) => (settle(S, r).byGid[gid] || { points: 0 }).points);
   // Who traded with whom, over the whole game
   const pairs = {}, nm = id => { const g = S.groups.find(x => x.gid === id) || {}; return (g.name || "?") + (S.mode === "pit" && g.code ? " · " + g.code : ""); };
-  G.rounds.forEach((_, r) => { const X = settle(S, r); for (const c of G.comms) for (const p of X.market[c.k].pairs) { const k = p.b + "|" + p.s; pairs[k] = (pairs[k] || 0) + p.q; } });
+  G.rounds.forEach((_, r) => { const X = settle(S, r); for (const m of Object.values(X.market)) for (const p of m.pairs) { const k = p.b + "|" + p.s; pairs[k] = (pairs[k] || 0) + p.q; } });
   const plist = Object.entries(pairs).map(([k, q]) => ({ b: k.split("|")[0], s: k.split("|")[1], q })).sort((a, b) => b.q - a.q);
   $("#view").innerHTML = `<div class="topbar"><div class="yr"><div class="sub">Futures · ${G.rounds.length} quarter${G.rounds.length > 1 ? "s" : ""} on the exchange</div><h2>Final results</h2></div><div>${navBack()}</div></div>
     <div class="podium">${pod(1)}${pod(0)}${pod(2)}</div>

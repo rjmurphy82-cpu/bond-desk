@@ -210,3 +210,21 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--orange);outline
 .mmrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px;border-top:2px dashed var(--rule);padding-top:10px}
 .mmrow .small{flex-basis:100%}
 .btn.bbuy{background:#1F5FAD}.btn.bsell{background:#23763A}
+
+/* Headlines, private intel, risk meter */
+.newsl.report li.newest{background:#FFF3B0;border-radius:6px;padding:4px 6px;margin-left:-6px}
+.brkg{display:inline-block;background:var(--orange);color:#fff;font-family:Oswald,Arial,sans-serif;font-size:12px;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:1px 6px;vertical-align:2px}
+.intel{border:2px solid #7E2A8C;background:#F7EEF9}
+.intel .label{color:#7E2A8C}
+.breaking{background:var(--orange);color:#fff;border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:17px;line-height:1.35;animation:pop .4s ease-out}
+.breaking b{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;letter-spacing:.06em;margin-right:6px;background:#fff;color:var(--orange);border-radius:4px;padding:0 6px}
+@media (prefers-reduced-motion:reduce){.breaking{animation:none}}
+.meter{background:var(--card);border:2px solid var(--rule);border-radius:10px;padding:10px 14px;margin-bottom:10px}
+.meter .mtop{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.meter .mtop .label{margin:0}
+.meter .mtop b{font-family:Oswald,Arial,sans-serif;font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.meter .mbar{height:12px;background:var(--sand);border-radius:999px;overflow:hidden;margin:6px 0}
+.meter .mbar i{display:block;height:100%;border-radius:999px;transition:width .3s}
+.meter.g{border-color:var(--green)}.meter.g .mbar i{background:var(--green)}.meter.g .mtop b{color:var(--green)}
+.meter.y{border-color:#C9A100}.meter.y .mbar i{background:#E0B000}.meter.y .mtop b{color:#9A6B00}
+.meter.r{border-color:var(--red)}.meter.r .mbar i{background:var(--red)}.meter.r .mtop b{color:var(--red)}

@@ -62,7 +62,7 @@ export async function getState(kv, { code, gid, key, hostKey, since }) {
   const groups = hobj(res[0]), host = isHost(s, hostKey);
   const me = gid && groups[gid] && groups[gid].key === key ? gid : null;
   const showCodes = host || s.phase === "final";
-  const out = { v: +v, phase: s.phase, r: s.r, step: s.step || null, game: s.game, nr: s.nr || null, mode: s.mode || null, tradeAt: s.tradeAt || null, win: s.win || null, host, openedAt: s.openedAt || null, now: Date.now(),
+  const out = { v: +v, phase: s.phase, r: s.r, step: s.step || null, game: s.game, nr: s.nr || null, mode: s.mode || null, news: s.news ?? null, tradeAt: s.tradeAt || null, win: s.win || null, host, openedAt: s.openedAt || null, now: Date.now(),
     groups: Object.entries(groups).sort((a, b) => (a[1].t || 0) - (b[1].t || 0)).map(([id, g]) => ({ gid: id, name: g.name, role: g.role || null, ...(showCodes || id === me ? { code: g.code || null } : {}), ...(host ? { pin: g.pin, manual: !!g.manual } : {}) })),
     me: me ? { gid: me, name: groups[me].name, pin: groups[me].pin, code: groups[me].code || null } : null, decisions: [], answered: [], trades: [], book: null };
   for (let r = 0; r < N; r++) {
@@ -136,13 +136,16 @@ export async function hostOp(kv, { code, hostKey, op, gid, a, pick, name, step, 
   const s = await loadState(kv, code); if (!isHost(s, hostKey)) fail("not_host", "Only the host screen can do that.");
   const G = GAMES[s.game], N = NR(s);
   const save = (extra = []) => touch(kv, code, N, [["SET", K(code, "state"), JSON.stringify(s), "EX", TTL], ...extra]);
-  const openRound = r => { s.r = r; s.phase = "open"; s.openedAt = Date.now(); delete s.step; delete s.tradeAt; delete s.win; };
+  const openRound = r => { s.r = r; s.phase = "open"; s.openedAt = Date.now(); delete s.step; delete s.tradeAt; delete s.win; if (s.mode === "pit") { const R = G.rounds[r]; s.news = R.report ? Math.min(R.pre ?? 2, R.report.length) : 0; } };
   if (op === "start") { if (s.phase !== "lobby") fail("bad_op", "Already started."); openRound(0); await save(); }
   else if (op === "reveal") { if (s.phase !== "open" || !answerable(G, s.r)) fail("bad_op", "Nothing to reveal."); s.phase = "reveal"; s.step = G.kind === "desk" ? "market" : G.kind === "exchange" ? "fills" : "answer"; await save(); }
   else if (op === "step") { if (s.phase !== "reveal") fail("bad_op", "Reveal first."); if (!["fills", "market", "stand"].includes(step)) fail("bad_op", "Unknown step."); if (s.step !== step) { s.step = step; await save(); } }
   else if (op === "trade") { // open the trading window in the live pit
     if (s.mode !== "pit" || s.phase !== "open") fail("bad_op", "Trading opens during a quarter.");
     s.win = Math.max(60, Math.min(900, Math.round(+secs || 300))); s.tradeAt = Date.now(); await save(); }
+  else if (op === "news") { // release the next headline during the live pit
+    if (s.mode !== "pit" || s.phase !== "open") fail("bad_op", "Headlines drop during a quarter.");
+    const R = G.rounds[s.r]; if ((s.news || 0) < R.report.length) { s.news = (s.news || 0) + 1; await save(); } }
   else if (op === "extend") { if (s.mode !== "pit" || s.phase !== "open" || !s.tradeAt) fail("bad_op", "Trading isn't open.");
     const now = Date.now(), end = s.tradeAt + s.win * 1000; if (end < now) { s.win = Math.round((now - s.tradeAt) / 1000) + (+secs || 60); } else s.win += (+secs || 60); await save(); }
   else if (op === "reopen") { if (s.phase !== "reveal" || G.kind === "story") fail("bad_op", "Nothing to reopen."); s.phase = "open"; delete s.step; if (s.mode === "pit") { delete s.tradeAt; delete s.win; } await save(); }

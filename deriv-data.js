@@ -218,6 +218,83 @@ const QUARTERS = [
     { wheat: "Quiet.", corn: "Quiet.", sugar: "Frost damaged Brazil's cane: sugar up 20%.", soyoil: "Cheap palm oil pulled buyers away from soybean oil: down 10%.", diesel: "No OPEC change, no big move." },
     "Watch the substitutes. A record crop of palm oil made soybean oil cheaper, even with no soybean news at all.")
 ];
+// Start small, private clues and headline order. open = commodities traded that quarter; pre = headlines shown
+// before trading opens (the rest drop during the live pit); priv = intel only one side sees.
+const ALL5 = ["wheat", "corn", "sugar", "soyoil", "diesel"];
+const EXTRA = [
+  { open: ["wheat", "diesel"], margin: 3, pre: 2, N: { wheat: 4, corn: 0, sugar: 0, soyoil: 0, diesel: 1 },
+    report: ["Golden Prairie's marketing team launches a cereal ad campaign with a famous NBA player. Early social media buzz is huge.",
+      "Refineries finished their spring maintenance on time and are running near full speed.",
+      "Crop Progress report: Kansas winter wheat is rated 41% \"good to excellent,\" down from 63% at this time last year. Kansas grows more wheat than any other state.",
+      "Trucking companies say they're hiring more drivers this spring.",
+      "Grocery stores report that flour prices on their shelves haven't changed this month."],
+    priv: { buy: ["Your purchasing team hears that two other big cereal makers are quietly trying to lock in their wheat for spring.", "Your trucking manager says your fuel use will be normal this quarter."],
+      sell: ["Your farm manager walked your Kansas fields this week and expects about 25% less wheat per acre than last year.", "Your refinery is running smoothly and its diesel tanks are full."] } },
+  { open: ["wheat", "corn", "soyoil", "diesel"], margin: 6, pre: 2, N: { wheat: 3, corn: 4, sugar: 0, soyoil: 2, diesel: 1 },
+    report: ["Golden Prairie's new granola bar hits shelves in 2,000 stores.",
+      "Gas station prices tick up as the summer driving season starts.",
+      "Russia's agriculture ministry raises its wheat harvest estimate to a record. Russia is the world's largest wheat exporter.",
+      "The National Weather Service forecasts a \"heat dome\" over the Corn Belt for the second half of July, the weeks when corn plants pollinate.",
+      "The EPA raises how much renewable diesel refiners must blend into fuel next year. Most U.S. renewable diesel is made from soybean oil."],
+    priv: { buy: ["A grain broker tells you Russian ships are already booking extra wheat cargo space for the summer.", "Your snack division plans to use 20% more soybean oil next year, and your competitors are expanding too."],
+      sell: ["Your agronomist says your corn needs rain in the last two weeks of July, or yields will drop sharply.", "Your crushing plant's biggest customer, a renewable diesel refinery, just asked to double its soybean oil order."] } },
+  { open: ALL5, pre: 2,
+    report: ["A food blogger claims cereal sales are falling as people switch to eggs for breakfast.",
+      "Soybean crushing plants report steady oil output.",
+      "Wheat exports are right in line with expectations.",
+      "USDA: farmers planted the most corn acres since the 1930s, and yields per acre are near a record.",
+      "A Category 3 hurricane is tracking toward the Texas and Louisiana coast, home to about half of U.S. refining capacity.",
+      "India, the world's second-largest sugar producer, says it will \"review\" sugar exports after a weak monsoon season."],
+    priv: { buy: ["Your sugar supplier warns it may not be able to fill your full order next quarter.", "Your logistics manager says Gulf Coast fuel terminals are telling customers to stock up before storm season peaks."],
+      sell: ["Your corn bins are full, and grain elevators near your farms have started turning trucks away.", "Your refinery is on the Louisiana coast. Managers are drawing up a plan to shut down if a big storm hits."] } },
+  { open: ALL5, pre: 2,
+    report: ["Golden Prairie's CEO tells a TV host to expect \"record holiday sales.\"",
+      "Ethanol plants are running at normal rates.",
+      "Forecasters predict one of the mildest winters in 20 years for the Northeast, where many homes burn heating oil, a close cousin of diesel.",
+      "Shipping insurers raise rates sharply for cargo ships leaving Black Sea ports. Those ports carry about a quarter of the world's wheat exports.",
+      "The EPA says it will delay its renewable diesel rule by a year.",
+      "OPEC agrees to pump more oil starting next month."],
+    priv: { buy: ["Your wheat broker says Egypt, the world's biggest wheat importer, just bought twice its usual amount.", "Your Ohio cracker plant reports the warmest November in years, and its heating bills are way down."],
+      sell: ["Your renewable diesel customer just cut its soybean oil order in half, pointing to the delayed EPA rule.", "Your fuel storage tanks are full, and your heating oil customers are buying less than usual."] } },
+  { open: ALL5, pre: 2,
+    report: ["A viral video of a cereal-packing robot sends Golden Prairie's stock up 6%.",
+      "Trucking companies report normal freight demand.",
+      "U.S. wheat stocks are tight, but Australia's wheat harvest is huge.",
+      "The U.S. dollar hits a 10-year high. U.S. crops now cost more for buyers in other countries.",
+      "Brazil's second corn crop is coming in early and large. Brazil is the world's biggest corn exporter.",
+      "Brazil's sugar cane mills report their best crushing season in a decade."],
+    priv: { buy: ["Your Brazilian sugar supplier offers a big discount if you sign a contract this month.", "Your grain buyer says wheat offers from Australia are flooding in at good prices."],
+      sell: ["Your biggest export customer, in Japan, just switched to buying cheaper corn from Brazil.", "Your sugar mill has more sugar in its warehouse than it has room to store."] } },
+  { open: ALL5, pre: 2,
+    report: ["Golden Prairie wins a \"Best Places to Work\" award.",
+      "A new study says Americans eat too much added sugar.",
+      "Corn markets are quiet and ethanol demand is steady.",
+      "Rain arrived just in time across the Great Plains, and wheat crop ratings jump.",
+      "Hackers shut down a major pipeline that carries diesel and gasoline to the East Coast. The company says repairs could take \"weeks.\"",
+      "Port workers in Argentina, the world's biggest exporter of soybean oil, go on strike with no end date."],
+    priv: { buy: ["Your East Coast plants report long lines at truck stops, and some stations are limiting diesel purchases.", "Your soybean oil supplier says it can't promise next month's delivery."],
+      sell: ["Your wheat fields got perfect rain. You expect your best yield in five years.", "Buyers in Asia are calling your crushing plant directly because Argentina can't ship."] } },
+  { open: ALL5, pre: 2,
+    report: ["Soybean oil markets are steady.",
+      "An oil analyst on TV warns prices \"could soar.\" He has made the same call every month this year.",
+      "Cattle ranchers are rebuilding their herds and buying more corn for feed.",
+      "Argentina, a major wheat exporter, has had its driest winter in 40 years.",
+      "India, which normally grows all the wheat it needs, quietly cuts its import tax on wheat to zero.",
+      "Weekly government data: U.S. diesel inventories reach a five-year high."],
+    priv: { buy: ["Your grain broker hears India is quietly asking exporters for wheat price quotes.", "Your fuel supplier offers you a discount to lock in diesel, saying its tanks are overflowing."],
+      sell: ["Ranchers near your farms are offering to buy corn directly at above-market prices.", "Your refinery's storage tanks are nearly full, and you may have to sell diesel at a discount."] } },
+  { open: ALL5, pre: 2,
+    report: ["Golden Prairie names a new CEO.",
+      "A food magazine names granola the \"snack of the year.\"",
+      "Wheat and corn markets have a quiet end to the year.",
+      "OPEC's meeting ends with no change in output.",
+      "A rare frost hits São Paulo state in Brazil, where most of the country's sugar cane grows.",
+      "Malaysia and Indonesia report record palm oil output. Palm oil competes directly with soybean oil in cooking and packaged food."],
+    priv: { buy: ["A cooking oil supplier offers you palm oil at a 15% discount to soybean oil.", "Your sugar broker says Brazilian mills have stopped taking new orders for now."],
+      sell: ["Your sugar mill's partner in Brazil says the frost destroyed about a third of its cane.", "Two of your soybean oil customers just switched part of their orders to palm oil."] } }
+];
+QUARTERS.forEach((q, i) => Object.assign(q, EXTRA[i] || {}));
+export const activeComms = R => COMMS.filter(c => !R.open || R.open.includes(c.k));
 const exchange = {
   title: "The Futures Exchange", kind: "exchange",
   pitch: "Half the desks are food makers that BUY wheat, corn, sugar, soybean oil and diesel. Half are producers that SELL them. Each quarter, read the market report, decide what to hedge, and trade futures with the other desks. You never know who's on the other side.",
@@ -235,11 +312,12 @@ const exchange = {
 const snap = (v, t) => Math.round(Math.round(v / t) * t * 100) / 100;
 export const exAsk = (c, r) => snap(Math.ceil(r * (1 + EX_SPREAD) / c.tick - 1e-9) * c.tick, c.tick);
 export const exBid = (c, r) => snap(Math.floor(r * (1 - EX_SPREAD) / c.tick + 1e-9) * c.tick, c.tick);
-export const exBudget = R => COMMS.reduce((a, c) => a + R.r[c.k] * c.size * R.N[c.k], 0);
+export const exBudget = R => activeComms(R).reduce((a, c) => a + R.r[c.k] * c.size * R.N[c.k], 0);
 // Clean up an order ticket, or null if it breaks a rule
 export function exValidate(R, pick) {
   const out = {}; let used = 0;
-  for (const c of COMMS) {
+  for (const k of Object.keys((pick || {}).orders || {})) if (!activeComms(R).some(c => c.k === k)) return null;
+  for (const c of activeComms(R)) {
     const o = ((pick || {}).orders || {})[c.k]; if (!o || !o.side || o.side === "none") continue;
     if (o.side !== "buy" && o.side !== "sell") return null;
     const qty = +o.qty, lim = +o.lim, r = R.r[c.k];
@@ -287,7 +365,7 @@ function scoreDesks(R, market, groups, decs, byGid) {
   const B = exBudget(R);
   for (const g of groups) {
     const nat = g.role === "sell" ? 1 : -1; let risk = 0, fill = 0, fut = 0; const lines = [];
-    for (const c of COMMS) {
+    for (const c of activeComms(R)) {
       const r = R.r[c.k], S = R.S[c.k], fl = market[c.k].fills[g.gid] || [], N = R.N[c.k];
       const x = fl.reduce((a, f) => a + (f.side === "buy" ? f.qty : -f.qty), 0);
       const rk = (S - r) * c.size * (nat * N + x), fg = fl.reduce((a, f) => a + (r - f.price) * c.size * (f.side === "buy" ? f.qty : -f.qty), 0);
@@ -304,7 +382,7 @@ function scoreDesks(R, market, groups, decs, byGid) {
 // Settle a whole quarter. decs = {gid: {orders}}, groups = [{gid, role}]
 export function exSettle(R, decs, groups) {
   const market = {}, byGid = {}, B = exBudget(R); let mmPnl = 0;
-  for (const c of COMMS) {
+  for (const c of activeComms(R)) {
     const list = [];
     for (const g of groups) { const o = ((decs[g.gid] || {}).orders || {})[c.k]; if (o) list.push({ ...o, gid: g.gid, t: (decs[g.gid] || {}).t || 0 }); }
     market[c.k] = matchOne(c, R, list);
@@ -513,10 +591,11 @@ export const pitFrac = (s, now) => !s.tradeAt ? 0 : Math.max(0, Math.min(1, (now
 export const pitOpen = (s, now) => s.phase === "open" && !!s.tradeAt && now < s.tradeAt + s.win * 1000;
 export function mmQuote(c, r, frac) { const sp = PIT_MM.start + (PIT_MM.end - PIT_MM.start) * frac; return { bid: snap(Math.floor(r * (1 - sp) / c.tick + 1e-9) * c.tick, c.tick), ask: snap(Math.ceil(r * (1 + sp) / c.tick - 1e-9) * c.tick, c.tick), spread: sp }; }
 export const pitUsed = (book, gid) => book.trades.reduce((a, t) => a + (t.b === gid || t.s === gid ? t.qty : 0), 0) + book.orders.reduce((a, o) => a + (o.gid === gid ? o.qty : 0), 0);
+const limitMsg = n => n <= 0 ? "You've used your whole bank limit for this quarter. Cancel an open order to free up room." : `Your bank limit only lets you trade ${n} more contract${n === 1 ? "" : "s"} this quarter.`;
 export const emptyBook = () => ({ orders: [], trades: [], seq: 0 });
 // Apply one pit action. Returns {book} or {error}. me = {gid, code}
 export function pitApply(R, book, me, a, now, frac) {
-  const b = JSON.parse(JSON.stringify(book || emptyBook())), c = COMMS.find(x => x.k === a.k);
+  const b = JSON.parse(JSON.stringify(book || emptyBook())), c = activeComms(R).find(x => x.k === a.k);
   const err = m => ({ error: m }), left = () => R.margin - pitUsed(b, me.gid), id = () => "x" + (++b.seq);
   const trade = (k, side, qty, price, other) => { const t = { id: id(), k, qty, price, t: now }; if (other === "mm") { t.mm = true; if (side === "buy") { t.b = me.gid; t.bc = me.code; t.s = "mm"; t.sc = "Market maker"; } else { t.s = me.gid; t.sc = me.code; t.b = "mm"; t.bc = "Market maker"; } } else if (side === "buy") { t.b = me.gid; t.bc = me.code; t.s = other.gid; t.sc = other.code; } else { t.s = me.gid; t.sc = me.code; t.b = other.gid; t.bc = other.code; } b.trades.push(t); };
   if (a.op === "cancel") { const i = b.orders.findIndex(o => o.id === a.id && o.gid === me.gid); if (i < 0) return err("That order is already gone."); b.orders.splice(i, 1); return { book: b }; }
@@ -526,7 +605,7 @@ export function pitApply(R, book, me, a, now, frac) {
     const o = b.orders.find(x => x.id === a.id);
     if (!o) return err("Too slow! Someone else took that order.");
     if (o.gid === me.gid) return err("That's your own order.");
-    const q = Math.min(qty, o.qty); if (q > left()) return err(`Your bank limit only lets you trade ${left()} more contract${left() === 1 ? "" : "s"} this quarter.`);
+    const q = Math.min(qty, o.qty); if (q > left()) return err(limitMsg(left()));
     trade(o.k, o.side === "sell" ? "buy" : "sell", q, o.price, o); o.qty -= q; if (!o.qty) b.orders = b.orders.filter(x => x !== o);
     return { book: b, filled: q, price: o.price };
   }
@@ -534,7 +613,7 @@ export function pitApply(R, book, me, a, now, frac) {
   const r = R.r[c.k];
   if (a.op === "mm") {
     if (a.side !== "buy" && a.side !== "sell") return err("Pick buy or sell.");
-    if (qty > left()) return err(`Your bank limit only lets you trade ${left()} more contract${left() === 1 ? "" : "s"} this quarter.`);
+    if (qty > left()) return err(limitMsg(left()));
     const q = mmQuote(c, r, frac), price = a.side === "buy" ? q.ask : q.bid;
     trade(c.k, a.side, qty, price, "mm"); return { book: b, filled: qty, price };
   }
@@ -542,7 +621,7 @@ export function pitApply(R, book, me, a, now, frac) {
     if (a.side !== "buy" && a.side !== "sell") return err("Pick buy or sell.");
     const price = snap(+a.price, c.tick);
     if (!(price >= r * 0.7 - 1e-9 && price <= r * 1.3 + 1e-9)) return err("That price is too far from the posted price.");
-    if (qty > left()) return err(`Your bank limit only lets you trade ${left()} more contract${left() === 1 ? "" : "s"} this quarter.`);
+    if (qty > left()) return err(limitMsg(left()));
     let rem = qty; const opp = b.orders.filter(o => o.k === c.k && o.gid !== me.gid && (a.side === "buy" ? o.side === "sell" && o.price <= price + 1e-9 : o.side === "buy" && o.price >= price - 1e-9))
       .sort((x, y) => (a.side === "buy" ? x.price - y.price : y.price - x.price) || x.t - y.t);
     let got = 0;
@@ -556,7 +635,7 @@ export function pitApply(R, book, me, a, now, frac) {
 // Settle a pit quarter from its trades
 export function exSettleTrades(R, trades, groups) {
   const market = {}, byGid = {}, B = exBudget(R); let mmPnl = 0;
-  for (const c of COMMS) {
+  for (const c of activeComms(R)) {
     const ts = (trades || []).filter(t => t.k === c.k), fills = {}, pairs = [];
     const add = (gid, side, qty, price, w) => { if (gid === "mm") return; (fills[gid] = fills[gid] || []).push({ side, qty, price, w }); };
     let vol = 0, mmBuy = 0, mmSell = 0, val = 0, hi = null, lo = null;
