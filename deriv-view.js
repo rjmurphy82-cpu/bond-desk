@@ -1,6 +1,6 @@
 // Unit 5 Derivatives Live: pieces shared by the projector (deriv-host.js) and the iPads (deriv-play.js).
-import { GAMES, ORDER, UNIT, Q_SECS, fmt, needed, exSettle, exBudget, exAsk, exBid } from "./deriv-data.js";
-export { GAMES, ORDER, UNIT, Q_SECS, fmt, needed, exSettle, exBudget, exAsk, exBid };
+import { GAMES, ORDER, UNIT, Q_SECS, fmt, needed, exSettle, exBudget, exAsk, exBid, exSettleTrades, mmQuote, pitFrac, pitOpen, pitUsed } from "./deriv-data.js";
+export { GAMES, ORDER, UNIT, Q_SECS, fmt, needed, exSettle, exBudget, exAsk, exBid, exSettleTrades, mmQuote, pitFrac, pitOpen, pitUsed };
 export const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 export const SHAPES = ["▲", "◆", "●", "■"];
 export const ord = n => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
@@ -13,7 +13,7 @@ export const dec = (S, r, gid) => (S.decisions[r] || {})[gid] || null;
 export const answerable = (G, r) => G.kind !== "story" || (G.rounds[r] && G.rounds[r].t === "q");
 // Exchange: settle a quarter once per state version
 const scache = new Map();
-export function settle(S, r) { const k = S.game + ":" + S.v + ":" + r; if (!scache.has(k)) { if (scache.size > 60) scache.clear(); scache.set(k, exSettle(GAMES[S.game].rounds[r], S.decisions[r] || {}, S.groups)); } return scache.get(k); }
+export function settle(S, r) { const k = S.game + ":" + S.v + ":" + r; if (!scache.has(k)) { if (scache.size > 60) scache.clear(); scache.set(k, S.mode === "pit" ? exSettleTrades(GAMES[S.game].rounds[r], S.trades[r] || [], S.groups) : exSettle(GAMES[S.game].rounds[r], S.decisions[r] || {}, S.groups)); } return scache.get(k); }
 
 // A desk group's result for one round (no answer = the desk's default choice)
 export function deskResult(G, r, d) { const R = G.rounds[r]; const pick = d && !d.a ? d : G.dflt; return { ...G.result(R, pick), missing: !d }; }
@@ -101,4 +101,15 @@ export function exResultHTML(G, R, x, showRisk) {
   return `<div class="tblwrap"><table class="exsheet"><tr><th>Commodity</th><th>Your trades</th><th class="r">Delivery price</th><th class="r">Futures gain/loss</th>${showRisk ? '<th class="r">Left unhedged</th>' : ""}</tr>
     ${x.lines.map(l => { const fills = l.fills.length ? l.fills.map(f => `${f.side === "buy" ? "Bought" : "Sold"} ${f.qty} @ ${px(f.price)} from ${who(f.w)}`.replace("Sold " + f.qty + " @ " + px(f.price) + " from", "Sold " + f.qty + " @ " + px(f.price) + " to")).join("<br>") : (l.ord ? `<span class="neg">Order not filled</span>` : "No trade");
       return `<tr><td><b>${l.c.name}</b>${l.wrong ? ' <span class="pill r">wrong side</span>' : ""}</td><td>${fills}</td><td class="r">${px(R.S[l.c.k])}<div class="small">${R.S[l.c.k] >= R.r[l.c.k] ? "+" : ""}${(100 * (R.S[l.c.k] / R.r[l.c.k] - 1)).toFixed(1)}%</div></td><td class="r ${l.fut < 0 ? "neg" : l.fut > 0 ? "pos" : ""}">${l.fills.length ? fmt.sgn(Math.round(l.fut)) : "–"}</td>${showRisk ? `<td class="r">${l.net === 0 ? "Fully hedged" : `${Math.abs(l.net)} contract${Math.abs(l.net) > 1 ? "s" : ""}: ${l.risk === 0 ? "$0" : (l.risk > 0 ? "lucky " : "hurt ") + fmt.usd(Math.abs(Math.round(l.risk)))}`}</td>` : ""}</tr>`; }).join("")}</table></div>`;
+}
+
+/* ---------- live pit helpers ---------- */
+export const pitNow = skew => Date.now() + skew;
+export const pitLeft = (S, skew) => S.tradeAt ? Math.max(0, Math.ceil((S.tradeAt + S.win * 1000 - pitNow(skew)) / 1000)) : null;
+export const clockText = s => s == null ? "–" : Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+export function bookSide(S, k, side) { const o = ((S.book || {}).orders || []).filter(x => x.k === k && x.side === side); return o.sort((a, b) => (side === "sell" ? a.price - b.price : b.price - a.price) || a.t - b.t); }
+export function lastPrice(S, k) { const t = (S.trades[S.r] || []).filter(x => x.k === k); return t.length ? t[t.length - 1].price : null; }
+export function tapeHTML(S, G, n, me) {
+  const ts = (S.trades[S.r] || []).slice(-n).reverse(), cn = k => (G.comms.find(c => c.k === k) || {}).name || k;
+  return ts.length ? `<div class="tape">${ts.map(t => `<div class="tick ${me && (t.b === me || t.s === me) ? "mine" : ""} ${t.mm ? "mm" : ""}"><b>${esc(t.bc)}</b> bought ${t.qty} ${esc(cn(t.k).toLowerCase())} from <b>${esc(t.sc)}</b> @ ${fmt.usd(t.price, true)}</div>`).join("")}</div>` : `<div class="small">No trades yet.</div>`;
 }

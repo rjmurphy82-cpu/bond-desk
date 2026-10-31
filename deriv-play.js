@@ -1,6 +1,6 @@
 // Unit 5 Derivatives Live: student (iPad) screen for all eight games
 import { call, $, $$, store } from "./deriv-client.js";
-import { GAMES, Q_SECS, fmt, esc, SHAPES, ord, game, round, dec, deskResult, standings, show, deltaText, roundLabel, secsLeft, briefHTML, resultTable, storyCardHTML, needed, settle, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML } from "./deriv-view.js";
+import { GAMES, Q_SECS, fmt, esc, SHAPES, ord, game, round, dec, deskResult, standings, show, deltaText, roundLabel, secsLeft, briefHTML, resultTable, storyCardHTML, needed, settle, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML, mmQuote, pitFrac, pitNow, pitLeft, clockText, bookSide, lastPrice, tapeHTML, pitUsed } from "./deriv-view.js";
 
 const SK = "dv_play";
 let me = store.get(SK);          // {code, gid, key, name, pin}
@@ -37,7 +37,9 @@ async function doJoin() {
 function joinErr(m, pin) { const c = $("#jCode").value, n = $("#jName").value, p = $("#jPin") ? $("#jPin").value : ""; renderJoin(m, pin || !!$("#jPin")); $("#jCode").value = c; $("#jName").value = n; if ($("#jPin")) $("#jPin").value = p; }
 
 /* ---------- polling ---------- */
-function startPoll() { clearInterval(pollT); pollT = setInterval(() => { if (!document.hidden) refresh(); }, 2000); }
+const fastNow = () => S && S.mode === "pit" && S.phase === "open" && S.tradeAt;
+let pollFast = false;
+function startPoll() { clearInterval(pollT); pollFast = !!fastNow(); pollT = setInterval(() => { if (!document.hidden) refresh(); }, pollFast ? 900 : 2000); }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && me) refresh(); });
 async function refresh(force) {
   if (!me) return;
@@ -45,7 +47,7 @@ async function refresh(force) {
   busy = true;
   try {
     const r = await call("state", { code: me.code, gid: me.gid, key: me.key, since: S ? S.v : undefined });
-    conn = ""; if (!r.same) { if (!r.me) throw Object.assign(new Error(), { code: "not_in_game" }); S = r; skew = S.now - Date.now(); render(); } else setConn();
+    conn = ""; if (!r.same) { if (!r.me) throw Object.assign(new Error(), { code: "not_in_game" }); S = r; skew = S.now - Date.now(); if (!!fastNow() !== pollFast) startPoll(); render(); } else setConn();
   } catch (e) {
     if (e.code === "no_game" || e.code === "not_in_game") { const code = me.code; me = null; store.del(SK); clearInterval(pollT); history.replaceState(null, "", "/deriv?c=" + code); renderJoin(e.code === "no_game" ? "That game has ended." : "You were removed or rejoined on another iPad. Join again."); }
     else { conn = "Reconnecting..."; setConn(); }
@@ -148,15 +150,66 @@ function renderDesk(G) {
     <div class="lesson" style="margin-top:12px"><b>The lesson</b>${esc(R.lesson)}</div>${status()}`;
 }
 
+/* ---------- the live trading pit (iPad) ---------- */
+const myCode = () => (S && S.me && S.me.code) || "";
+let pit = { k: "wheat", side: null, qty: 1, price: null, msg: "", bad: false }, pitTick = null, pitBusy = false;
+function myPos(G, R, k) { const ts = (S.trades[S.r] || []).filter(t => t.k === k); return ts.reduce((a, t) => a + (t.b === me.gid ? t.qty : t.s === me.gid ? -t.qty : 0), 0); }
+function renderPit(G) {
+  const R = round(S), role = myRole(), left = pitLeft(S, skew), open = S.tradeAt && left > 0;
+  clearInterval(pitTick);
+  if (!S.tradeAt) {
+    $("#view").innerHTML = exHead(G, R) + `<div class="lockedcard" style="margin-bottom:14px"><div class="label" style="color:var(--light)">Trading opens soon · you are Desk ${esc(myCode())}</div><div style="font-size:18px;margin-top:4px">Read the market report and your cost sheet now. Decide what to hedge and what price you'd accept. Other desks only see your codename.</div></div>
+      <div class="cols">${exSheetHTML(G, R, role)}${exReportHTML(R)}</div>${status()}`;
+    return;
+  }
+  const frac = pitFrac({ tradeAt: S.tradeAt, win: S.win }, pitNow(skew)), used = pitUsed({ trades: (S.trades[S.r] || []).map(t => ({ ...t })), orders: ((S.book || {}).orders || []).filter(o => o.mine).map(o => ({ ...o, gid: me.gid })) }, me.gid);
+  const c = G.comms.find(x => x.k === pit.k), r = R.r[c.k], q = mmQuote(c, r, frac), nat = role === "sell" ? 1 : -1;
+  const offers = bookSide(S, c.k, "sell"), bids = bookSide(S, c.k, "buy"), last = lastPrice(S, c.k);
+  if (pit.price == null || pit.priceK !== c.k) { pit.price = last ?? r; pit.priceK = c.k; }
+  if (!pit.side) pit.side = role;
+  const tabs = G.comms.map(x => { const pos = myPos(G, R, x.k), need = R.N[x.k], hedged = nat < 0 ? Math.max(0, pos) : Math.max(0, -pos); return `<button class="ptab ${x.k === c.k ? "on" : ""}" data-tab="${x.k}"><b>${x.name}</b><span>${hedged} of ${need} hedged${(nat < 0 && pos < 0) || (nat > 0 && pos > 0) ? " ⚠" : ""}</span></button>`; }).join("");
+  const row = (o, act) => o.mine ? `<div class="orow mine"><span>You · ${o.qty} @ <b>${px(o.price)}</b></span><button class="btn ghost sm" data-cancel="${o.id}">Cancel</button></div>`
+    : `<div class="orow"><span>${esc(o.code)} · ${o.qty} @ <b>${px(o.price)}</b></span><span><button class="btn sm ${act === "Buy" ? "bbuy" : "bsell"}" data-take="${o.id}" data-q="1" ${open ? "" : "disabled"}>${act} 1</button>${o.qty > 1 ? ` <button class="btn sm ${act === "Buy" ? "bbuy" : "bsell"}" data-take="${o.id}" data-q="${o.qty}" ${open ? "" : "disabled"}>${act} ${o.qty}</button>` : ""}</span></div>`;
+  $("#view").innerHTML = `<div class="pitbar ${open && left <= 30 ? "low" : ""}"><span>Desk <b>${esc(myCode())}</b> · ${role === "sell" ? "Seller" : "Buyer"}</span><span id="pclock">${open ? clockText(left) : "CLOSED"}</span><span>Contracts <b>${used} of ${R.margin}</b></span></div>
+    ${pit.msg ? `<div class="pmsg ${pit.bad ? "bad" : ""}">${esc(pit.msg)}</div>` : ""}
+    ${open ? "" : `<div class="lockedcard" style="margin:10px 0"><h2>Trading is closed</h2><div style="color:#E6E6E6">Watch the board for delivery prices.</div></div>`}
+    <div class="ptabs">${tabs}</div>
+    <div class="cols"><div class="card"><div class="label">${c.name} · posted ${px(r)} · last trade ${last == null ? "none yet" : px(last)}</div>
+        <div class="obook"><div><div class="fl">Offers to sell (lowest first)</div>${offers.slice(0, 6).map(o => row(o, "Buy")).join("") || '<div class="small">No offers yet.</div>'}</div>
+        <div><div class="fl">Bids to buy (highest first)</div>${bids.slice(0, 6).map(o => row(o, "Sell")).join("") || '<div class="small">No bids yet.</div>'}</div></div>
+        <div class="mmrow"><span class="small">Market maker (prices get worse every minute)</span><button class="btn sm bbuy" data-mm="buy" ${open ? "" : "disabled"}>Buy 1 @ ${px(q.ask)}</button><button class="btn sm bsell" data-mm="sell" ${open ? "" : "disabled"}>Sell 1 @ ${px(q.bid)}</button></div></div>
+      <div class="card"><div class="label">Post your own ${pit.side === "buy" ? "bid" : "offer"}</div>
+        <div class="tseg" style="grid-template-columns:1fr 1fr"><button class="${pit.side === "buy" ? "sel" : ""}" data-v="buy" data-pside="buy">Bid to buy</button><button class="${pit.side === "sell" ? "sel" : ""}" data-v="sell" data-pside="sell">Offer to sell</button></div>
+        <div class="tstep" style="margin-top:10px"><span class="tl">Contracts</span><button data-pq="-1">−</button><b>${pit.qty}</b><button data-pq="1">+</button></div>
+        <div class="tstep" style="margin-top:6px"><span class="tl">Price per ${c.unit}</span><button data-pp="-1">−</button><b>${px(pit.price)}</b><button data-pp="1">+</button></div>
+        <div class="actions"><button class="btn big" id="postBtn" style="width:100%" ${open ? "" : "disabled"}>Post ${pit.qty} @ ${px(pit.price)}</button></div>
+        <div class="small">If your price matches an order already on the board, you trade right away at that order's price.</div>
+        <div class="label" style="margin-top:12px">Your position in ${c.name.toLowerCase()}</div><div style="font-size:16px">You ${role === "buy" ? "need" : "will sell"} ${R.N[c.k]} contracts. Futures: ${(p => p > 0 ? "long " + p : p < 0 ? "short " + -p : "none yet")(myPos(G, R, c.k))}.</div></div></div>
+    <div class="card" style="margin-top:12px"><div class="label">Trade tape</div>${tapeHTML(S, G, 8, me.gid)}</div>
+    <details style="margin-top:12px"><summary class="label" style="cursor:pointer">Market report and cost sheet</summary><div class="cols" style="margin-top:8px">${exReportHTML(R)}${exSheetHTML(G, R, role)}</div></details>${status()}`;
+  const act = async a => { if (pitBusy) return; pitBusy = true; try { const x = await call("pit", { code: me.code, gid: me.gid, key: me.key, r: S.r, a }); pit.bad = false; pit.msg = a.op === "cancel" ? "Order cancelled." : x.filled && x.rested ? `Traded ${x.filled}, and ${x.rested} posted on the board.` : x.filled ? `Done: ${a.op === "mm" ? (a.side === "buy" ? "bought" : "sold") : a.op === "take" ? "traded" : "traded"} ${x.filled} @ ${px(x.price || pit.price)}.` : `Posted. Waiting for someone to take it.`; S = null; await refresh(true); } catch (e) { pit.bad = true; pit.msg = e.message; renderPit(G); } finally { pitBusy = false; } };
+  $$("[data-tab]").forEach(b => b.onclick = () => { pit.k = b.dataset.tab; pit.msg = ""; keepY(() => renderPit(G)); });
+  $$("[data-pside]").forEach(b => b.onclick = () => { pit.side = b.dataset.pside; keepY(() => renderPit(G)); });
+  $$("[data-pq]").forEach(b => b.onclick = () => { pit.qty = Math.max(1, Math.min(R.margin, pit.qty + +b.dataset.pq)); keepY(() => renderPit(G)); });
+  $$("[data-pp]").forEach(b => b.onclick = () => { pit.price = Math.max(Math.round(r * 0.7 * 100) / 100, Math.min(Math.round(r * 1.3 * 100) / 100, Math.round((pit.price + +b.dataset.pp * c.tick) * 100) / 100)); keepY(() => renderPit(G)); });
+  $$("[data-take]").forEach(b => b.onclick = () => act({ op: "take", id: b.dataset.take, qty: +b.dataset.q }));
+  $$("[data-cancel]").forEach(b => b.onclick = () => act({ op: "cancel", id: b.dataset.cancel, qty: 1 }));
+  $$("[data-mm]").forEach(b => b.onclick = () => act({ op: "mm", k: c.k, side: b.dataset.mm, qty: 1 }));
+  if ($("#postBtn")) $("#postBtn").onclick = () => act({ op: "post", k: c.k, side: pit.side, qty: pit.qty, price: pit.price });
+  if (open) pitTick = setInterval(() => { const el = $("#pclock"); if (!el) return clearInterval(pitTick); const l = pitLeft(S, skew); el.textContent = l > 0 ? clockText(l) : "CLOSED"; if (l <= 0) { clearInterval(pitTick); renderPit(G); } }, 250);
+}
+
 /* ---------- the Futures Exchange ---------- */
 const px = v => fmt.usd(v, true);
 const myRole = () => roleOf(S, me.gid);
-function roleCard(G) { const r = myRole(), co = G.roles[r]; return `<div class="rolecard ${r}"><div class="label">You are a ${r === "sell" ? "SELLER" : "BUYER"}</div><h2>${esc(co.name)}</h2><p>${esc(co.what)}</p></div>`; }
+function roleCard(G) { const r = myRole(), co = G.roles[r]; return `<div class="rolecard ${r}"><div class="label">You are a ${r === "sell" ? "SELLER" : "BUYER"}${S.mode === "pit" && myCode() ? " · codename Desk " + esc(myCode()) : ""}</div><h2>${esc(co.name)}</h2><p>${esc(co.what)}</p></div>`; }
 function exHead(G, R) {
   const m = myStanding(Math.max(-1, S.r - 1)).mine;
   return `<div class="mini"><span>Quarter ${S.r + 1} of ${G.rounds.length} · <b>${esc(R.title)}</b> · ${myRole() === "sell" ? "Seller" : "Buyer"}</span><span>Points: <b>${fmt.num(S.r === 0 || !m ? 0 : m.value)}</b></span></div>`;
 }
 function renderExchange(G) {
+  clearInterval(pitTick);
+  if (S.mode === "pit" && S.phase === "open") return renderPit(G);
   const R = round(S), d = mine(), role = myRole();
   if (S.phase === "open") {
     if (d) {

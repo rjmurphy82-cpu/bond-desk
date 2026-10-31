@@ -282,6 +282,25 @@ function matchOne(c, R, list) {
   }
   return { p: best.vol ? best.p : null, vol: best.vol, ask, bid, mmBuy, mmSell, unfilled, fills, pairs };
 }
+// Score every desk from its fills (shared by sealed bids and the live pit)
+function scoreDesks(R, market, groups, decs, byGid) {
+  const B = exBudget(R);
+  for (const g of groups) {
+    const nat = g.role === "sell" ? 1 : -1; let risk = 0, fill = 0, fut = 0; const lines = [];
+    for (const c of COMMS) {
+      const r = R.r[c.k], S = R.S[c.k], fl = market[c.k].fills[g.gid] || [], N = R.N[c.k];
+      const x = fl.reduce((a, f) => a + (f.side === "buy" ? f.qty : -f.qty), 0);
+      const rk = (S - r) * c.size * (nat * N + x), fg = fl.reduce((a, f) => a + (r - f.price) * c.size * (f.side === "buy" ? f.qty : -f.qty), 0);
+      const fp = fl.reduce((a, f) => a + (S - f.price) * c.size * (f.side === "buy" ? f.qty : -f.qty), 0);
+      const ord = (((decs || {})[g.gid] || {}).orders || {})[c.k] || null, filled = fl.reduce((a, f) => a + f.qty, 0);
+      risk += Math.abs(rk); fill += fg; fut += fp;
+      const wrong = ord ? ((nat < 0 && ord.side === "sell") || (nat > 0 && ord.side === "buy")) : ((nat < 0 && x < 0) || (nat > 0 && x > 0));
+      lines.push({ c, N, ord, fills: fl, filled, x, net: nat * N + x, risk: rk || 0, fillGain: fg || 0, fut: fp || 0, wrong });
+    }
+    const points = Math.max(0, Math.round(1000 - EX_K * risk / B + EX_K * fill / B));
+    byGid[g.gid] = { points, risk, fill, fut, lines, budget: B };
+  }
+}
 // Settle a whole quarter. decs = {gid: {orders}}, groups = [{gid, role}]
 export function exSettle(R, decs, groups) {
   const market = {}, byGid = {}, B = exBudget(R); let mmPnl = 0;
@@ -291,20 +310,7 @@ export function exSettle(R, decs, groups) {
     market[c.k] = matchOne(c, R, list);
     const S = R.S[c.k]; for (const f of Object.values(market[c.k].fills).flat()) if (f.w === "mm") mmPnl -= (f.side === "buy" ? 1 : -1) * (S - f.price) * c.size * f.qty;
   }
-  for (const g of groups) {
-    const nat = g.role === "sell" ? 1 : -1; let risk = 0, fill = 0, fut = 0; const lines = [];
-    for (const c of COMMS) {
-      const r = R.r[c.k], S = R.S[c.k], fl = market[c.k].fills[g.gid] || [], N = R.N[c.k];
-      const x = fl.reduce((a, f) => a + (f.side === "buy" ? f.qty : -f.qty), 0);
-      const rk = (S - r) * c.size * (nat * N + x), fg = fl.reduce((a, f) => a + (r - f.price) * c.size * (f.side === "buy" ? f.qty : -f.qty), 0);
-      const fp = fl.reduce((a, f) => a + (S - f.price) * c.size * (f.side === "buy" ? f.qty : -f.qty), 0);
-      const ord = ((decs[g.gid] || {}).orders || {})[c.k] || null, filled = fl.reduce((a, f) => a + f.qty, 0);
-      risk += Math.abs(rk); fill += fg; fut += fp;
-      lines.push({ c, N, ord, fills: fl, filled, x, net: nat * N + x, risk: rk || 0, fillGain: fg || 0, fut: fp || 0, wrong: ord && ((nat < 0 && ord.side === "sell") || (nat > 0 && ord.side === "buy")) });
-    }
-    const points = Math.max(0, Math.round(1000 - EX_K * risk / B + EX_K * fill / B));
-    byGid[g.gid] = { points, risk, fill, fut, lines, budget: B };
-  }
+  scoreDesks(R, market, groups, decs, byGid);
   return { market, byGid, mmPnl, budget: B };
 }
 
@@ -495,4 +501,72 @@ export function validPick(G, R, d) {
   const out = {};
   for (const f of needed(G, R, d || {})) { const v = String((d || {})[f.k] ?? ""); if (!f.opts.some(o => o[0] === v)) return null; out[f.k] = v; }
   return out;
+}
+
+/* ---------- The Futures Exchange: live trading pit ----------
+   During a timed window, desks post bids and offers that everyone sees (under codenames), take each
+   other's orders, or trade with the market maker, whose spread widens from 3% to 9% as the clock runs out.
+   book = {orders:[{id,gid,code,k,side,qty,price,t}], trades:[{id,k,b,s,bc,sc,qty,price,t,mm}], seq} */
+export const CODENAMES = ["Falcon", "Otter", "Bison", "Cobra", "Raven", "Lynx", "Mako", "Viper", "Heron", "Puma", "Wolf", "Orca", "Hawk", "Fox", "Badger", "Moose", "Gecko", "Panther", "Condor", "Jaguar", "Marlin", "Coyote", "Stallion", "Mustang", "Osprey", "Grizzly", "Pelican", "Kestrel", "Rhino", "Tiger"];
+export const PIT_MM = { start: 0.03, end: 0.09 };
+export const pitFrac = (s, now) => !s.tradeAt ? 0 : Math.max(0, Math.min(1, (now - s.tradeAt) / (s.win * 1000)));
+export const pitOpen = (s, now) => s.phase === "open" && !!s.tradeAt && now < s.tradeAt + s.win * 1000;
+export function mmQuote(c, r, frac) { const sp = PIT_MM.start + (PIT_MM.end - PIT_MM.start) * frac; return { bid: snap(Math.floor(r * (1 - sp) / c.tick + 1e-9) * c.tick, c.tick), ask: snap(Math.ceil(r * (1 + sp) / c.tick - 1e-9) * c.tick, c.tick), spread: sp }; }
+export const pitUsed = (book, gid) => book.trades.reduce((a, t) => a + (t.b === gid || t.s === gid ? t.qty : 0), 0) + book.orders.reduce((a, o) => a + (o.gid === gid ? o.qty : 0), 0);
+export const emptyBook = () => ({ orders: [], trades: [], seq: 0 });
+// Apply one pit action. Returns {book} or {error}. me = {gid, code}
+export function pitApply(R, book, me, a, now, frac) {
+  const b = JSON.parse(JSON.stringify(book || emptyBook())), c = COMMS.find(x => x.k === a.k);
+  const err = m => ({ error: m }), left = () => R.margin - pitUsed(b, me.gid), id = () => "x" + (++b.seq);
+  const trade = (k, side, qty, price, other) => { const t = { id: id(), k, qty, price, t: now }; if (other === "mm") { t.mm = true; if (side === "buy") { t.b = me.gid; t.bc = me.code; t.s = "mm"; t.sc = "Market maker"; } else { t.s = me.gid; t.sc = me.code; t.b = "mm"; t.bc = "Market maker"; } } else if (side === "buy") { t.b = me.gid; t.bc = me.code; t.s = other.gid; t.sc = other.code; } else { t.s = me.gid; t.sc = me.code; t.b = other.gid; t.bc = other.code; } b.trades.push(t); };
+  if (a.op === "cancel") { const i = b.orders.findIndex(o => o.id === a.id && o.gid === me.gid); if (i < 0) return err("That order is already gone."); b.orders.splice(i, 1); return { book: b }; }
+  const qty = +a.qty;
+  if (!(Number.isInteger(qty) && qty >= 1)) return err("Pick how many contracts.");
+  if (a.op === "take") {
+    const o = b.orders.find(x => x.id === a.id);
+    if (!o) return err("Too slow! Someone else took that order.");
+    if (o.gid === me.gid) return err("That's your own order.");
+    const q = Math.min(qty, o.qty); if (q > left()) return err(`Your bank limit only lets you trade ${left()} more contract${left() === 1 ? "" : "s"} this quarter.`);
+    trade(o.k, o.side === "sell" ? "buy" : "sell", q, o.price, o); o.qty -= q; if (!o.qty) b.orders = b.orders.filter(x => x !== o);
+    return { book: b, filled: q, price: o.price };
+  }
+  if (!c) return err("Pick a commodity.");
+  const r = R.r[c.k];
+  if (a.op === "mm") {
+    if (a.side !== "buy" && a.side !== "sell") return err("Pick buy or sell.");
+    if (qty > left()) return err(`Your bank limit only lets you trade ${left()} more contract${left() === 1 ? "" : "s"} this quarter.`);
+    const q = mmQuote(c, r, frac), price = a.side === "buy" ? q.ask : q.bid;
+    trade(c.k, a.side, qty, price, "mm"); return { book: b, filled: qty, price };
+  }
+  if (a.op === "post") {
+    if (a.side !== "buy" && a.side !== "sell") return err("Pick buy or sell.");
+    const price = snap(+a.price, c.tick);
+    if (!(price >= r * 0.7 - 1e-9 && price <= r * 1.3 + 1e-9)) return err("That price is too far from the posted price.");
+    if (qty > left()) return err(`Your bank limit only lets you trade ${left()} more contract${left() === 1 ? "" : "s"} this quarter.`);
+    let rem = qty; const opp = b.orders.filter(o => o.k === c.k && o.gid !== me.gid && (a.side === "buy" ? o.side === "sell" && o.price <= price + 1e-9 : o.side === "buy" && o.price >= price - 1e-9))
+      .sort((x, y) => (a.side === "buy" ? x.price - y.price : y.price - x.price) || x.t - y.t);
+    let got = 0;
+    for (const o of opp) { if (!rem) break; const q = Math.min(rem, o.qty); trade(c.k, a.side, q, o.price, o); o.qty -= q; rem -= q; got += q; }
+    b.orders = b.orders.filter(o => o.qty > 0);
+    if (rem) b.orders.push({ id: id(), gid: me.gid, code: me.code, k: c.k, side: a.side, qty: rem, price, t: now });
+    return { book: b, filled: got, rested: rem };
+  }
+  return err("Unknown action.");
+}
+// Settle a pit quarter from its trades
+export function exSettleTrades(R, trades, groups) {
+  const market = {}, byGid = {}, B = exBudget(R); let mmPnl = 0;
+  for (const c of COMMS) {
+    const ts = (trades || []).filter(t => t.k === c.k), fills = {}, pairs = [];
+    const add = (gid, side, qty, price, w) => { if (gid === "mm") return; (fills[gid] = fills[gid] || []).push({ side, qty, price, w }); };
+    let vol = 0, mmBuy = 0, mmSell = 0, val = 0, hi = null, lo = null;
+    for (const t of ts) {
+      add(t.b, "buy", t.qty, t.price, t.mm ? "mm" : t.s); add(t.s, "sell", t.qty, t.price, t.mm ? "mm" : t.b);
+      if (t.mm) { if (t.b === "mm") { mmBuy += t.qty; mmPnl += (R.S[c.k] - t.price) * c.size * t.qty; } else { mmSell += t.qty; mmPnl -= (R.S[c.k] - t.price) * c.size * t.qty; } }
+      else { vol += t.qty; val += t.qty * t.price; pairs.push({ b: t.b, s: t.s, q: t.qty }); hi = hi == null ? t.price : Math.max(hi, t.price); lo = lo == null ? t.price : Math.min(lo, t.price); }
+    }
+    market[c.k] = { p: vol ? Math.round(val / vol * 100) / 100 : null, vol, mmBuy, mmSell, unfilled: 0, fills, pairs, hi, lo, n: ts.length, last: ts.length ? ts[ts.length - 1].price : null };
+  }
+  scoreDesks(R, market, groups, null, byGid);
+  return { market, byGid, mmPnl, budget: B };
 }

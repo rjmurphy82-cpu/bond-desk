@@ -117,7 +117,7 @@ export function memoryKV() {
   const run = c => { const [cmd, k, ...a] = c; const v = live(k);
     switch (cmd) {
       case "GET": return v === undefined ? null : v;
-      case "SET": m.set(k, a[0]); if (a[1] === "EX") exp.set(k, Date.now() + a[2] * 1000); return "OK";
+      case "SET": { const o = a.slice(1).map(String); if (o.includes("NX") && v !== undefined) return null; m.set(k, a[0]); const e = o.indexOf("EX"); if (e >= 0) exp.set(k, Date.now() + o[e + 1] * 1000); return "OK"; }
       case "EXISTS": return v === undefined ? 0 : 1;
       case "INCR": { const n = (+(v || 0)) + 1; m.set(k, String(n)); return n; }
       case "EXPIRE": if (v !== undefined) exp.set(k, Date.now() + a[0] * 1000); return v === undefined ? 0 : 1;

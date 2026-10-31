@@ -1,10 +1,11 @@
 // Unit 5 Derivatives Live: host (projector) screen for all eight games
 import { call, offlineCaller, $, $$, store } from "./deriv-client.js";
 import { qrSVG } from "./qr.js";
-import { GAMES, ORDER, Q_SECS, fmt, esc, SHAPES, game, round, dec, answerable, deskResult, standings, bench, show, deltaText, roundLabel, secsLeft, briefHTML, resultTable, storyCardHTML, needed, settle, exBudget, exAsk, exBid, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML } from "./deriv-view.js";
+import { GAMES, ORDER, Q_SECS, fmt, esc, SHAPES, game, round, dec, answerable, deskResult, standings, bench, show, deltaText, roundLabel, secsLeft, briefHTML, resultTable, storyCardHTML, needed, settle, exBudget, exAsk, exBid, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML, mmQuote, pitFrac, pitNow, pitLeft, clockText, bookSide, lastPrice, tapeHTML } from "./deriv-view.js";
+const PIT_MM_START = 0.03, PIT_MM_END = 0.09;
 
 let api = call, offline = false, S = null, sess = null, pollT = null, netErr = "", skew = 0;
-const ui = { lastKey: "", menu: false, pick: null, nr: 4 };
+const ui = { lastKey: "", menu: false, pick: null, nr: 4, mode: "pit" };
 let tLen = 180, tLeft = 180, tRun = null, qTick = null;
 const SKEY = "dv_host";
 const TOPICS = [["futures", "Futures"], ["options", "Options"], ["swaps", "Swaps"], ["cds", "Credit Default Swaps"]];
@@ -34,7 +35,7 @@ function renderMenu(msg = "") {
         <h2 style="font-size:40px;line-height:1.05;margin:4px 0 8px">${esc(P.title)}</h2>
         <div style="font-size:18px;line-height:1.5">${P.kind === "story" ? "Students join on their own iPads. You tell the story on the board one chapter at a time; they answer each question on their iPad. Faster right answers earn more points (500 to 1,000). Run it before the trading desk." : esc(P.pitch) + " " + esc(P.rule)}</div>
         <div class="small" style="margin-top:8px;font-size:15px">${kindLine(P)}</div>
-        ${P.kind === "exchange" ? `<div class="nrpick"><span>How many quarters?</span>${Array.from({ length: P.rounds.length }, (_, i) => `<button class="${ui.nr === i + 1 ? "on" : ""}" data-nr="${i + 1}">${i + 1}</button>`).join("")}<span class="small" style="color:#CFCFCF">About ${ui.nr * 20} minutes</span></div>` : ""}
+        ${P.kind === "exchange" ? `<div class="nrpick"><span>How many quarters?</span>${Array.from({ length: P.rounds.length }, (_, i) => `<button class="${ui.nr === i + 1 ? "on" : ""}" data-nr="${i + 1}">${i + 1}</button>`).join("")}<span class="small" style="color:#CFCFCF">About ${ui.nr * 20} minutes</span></div><div class="nrpick"><span>Trading style</span><button class="wide ${ui.mode === "pit" ? "on" : ""}" data-mode="pit">Live trading pit</button><button class="wide ${ui.mode === "sealed" ? "on" : ""}" data-mode="sealed">Sealed bids (backup)</button></div><div class="small" style="color:#CFCFCF;margin-top:4px">${ui.mode === "pit" ? "Desks post bids and offers and trade live during a timed window. Needs solid Wi-Fi." : "Each desk sends one set of orders a quarter. Use this if the Wi-Fi is slow. Play without iPads always uses sealed bids."}</div>` : ""}
         <div class="actions" style="justify-content:flex-start"><button class="btn big" id="newGame">${live ? "End it &amp; start this game" : "Start this game"}</button></div>
         ${msg ? `<div class="err">${esc(msg)}</div>` : ""}</div>
       <div class="card"><div class="label">No Wi-Fi or iPads today?</div>
@@ -42,17 +43,18 @@ function renderMenu(msg = "") {
         <div class="actions" style="justify-content:flex-start"><button class="btn ghost" id="offGame">${live ? "End it &amp; play without iPads" : "Play without iPads"}</button></div></div></div>`;
   $$(".gpick").forEach(b => b.onclick = () => { ui.pick = b.dataset.g; history.replaceState(null, "", "?g=" + ui.pick); renderMenu(); });
   $$("[data-nr]").forEach(b => b.onclick = () => { ui.nr = +b.dataset.nr; renderMenu(msg); });
+  $$("[data-mode]").forEach(b => b.onclick = () => { ui.mode = b.dataset.mode; renderMenu(msg); });
   if ($("#mResume")) $("#mResume").onclick = () => { ui.menu = false; ui.lastKey = ""; render(); };
   $("#newGame").onclick = async () => {
     if (live && !confirm("End this game and start a new one? Everyone's results will be erased.")) return;
     $("#newGame").disabled = true; await endCurrent();
-    try { const r = await api("create", { game: ui.pick, nr: ui.nr }); sess = { code: r.code, hostKey: r.hostKey }; store.set(SKEY, sess); ui.menu = false; await refresh(true); startPoll(); }
+    try { const r = await api("create", { game: ui.pick, nr: ui.nr, mode: ui.mode }); sess = { code: r.code, hostKey: r.hostKey }; store.set(SKEY, sess); ui.menu = false; await refresh(true); startPoll(); }
     catch (e) { renderMenu(e.code === "db_not_configured" ? "The game database isn't connected yet (see the README). You can still play without iPads." : e.message + " You can still play without iPads."); }
   };
   $("#offGame").onclick = async () => {
     if (live && !confirm("End this game and play without iPads? Everyone's results will be erased.")) return;
     await endCurrent(); offline = true; api = offlineCaller(); $("#offlineTag").style.display = "inline-block";
-    const r = await api("create", { game: ui.pick, nr: ui.nr }); sess = { code: r.code, hostKey: r.hostKey }; ui.menu = false; await refresh(true);
+    const r = await api("create", { game: ui.pick, nr: ui.nr, mode: "sealed" }); sess = { code: r.code, hostKey: r.hostKey }; ui.menu = false; await refresh(true);
   };
 }
 function summary() {
@@ -65,11 +67,11 @@ async function endCurrent() {
   store.del(SKEY); clearInterval(pollT); clearInterval(tRun); clearInterval(qTick); tRun = null; S = null; sess = null; ui.lastKey = "";
   if (offline) { offline = false; api = call; $("#offlineTag").style.display = "none"; }
 }
-function startPoll() { clearInterval(pollT); if (offline) return; pollT = setInterval(() => refresh(false), 1500); }
+function startPoll() { clearInterval(pollT); if (offline) return; pollT = setInterval(() => refresh(false), S && S.mode === "pit" && S.phase === "open" && S.tradeAt ? 900 : 1500); }
 async function refresh(force) {
   try {
     const r = await api("state", { code: sess.code, hostKey: sess.hostKey, since: force || !S ? undefined : S.v });
-    if (netErr) showErr(""); if (r.same) return; S = r; skew = S.now - Date.now(); render();
+    if (netErr) showErr(""); if (r.same) return; const wasFast = S && S.mode === "pit" && S.phase === "open" && S.tradeAt; S = r; skew = S.now - Date.now(); const fast = S.mode === "pit" && S.phase === "open" && S.tradeAt; if (!offline && !!wasFast !== !!fast) startPoll(); render();
   } catch (e) {
     if (e.code === "no_game") { store.del(SKEY); clearInterval(pollT); S = null; return renderMenu("That game has expired. Start a new one."); }
     showErr("Connection hiccup. Retrying...");
@@ -296,6 +298,37 @@ function renderFinal(G) {
   $("#again").onclick = () => renderMenu(); wireBack();
 }
 
+/* ---------- the live trading pit (projector) ---------- */
+let pitTick = null, ui_win = 300;
+function renderPit(G) {
+  const R = round(S), left = pitLeft(S, skew), open = S.tradeAt && left > 0, closed = S.tradeAt && left === 0;
+  clearInterval(pitTick);
+  const frac = pitFrac({ tradeAt: S.tradeAt, win: S.win }, pitNow(skew));
+  const ctrl = !S.tradeAt
+    ? `<div class="nrpick light"><span>Trading window</span>${[3, 4, 5, 6, 8].map(m => `<button class="${ui_win === m * 60 ? "on" : ""}" data-win="${m * 60}">${m}</button>`).join("")}<span class="small">minutes</span></div><button class="btn big" id="tradeBtn">Open trading</button>`
+    : `<div class="pitclock ${open && left <= 30 ? "low" : ""}" id="pitClock">${open ? clockText(left) : "CLOSED"}</div>${open ? `<button class="btn ghost sm" id="extBtn">+1 min</button>` : `<button class="btn ghost sm" id="extBtn">Reopen +1 min</button>`}<button class="btn ${closed ? "big" : "ghost sm"}" id="closeBtn">${closed ? "Settle the quarter →" : "Close the market now"}</button>`;
+  const tiles = G.comms.map(c => {
+    const r = R.r[c.k], last = lastPrice(S, c.k), bb = bookSide(S, c.k, "buy")[0], ba = bookSide(S, c.k, "sell")[0], q = mmQuote(c, r, frac);
+    const vol = (S.trades[S.r] || []).filter(t => t.k === c.k).reduce((a, t) => a + t.qty, 0), ch = last == null ? 0 : last - r;
+    return `<div class="ptile"><div class="pn">${c.name}</div><div class="pl ${ch > 0 ? "up" : ch < 0 ? "dn" : ""}">${last == null ? px(r) : px(last)}${last == null ? "" : ch > 0 ? " ▲" : ch < 0 ? " ▼" : ""}</div>
+      <div class="ps">${last == null ? "Posted price · no trades yet" : `Posted ${px(r)} · ${ch >= 0 ? "+" : ""}${(100 * ch / r).toFixed(1)}%`}</div>
+      <div class="pq"><span>Best bid <b>${bb ? px(bb.price) : "–"}</b></span><span>Best offer <b>${ba ? px(ba.price) : "–"}</b></span></div>
+      <div class="pq mm"><span>Market maker ${px(q.bid)} / ${px(q.ask)}</span><span>${vol} traded</span></div></div>`;
+  }).join("");
+  $("#view").innerHTML = exTop(G, R, codeChip() + ctrl) + (S.tradeAt
+    ? `<div class="pitgrid"><div class="ptiles">${tiles}</div><div class="card"><div class="label">Trade tape · codenames only</div>${tapeHTML(S, G, 14)}</div></div>
+       <div class="board" style="margin-top:14px">${exReportHTML(R)}<div class="card"><div class="label">How the pit works</div><div style="font-size:16px;line-height:1.5">Desks post bids (to buy) and offers (to sell) on their iPads, or tap someone else's to trade on the spot. The market maker always trades, but its prices get worse every minute: ${Math.round(100 * PIT_MM_START)}% from posted at the open, ${Math.round(100 * PIT_MM_END)}% at the close. Each desk can trade up to ${R.margin} contracts.</div></div></div>`
+    : `<div class="board"><div class="grid" style="align-content:start">${exReportHTML(R, true)}</div><div class="grid" style="align-content:start">${exPostedHTML(G, R)}
+       <div class="card"><div class="label">Before trading opens</div><div style="font-size:18px;line-height:1.5">Give desks a few minutes to read the market report and their cost sheet. When you open trading, the clock starts and the iPads switch to the trading screen.</div></div>
+       <div class="card"><div class="label">Desks: ${S.groups.length}</div><div class="tiles">${S.groups.map(g => `<div class="tile"><span class="nm">${esc(g.name)}</span><span class="st">${roleTag(g.role || "buy")}</span></div>`).join("")}</div></div></div></div>`)
+    + `<div class="small" id="netErr">${esc(netErr)}</div>`;
+  $$("[data-win]").forEach(b => b.onclick = () => { ui_win = +b.dataset.win; renderPit(G); });
+  if ($("#tradeBtn")) $("#tradeBtn").onclick = () => op("trade", { secs: ui_win });
+  if ($("#extBtn")) $("#extBtn").onclick = () => op("extend", { secs: 60 });
+  if ($("#closeBtn")) $("#closeBtn").onclick = async () => { if (open && !confirm("Close the market now? Open orders are cancelled.")) return; await op("reveal"); };
+  if (open) pitTick = setInterval(() => { const el = $("#pitClock"); if (!el) return clearInterval(pitTick); const l = pitLeft(S, skew); el.textContent = l > 0 ? clockText(l) : "CLOSED"; el.classList.toggle("low", l > 0 && l <= 30); if (l <= 0) { clearInterval(pitTick); renderPit(G); } }, 250);
+}
+
 /* ---------- the Futures Exchange ---------- */
 const px = v => fmt.usd(v, true);
 const roleTag = r => `<span class="rtag ${r}">${r === "sell" ? "Seller" : "Buyer"}</span>`;
@@ -315,6 +348,8 @@ function exPostedHTML(G, R) {
 }
 function renderExchange(G) {
   const R = round(S);
+  if (S.mode === "pit" && S.phase === "open") return renderPit(G);
+  clearInterval(pitTick);
   if (S.phase === "open") {
     const done = new Set(S.answered), all = S.groups.length && done.size >= S.groups.length;
     $("#view").innerHTML = exTop(G, R, codeChip() + clock()) + `<div class="board"><div class="grid" style="align-content:start">${exReportHTML(R, true)}${exPostedHTML(G, R)}</div>
@@ -334,8 +369,8 @@ function renderExchange(G) {
   const tabs = `<div style="display:flex;gap:6px">${[["fills", "1. Where it traded"], ["market", "2. Delivery"], ["stand", "3. Standings"]].map(([v, l]) => `<button class="btn ${step === v ? "dk" : "ghost"} sm" data-t="${v}">${l}</button>`).join("")}</div>`;
   let body;
   if (step === "fills") {
-    body = `<div class="card"><div class="label">The market closed. One price per commodity, set by the orders desks sent.</div><div class="tblwrap"><table class="standings"><tr><th>Commodity</th><th class="r">Posted</th><th class="r">Where desks traded</th><th class="r">Contracts between desks</th><th class="r">Market maker</th><th class="r">Orders not filled</th></tr>
-      ${G.comms.map(c => { const m = X.market[c.k]; return `<tr><td class="nm">${c.name}</td><td class="r">${px(R.r[c.k])}</td><td class="r val">${m.p == null ? "No match" : px(m.p)}${m.p != null && m.p !== R.r[c.k] ? `<div class="small">${m.p > R.r[c.k] ? "above" : "below"} posted</div>` : ""}</td><td class="r val">${m.vol}</td><td class="r">${m.mmSell ? `Sold ${m.mmSell} @ ${px(m.ask)}` : ""}${m.mmSell && m.mmBuy ? "<br>" : ""}${m.mmBuy ? `Bought ${m.mmBuy} @ ${px(m.bid)}` : ""}${!m.mmSell && !m.mmBuy ? "–" : ""}</td><td class="r">${m.unfilled || "–"}</td></tr>`; }).join("")}</table></div>
+    body = `<div class="card"><div class="label">${S.mode === "pit" ? "The market closed. Here is where desks traded." : "The market closed. One price per commodity, set by the orders desks sent."}</div><div class="tblwrap"><table class="standings"><tr><th>Commodity</th><th class="r">Posted</th><th class="r">Where desks traded</th><th class="r">Contracts between desks</th><th class="r">Market maker</th><th class="r">${S.mode === "pit" ? "Trades" : "Orders not filled"}</th></tr>
+      ${S.mode === "pit" ? G.comms.map(c => { const m = X.market[c.k]; return `<tr><td class="nm">${c.name}</td><td class="r">${px(R.r[c.k])}</td><td class="r val">${m.p == null ? "No desk trades" : px(m.p)}${m.p != null ? `<div class="small">average · range ${px(m.lo)} to ${px(m.hi)}</div>` : ""}</td><td class="r val">${m.vol}</td><td class="r">${m.mmSell ? `Sold ${m.mmSell}` : ""}${m.mmSell && m.mmBuy ? "<br>" : ""}${m.mmBuy ? `Bought ${m.mmBuy}` : ""}${!m.mmSell && !m.mmBuy ? "–" : ""}</td><td class="r">${m.n} trade${m.n === 1 ? "" : "s"}</td></tr>`; }).join("") : G.comms.map(c => { const m = X.market[c.k]; return `<tr><td class="nm">${c.name}</td><td class="r">${px(R.r[c.k])}</td><td class="r val">${m.p == null ? "No match" : px(m.p)}${m.p != null && m.p !== R.r[c.k] ? `<div class="small">${m.p > R.r[c.k] ? "above" : "below"} posted</div>` : ""}</td><td class="r val">${m.vol}</td><td class="r">${m.mmSell ? `Sold ${m.mmSell} @ ${px(m.ask)}` : ""}${m.mmSell && m.mmBuy ? "<br>" : ""}${m.mmBuy ? `Bought ${m.mmBuy} @ ${px(m.bid)}` : ""}${!m.mmSell && !m.mmBuy ? "–" : ""}</td><td class="r">${m.unfilled || "–"}</td></tr>`; }).join("")}</table></div>
       <div class="small" style="margin-top:8px">A price above posted means buyers wanted protection more than sellers did. Desks see their own fills on their iPads, but not who was on the other side.</div></div>
       <div class="actions"><button class="btn dk big" id="toMarket">Reveal delivery prices →</button></div>`;
   } else if (step === "market") {
@@ -383,7 +418,7 @@ function renderExFinal(G) {
   const pod = i => top[i] ? `<div class="pod ${i === 0 ? "first" : ""}"><div class="p">${["1st", "2nd", "3rd"][i]}</div><div class="n">${esc(top[i].g.name)}</div><div class="v">${fmt.num(top[i].value)} pts</div></div>` : "<div></div>";
   const per = gid => G.rounds.map((_, r) => (settle(S, r).byGid[gid] || { points: 0 }).points);
   // Who traded with whom, over the whole game
-  const pairs = {}, nm = id => (S.groups.find(g => g.gid === id) || {}).name || "?";
+  const pairs = {}, nm = id => { const g = S.groups.find(x => x.gid === id) || {}; return (g.name || "?") + (S.mode === "pit" && g.code ? " · " + g.code : ""); };
   G.rounds.forEach((_, r) => { const X = settle(S, r); for (const c of G.comms) for (const p of X.market[c.k].pairs) { const k = p.b + "|" + p.s; pairs[k] = (pairs[k] || 0) + p.q; } });
   const plist = Object.entries(pairs).map(([k, q]) => ({ b: k.split("|")[0], s: k.split("|")[1], q })).sort((a, b) => b.q - a.q);
   $("#view").innerHTML = `<div class="topbar"><div class="yr"><div class="sub">Futures · ${G.rounds.length} quarter${G.rounds.length > 1 ? "s" : ""} on the exchange</div><h2>Final results</h2></div><div>${navBack()}</div></div>
