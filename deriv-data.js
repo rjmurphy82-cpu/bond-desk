@@ -37,7 +37,7 @@ const STORY = {
     { t: "card", title: "It Has a Name", text: "What you signed is a FUTURES CONTRACT: an agreement made today to buy or sell something on a future date, at a price you lock in now. The buyer is LONG. The seller is SHORT." },
     { t: "q", q: "Chipotle buys tons of avocados every month. Which futures position protects it from price spikes?", a: ["Sell futures (short), like the bus company", "Don't use futures", "Buy futures (long), like your prom group", "Buy more restaurants"], c: 2, why: "Chipotle is a buyer, like your prom group. A long futures position locks in what it pays." },
     { t: "q", q: "A farmer will sell her corn at harvest in October. Which side protects her?", a: ["Buy futures (long)", "Sell futures (short)", "She can't use futures", "Wait and see"], c: 1, why: "The farmer is a seller, like the bus company. A short futures position locks in what she gets paid." },
-    { t: "q", q: "A bakery locks in flour at $20 a bag for 100 bags. When it buys, flour costs $25 a bag. How much did the futures contract save?", a: ["$25", "$5", "$2,500", "$500"], c: 3, why: "($25 − $20) × 100 bags = $500 saved." },
+    { t: "q", q: "A bakery locks in flour at $20 a bag for 100 bags. When it buys, flour costs $25 a bag. How much did the bakery save IN TOTAL by locking in?", a: ["$25", "$5", "$2,500", "$500"], c: 3, why: "It saved $5 on every bag. $5 × 100 bags = $500 saved in total." },
     { t: "q", q: "What's the main reason a business uses futures?", a: ["To lock in a price and avoid surprises", "To get rich when prices move", "To avoid paying taxes", "To borrow money"], c: 0, why: "Futures are about certainty. The business knows its price ahead of time, up or down." }
   ] },
   options: { title: "The Sneaker Drop", rounds: [
