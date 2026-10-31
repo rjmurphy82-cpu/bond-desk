@@ -131,3 +131,39 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--orange);outline
 .verdictbig .pts{font-family:Oswald,Arial,sans-serif;font-size:30px;margin-top:4px}
 .mini{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;font-family:Oswald,Arial,sans-serif;text-transform:uppercase;color:var(--rust);font-size:15px}
 .mini b{color:var(--brown)}
+
+/* Futures Exchange */
+.nrpick{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:12px}
+.nrpick>span:first-child{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;color:var(--light);margin-right:4px}
+.nrpick button{width:42px;height:42px;border-radius:8px;border:2px solid #555;background:transparent;color:#fff;font-size:18px}
+.nrpick button.on{background:var(--orange);border-color:var(--orange)}
+.rolecols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:700px){.rolecols{grid-template-columns:1fr}}
+.rolecol{display:grid;gap:6px;align-content:start}
+.rtag{display:inline-block;font-family:Oswald,Arial,sans-serif;font-size:12px;letter-spacing:.05em;text-transform:uppercase;border-radius:4px;padding:1px 7px;background:var(--sand);color:var(--brown)}
+.rtag.buy{background:#E3ECF8;color:#1F5FAD}.rtag.sell{background:#E3F1E7;color:#23763A}
+.tile.done .rtag{background:rgba(255,255,255,.15);color:#fff}
+.tblwrap{overflow-x:auto}
+.exsheet{min-width:460px}.exsheet td{font-size:16px;vertical-align:top}.exsheet tr.tot td{font-family:Oswald,Arial,sans-serif;border-top:2px solid var(--brown)}
+.brief.big .exsheet td{font-size:19px}
+.newsl.report li{margin-bottom:8px}
+.ticket{display:grid;gap:8px}
+.trow{border:2px solid var(--rule);border-radius:10px;padding:10px 12px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:center;background:var(--card)}
+.trow.on{border-color:var(--orange);background:#FFF8F9}
+.tname{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.tname b{font-family:Oswald,Arial,sans-serif;font-weight:600;font-size:20px;text-transform:uppercase;color:var(--brown)}
+.tname span{font-size:13px;color:var(--muted)}
+.tseg{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tseg button{border:2px solid var(--rule);background:#fff;border-radius:8px;padding:8px 0;font-size:16px;color:var(--brown)}
+.tseg button.sel{background:var(--brown);border-color:var(--brown);color:#fff}
+.tseg button.sel[data-v="buy"]{background:#1F5FAD;border-color:#1F5FAD}.tseg button.sel[data-v="sell"]{background:#23763A;border-color:#23763A}
+.tstep{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tstep .tl{font-size:13px;color:var(--muted);flex-basis:100%}
+.tstep button{width:44px;height:40px;border-radius:8px;border:2px solid var(--rule);background:#fff;font-size:22px;color:var(--brown);line-height:1}
+.tstep b{font-family:Oswald,Arial,sans-serif;font-size:22px;min-width:64px;text-align:center;font-variant-numeric:tabular-nums}
+.tstep.off{opacity:.4}
+.tfoot{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:18px;color:var(--brown);text-align:right}
+.tfoot.over{color:var(--red)}
+.rolecard{border-radius:12px;padding:14px 16px;text-align:left;margin-top:14px;color:#fff;background:#1F5FAD}
+.rolecard.sell{background:#23763A}
+.rolecard .label{color:#fff;opacity:.85}.rolecard h2{font-size:28px}.rolecard p{margin:6px 0 0;font-size:16px;line-height:1.4}

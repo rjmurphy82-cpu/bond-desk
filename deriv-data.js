@@ -110,80 +110,203 @@ const STORY = {
    TRADING DESKS (one per derivative; groups decide on iPads)
    ===================================================================== */
 
-// ---------- 1. The Futures Pit ----------
-const FUT_POINTS = (miss, budget) => Math.max(0, Math.round(1000 - 4000 * miss / budget));
-const futures = {
-  title: "The Futures Pit",
-  pitch: "Six rounds. In five, your desk runs a real business with a price problem: hedge it with futures or ride the market. In the last round you're a speculator with no business at all.",
-  rule: "Hedging rounds: your CFO set a budget at the futures price. Every dollar you miss it by, up OR down, costs points. Hit it exactly: 1,000 points. Speculator round: you score your profit, and a loss takes points away.",
+// ---------- 1. The Futures Exchange ----------
+// Half the desks are food makers (BUYERS of five commodities), half are producers (SELLERS of the same five).
+// Each quarter, desks send anonymous orders (buy or sell, how many contracts, their price limit).
+// A call auction matches desks against each other at one price per commodity; the market maker
+// fills what's left at the posted price ± 4%. At delivery, desks settle with whoever was on the other side.
+// Score: 1,000 points minus a penalty for every surprise left unhedged, plus or minus how well you traded
+// versus the posted price. Everything is measured against the quarter's budget.
+const COMMS = [
+  { k: "wheat", name: "Wheat", unit: "bushel", size: 5000, tick: 0.05 },
+  { k: "corn", name: "Corn", unit: "bushel", size: 5000, tick: 0.05 },
+  { k: "sugar", name: "Sugar", unit: "pound", size: 100000, tick: 0.01 },
+  { k: "soyoil", name: "Soybean oil", unit: "pound", size: 60000, tick: 0.01 },
+  { k: "diesel", name: "Diesel", unit: "gallon", size: 42000, tick: 0.02 }
+];
+const EX_SPREAD = 0.04, EX_K = 4000;
+// One quarter: posted futures price (r), delivery price (S), contracts each desk needs (N), margin limit,
+// the market report, and what happened to each commodity.
+const Q = (title, season, margin, r, S, N, report, story, lesson) => ({ title, season, margin, r, S, N, report, story, lesson });
+const QUARTERS = [
+  Q("Spring Planting", "January to March", 7,
+    { wheat: 6.50, corn: 4.50, sugar: 0.24, soyoil: 0.48, diesel: 2.60 }, { wheat: 7.60, corn: 4.55, sugar: 0.24, soyoil: 0.50, diesel: 2.56 },
+    { wheat: 4, corn: 3, sugar: 2, soyoil: 2, diesel: 1 },
+    ["Crop Progress report: Kansas winter wheat is rated 41% \"good to excellent,\" down from 63% at this time last year. Kansas grows more wheat than any other state.",
+     "Golden Prairie's marketing team launches a cereal ad campaign with a famous NBA player. Early social media buzz is huge.",
+     "Corn planting is on schedule across Iowa and Illinois, and soil moisture is close to normal.",
+     "Florida's sugar cane harvest wrapped up at about the same size as last year.",
+     "Refineries finished their spring maintenance on time and are running near full speed.",
+     "Restaurant chains say cooking oil orders are steady."],
+    { wheat: "The weak crop ratings were the clue: Kansas yields came in low and wheat jumped 17%.", corn: "Normal planting, normal price.", sugar: "A normal harvest kept sugar flat.", soyoil: "Steady demand, small move.", diesel: "Refineries running full kept diesel steady." },
+    "Crop condition ratings are an early warning. A falling rating means less supply later, and that pushes prices up."),
+  Q("Summer Heat", "April to June", 7,
+    { wheat: 7.40, corn: 4.60, sugar: 0.24, soyoil: 0.50, diesel: 2.55 }, { wheat: 6.80, corn: 5.30, sugar: 0.25, soyoil: 0.58, diesel: 2.60 },
+    { wheat: 3, corn: 4, sugar: 2, soyoil: 2, diesel: 1 },
+    ["The National Weather Service forecasts a \"heat dome\" over the Corn Belt for the second half of July, the weeks when corn plants pollinate.",
+     "Russia's agriculture ministry raises its wheat harvest estimate to a record. Russia is the world's largest wheat exporter.",
+     "The EPA raises how much renewable diesel refiners must blend into fuel next year. Most U.S. renewable diesel is made from soybean oil.",
+     "Gas station prices tick up as the summer driving season starts.",
+     "Sugar beet fields in Minnesota and North Dakota look healthy.",
+     "Golden Prairie's new granola bar hits shelves in 2,000 stores."],
+    { wheat: "A record Russian crop flooded the world market and wheat fell 8%.", corn: "Heat during pollination cut yields and corn rose 15%.", sugar: "Healthy beets, small move.", soyoil: "The renewable diesel rule raised demand for soybean oil: up 16%.", diesel: "The gas-station story was about gasoline, not diesel. Diesel barely moved." },
+    "Ask who uses a commodity. A new rule for fuel made a FOOD ingredient more expensive."),
+  Q("Harvest", "July to September", 6,
+    { wheat: 6.80, corn: 5.20, sugar: 0.25, soyoil: 0.57, diesel: 2.60 }, { wheat: 6.85, corn: 4.40, sugar: 0.29, soyoil: 0.56, diesel: 3.04 },
+    { wheat: 3, corn: 4, sugar: 2, soyoil: 2, diesel: 1 },
+    ["USDA: farmers planted the most corn acres since the 1930s, and yields per acre are near a record.",
+     "A Category 3 hurricane is tracking toward the Texas and Louisiana coast, home to about half of U.S. refining capacity.",
+     "India, the world's second-largest sugar producer, says it will \"review\" sugar exports after a weak monsoon season.",
+     "A food blogger claims cereal sales are falling as people switch to eggs for breakfast.",
+     "Wheat exports are right in line with expectations.",
+     "Soybean crushing plants report steady oil output."],
+    { wheat: "No real news, no real move.", corn: "After last quarter's spike, a huge harvest sent corn down 15%. Last quarter's winner was this quarter's loser.", sugar: "India cut exports and sugar jumped 16%. \"Review\" was the quiet word that mattered.", soyoil: "Steady output, steady price.", diesel: "The hurricane shut Gulf refineries and diesel rose 17%." },
+    "Prices that spiked can crash when supply catches up. Don't trade last quarter's news."),
+  Q("Winter", "October to December", 7,
+    { wheat: 6.85, corn: 4.45, sugar: 0.29, soyoil: 0.56, diesel: 3.00 }, { wheat: 7.70, corn: 4.40, sugar: 0.28, soyoil: 0.49, diesel: 2.56 },
+    { wheat: 4, corn: 2, sugar: 2, soyoil: 2, diesel: 2 },
+    ["Forecasters predict one of the mildest winters in 20 years for the Northeast, where many homes burn heating oil, a close cousin of diesel.",
+     "OPEC agrees to pump more oil starting next month.",
+     "Shipping insurers raise rates sharply for cargo ships leaving Black Sea ports. Those ports carry about a quarter of the world's wheat exports.",
+     "The EPA says it will delay its renewable diesel rule by a year.",
+     "Ethanol plants are running at normal rates.",
+     "Golden Prairie's CEO tells a TV host to expect \"record holiday sales.\""],
+    { wheat: "Higher shipping risk on the Black Sea squeezed world supply: wheat up 12%.", corn: "Normal ethanol demand kept corn flat.", sugar: "A small slip after last quarter's jump.", soyoil: "The delayed EPA rule erased last summer's demand story: down 12.5%.", diesel: "A mild winter plus more OPEC oil, two clues pointing the same way: diesel down 15%." },
+    "Remember earlier quarters. The EPA rule that pushed soybean oil up in the summer pulled it back down when it was delayed."),
+  Q("Strong Dollar", "January to March, Year 2", 6,
+    { wheat: 7.60, corn: 4.40, sugar: 0.28, soyoil: 0.50, diesel: 2.60 }, { wheat: 7.55, corn: 3.90, sugar: 0.24, soyoil: 0.51, diesel: 2.64 },
+    { wheat: 3, corn: 4, sugar: 3, soyoil: 1, diesel: 1 },
+    ["The U.S. dollar hits a 10-year high. U.S. crops now cost more for buyers in other countries.",
+     "Brazil's second corn crop is coming in early and large. Brazil is the world's biggest corn exporter.",
+     "Brazil's sugar cane mills report their best crushing season in a decade.",
+     "U.S. wheat stocks are tight, but Australia's wheat harvest is huge.",
+     "Trucking companies report normal freight demand.",
+     "A viral video of a cereal-packing robot sends Golden Prairie's stock up 6%."],
+    { wheat: "Tight U.S. stocks and a huge Australian crop cancelled out. Wheat was flat.", corn: "A strong dollar plus a big Brazilian crop: corn down 11%.", sugar: "Brazil's best season in a decade: sugar down 14%.", soyoil: "Quiet.", diesel: "Normal freight, normal price." },
+    "When two clues point opposite ways (tight U.S. wheat vs. huge Australian wheat), the price may not move at all."),
+  Q("Disruption", "April to June, Year 2", 7,
+    { wheat: 7.50, corn: 3.95, sugar: 0.24, soyoil: 0.51, diesel: 2.66 }, { wheat: 6.95, corn: 4.00, sugar: 0.25, soyoil: 0.60, diesel: 3.16 },
+    { wheat: 3, corn: 3, sugar: 2, soyoil: 2, diesel: 2 },
+    ["Hackers shut down a major pipeline that carries diesel and gasoline to the East Coast. The company says repairs could take \"weeks.\"",
+     "Port workers in Argentina, the world's biggest exporter of soybean oil, go on strike with no end date.",
+     "Rain arrived just in time across the Great Plains, and wheat crop ratings jump.",
+     "A new study says Americans eat too much added sugar.",
+     "Corn markets are quiet and ethanol demand is steady.",
+     "Golden Prairie wins a \"Best Places to Work\" award."],
+    { wheat: "Good rain meant a good crop: wheat down 7%.", corn: "Quiet.", sugar: "A health study doesn't change supply or demand this quarter.", soyoil: "With Argentina's ports shut, buyers scrambled: soybean oil up 18%.", diesel: "The pipeline outage sent diesel up 19%." },
+    "Supply shocks move fast. A shutdown at the world's biggest exporter matters more than any headline about demand."),
+  Q("Mixed Signals", "July to September, Year 2", 7,
+    { wheat: 6.95, corn: 4.00, sugar: 0.25, soyoil: 0.59, diesel: 3.10 }, { wheat: 7.80, corn: 4.30, sugar: 0.25, soyoil: 0.58, diesel: 2.70 },
+    { wheat: 4, corn: 3, sugar: 2, soyoil: 2, diesel: 2 },
+    ["Argentina, a major wheat exporter, has had its driest winter in 40 years.",
+     "India, which normally grows all the wheat it needs, quietly cuts its import tax on wheat to zero.",
+     "Weekly government data: U.S. diesel inventories reach a five-year high.",
+     "An oil analyst on TV warns prices \"could soar.\" He has made the same call every month this year.",
+     "Cattle ranchers are rebuilding their herds and buying more corn for feed.",
+     "Soybean oil markets are steady."],
+    { wheat: "Two quiet clues: Argentina's drought cut supply, and India cutting its import tax meant India needed to BUY. Wheat up 12%.", corn: "More feed demand pushed corn up 7.5%.", sugar: "Quiet.", soyoil: "Steady.", diesel: "Full storage tanks beat a TV prediction: diesel down 13%." },
+    "Data beats opinions. Inventory numbers told the diesel story; the TV analyst didn't."),
+  Q("Year-End", "October to December, Year 2", 6,
+    { wheat: 7.75, corn: 4.30, sugar: 0.25, soyoil: 0.58, diesel: 2.70 }, { wheat: 7.70, corn: 4.30, sugar: 0.30, soyoil: 0.52, diesel: 2.74 },
+    { wheat: 3, corn: 3, sugar: 3, soyoil: 2, diesel: 1 },
+    ["A rare frost hits São Paulo state in Brazil, where most of the country's sugar cane grows.",
+     "Malaysia and Indonesia report record palm oil output. Palm oil competes directly with soybean oil in cooking and packaged food.",
+     "Wheat and corn markets have a quiet end to the year.",
+     "OPEC's meeting ends with no change in output.",
+     "Golden Prairie names a new CEO.",
+     "A food magazine names granola the \"snack of the year.\""],
+    { wheat: "Quiet.", corn: "Quiet.", sugar: "Frost damaged Brazil's cane: sugar up 20%.", soyoil: "Cheap palm oil pulled buyers away from soybean oil: down 10%.", diesel: "No OPEC change, no big move." },
+    "Watch the substitutes. A record crop of palm oil made soybean oil cheaper, even with no soybean news at all.")
+];
+const exchange = {
+  title: "The Futures Exchange", kind: "exchange",
+  pitch: "Half the desks are food makers that BUY wheat, corn, sugar, soybean oil and diesel. Half are producers that SELL them. Each quarter, read the market report, decide what to hedge, and trade futures with the other desks. You never know who's on the other side.",
+  rule: "Score 1,000 points a quarter by landing on budget. Every dollar of price surprise you leave unhedged costs points, up OR down. Trading better than the posted price earns points; trading worse costs points. Your bank limits how many contracts you can trade each quarter.",
   metric: { label: "Points", start: 0, higher: true, show: v => num(v) },
   benchLabel: "Never hedged",
-  dflt: { side: "none", size: "all" },
-  rounds: [
-    { title: "Drought Watch", who: "Prairie Crunch Cereal", role: "buy", item: "wheat", unit: "bushel", q: 50000, F: 6.50, S: 8.00, now: 6.40,
-      brief: "Prairie Crunch will BUY 50,000 bushels of wheat in three months to make cereal.",
-      news: ["Kansas has had six weeks without rain.", "Weather forecasters see no relief in sight."],
-      story: "The drought got worse. Wheat jumped to $8.00 a bushel. Desks that bought futures locked in $6.50 and hit their budget. Desks without a hedge paid $75,000 more than planned.",
-      lesson: "A buyer fears rising prices, so a buyer goes LONG (buys futures)." },
-    { title: "Record Harvest", who: "Alto Verde Coffee", role: "sell", item: "coffee", unit: "pound", q: 40000, F: 2.10, S: 1.70, now: 2.15,
-      brief: "Alto Verde grows coffee and will SELL 40,000 pounds at harvest in three months.",
-      news: ["Brazil, the world's biggest coffee grower, expects a record crop.", "Coffee shops say demand is flat this year."],
-      story: "Brazil's record crop flooded the market and coffee fell to $1.70. Desks that sold futures still got $2.10 a pound. Unhedged desks got $16,000 less than budget.",
-      lesson: "A seller fears falling prices, so a seller goes SHORT (sells futures)." },
-    { title: "Fuel Fears", who: "Route 53 Freight", role: "buy", item: "diesel", unit: "gallon", q: 100000, F: 3.20, S: 2.80, now: 3.15,
-      brief: "Route 53 runs 60 trucks and will BUY 100,000 gallons of diesel next quarter.",
-      news: ["Oil-producing countries talk about cutting production.", "Some economists think a slowdown could cut fuel demand."],
-      story: "Fuel demand dropped and diesel fell to $2.80. Hedged desks LOST $40,000 on their futures, but they paid less for diesel by the same amount. They hit their $320,000 budget right on the nose.",
-      lesson: "A hedge can lose money and still do its job. The goal was a known cost, not a bet." },
-    { title: "Trade Deal", who: "Lindqvist Family Farm", role: "sell", item: "soybeans", unit: "bushel", q: 20000, F: 11.00, S: 12.50, now: 10.90,
-      brief: "The Lindqvists will SELL 20,000 bushels of soybeans at harvest.",
-      news: ["Talks on a big soybean trade deal with China have stalled.", "Farmers planted more soybeans than last year."],
-      story: "Surprise: the trade deal got signed and soybeans jumped to $12.50. Hedged desks gave up $30,000 of upside but hit their budget. Unhedged desks got lucky this time.",
-      lesson: "Hedging gives up the lucky surprises along with the bad ones." },
-    { title: "Peak Travel", who: "Skyline Airlines", role: "buy", item: "jet fuel", unit: "gallon", q: 200000, F: 2.50, S: 3.10, now: 2.45,
-      brief: "Skyline will BUY 200,000 gallons of jet fuel for summer flights.",
-      news: ["Summer bookings are the highest ever.", "A major refinery just shut down for repairs."],
-      story: "Record travel plus a closed refinery sent jet fuel to $3.10. Fully hedged desks locked in $2.50. Unhedged desks blew the budget by $120,000.",
-      lesson: "When two clues point the same way, the risk is real. That's when a hedge pays off." },
-    { title: "Speculator Round", spec: true, who: "Hersey Trading Co.", item: "corn", unit: "bushel", per: 5000, F: 4.50, S: 4.00, now: 4.55,
-      brief: "You have no farm and no business. You're a speculator: you trade corn futures only to make money. Each contract is 5,000 bushels.",
-      news: ["Perfect growing weather across the Midwest.", "The government predicts a record corn crop."],
-      story: "The record crop came in and corn fell to $4.00. Speculators who sold 2 contracts made $5,000. Those who bought 2 lost $5,000.",
-      lesson: "Hedgers use futures to REMOVE risk. Speculators TAKE ON risk to try to profit." }
-  ],
-  fields(R) {
-    if (R.spec) return [
-      { k: "side", label: "Your trade", opts: [["buy", "Buy corn futures", "You win if corn rises"], ["sell", "Sell corn futures", "You win if corn falls"], ["none", "Stay out", "No risk, no reward"]] },
-      { k: "size", label: "How many contracts?", skip: { side: "none" }, opts: [["1", "1 contract", "5,000 bushels"], ["2", "2 contracts", "10,000 bushels"]] }];
-    return [
-      { k: "side", label: "Your hedge", opts: [["buy", "Buy futures (long)", "Lock in what you pay"], ["sell", "Sell futures (short)", "Lock in what you get"], ["none", "No hedge", "Take the market price"]] },
-      { k: "size", label: "How much?", skip: { side: "none" }, opts: [["half", "Hedge half", num(R.q / 2) + " " + R.unit + "s"], ["all", "Hedge all", num(R.q) + " " + R.unit + "s"]] }];
+  roles: {
+    buy: { name: "Golden Prairie Foods", short: "Buyer", what: "You make cereal, granola bars and crackers. Every quarter you BUY wheat, corn, sugar and soybean oil, and diesel for your delivery trucks. Rising prices hurt you." },
+    sell: { name: "Heartland Supply Co.", short: "Seller", what: "You run farms, a sugar mill, a soybean crushing plant and a small refinery. Every quarter you SELL wheat, corn, sugar, soybean oil and diesel. Falling prices hurt you." }
   },
-  facts(R) {
-    if (R.spec) return [["Corn today", usd(R.now, true)], ["Futures price", usd(R.F, true)], ["Contract size", num(R.per) + " bu"]];
-    return [[R.item[0].toUpperCase() + R.item.slice(1) + " today", usd(R.now, true)], ["Futures price", usd(R.F, true) + " / " + R.unit], ["Quantity", num(R.q) + " " + R.unit + "s"], [R.role === "buy" ? "Cost budget" : "Sales budget", usd(R.F * R.q)]];
-  },
-  reveal(R) { return { label: (R.spec ? "Corn" : R.item[0].toUpperCase() + R.item.slice(1)) + " at delivery", big: usd(R.S, true), sub: (R.S > R.F ? "Up " : "Down ") + usd(Math.abs(R.S - R.F), true) + " from the futures price" }; },
-  result(R, d) {
-    const side = d.side || "none", sign = side === "buy" ? 1 : side === "sell" ? -1 : 0;
-    if (R.spec) {
-      const n = side === "none" ? 0 : (d.size === "2" ? 2 : 1), pnl = sign * (R.S - R.F) * R.per * n || 0, pts = Math.round(pnl / 5) || 0;
-      return { delta: pts, pick: side === "none" ? "Stayed out" : (side === "buy" ? "Bought " : "Sold ") + n + " contract" + (n > 1 ? "s" : ""),
-        rows: [["Futures profit or loss", n ? `${side === "buy" ? "(" + usd(R.S, true) + " − " + usd(R.F, true) + ")" : "(" + usd(R.F, true) + " − " + usd(R.S, true) + ")"} × ${num(R.per * n)}` : "No trade", sgn(pnl)]],
-        head: n ? (pnl > 0 ? "Profit of " + usd(pnl) : "Loss of " + usd(-pnl)) : "Stayed out", good: pnl > 0, bad: pnl < 0 };
-    }
-    const cov = side === "none" ? 0 : (d.size === "half" ? 0.5 : 1), hq = R.q * cov, pnl = sign * (R.S - R.F) * hq || 0;
-    const cash = R.S * R.q, budget = R.F * R.q, eff = R.role === "buy" ? cash - pnl : cash + pnl, miss = Math.abs(eff - budget), pts = FUT_POINTS(miss, budget);
-    const wrong = (R.role === "buy" && side === "sell") || (R.role === "sell" && side === "buy");
-    return { delta: pts, wrong, pick: side === "none" ? "No hedge" : (side === "buy" ? "Bought" : "Sold") + " futures · " + (cov === 1 ? "all" : "half"),
-      rows: [["Futures gain or loss", side === "none" ? "No futures" : `${side === "buy" ? "(" + usd(R.S, true) + " − " + usd(R.F, true) + ")" : "(" + usd(R.F, true) + " − " + usd(R.S, true) + ")"} × ${num(hq)}`, sgn(pnl)],
-        [R.role === "buy" ? "Cost in the cash market" : "Sales in the cash market", `${num(R.q)} × ${usd(R.S, true)}`, usd(cash)],
-        [R.role === "buy" ? "Effective cost" : "Effective sales", R.role === "buy" ? "Cash cost − futures gain" : "Cash sales + futures gain", usd(eff)],
-        ["Budget", `${num(R.q)} × ${usd(R.F, true)}`, usd(budget)],
-        ["Missed the budget by", "", usd(miss)]],
-      head: wrong ? "Wrong side: missed by " + usd(miss) : miss === 0 ? "Hit the budget exactly" : "Missed the budget by " + usd(miss), good: miss === 0, bad: wrong || pts < 300 };
-  }
+  comms: COMMS, spread: EX_SPREAD, maxRounds: QUARTERS.length, defaultRounds: 4,
+  dflt: { orders: {} },
+  rounds: QUARTERS
 };
+const snap = (v, t) => Math.round(Math.round(v / t) * t * 100) / 100;
+export const exAsk = (c, r) => snap(Math.ceil(r * (1 + EX_SPREAD) / c.tick - 1e-9) * c.tick, c.tick);
+export const exBid = (c, r) => snap(Math.floor(r * (1 - EX_SPREAD) / c.tick + 1e-9) * c.tick, c.tick);
+export const exBudget = R => COMMS.reduce((a, c) => a + R.r[c.k] * c.size * R.N[c.k], 0);
+// Clean up an order ticket, or null if it breaks a rule
+export function exValidate(R, pick) {
+  const out = {}; let used = 0;
+  for (const c of COMMS) {
+    const o = ((pick || {}).orders || {})[c.k]; if (!o || !o.side || o.side === "none") continue;
+    if (o.side !== "buy" && o.side !== "sell") return null;
+    const qty = +o.qty, lim = +o.lim, r = R.r[c.k];
+    if (!(Number.isInteger(qty) && qty >= 1 && qty <= R.margin)) return null;
+    if (!(lim >= r * 0.7 - 1e-9 && lim <= r * 1.3 + 1e-9)) return null;
+    out[c.k] = { side: o.side, qty, lim: snap(lim, c.tick) }; used += qty;
+  }
+  if (used > R.margin) return null;
+  return { orders: out };
+}
+// Match one commodity: a call auction among desks, then the market maker.
+function matchOne(c, R, list) {
+  const r = R.r[c.k], buys = list.filter(o => o.side === "buy"), sells = list.filter(o => o.side === "sell");
+  const cands = [...new Set([r, ...list.map(o => o.lim)])].sort((a, b) => a - b);
+  let best = { vol: 0, p: null, imb: Infinity, dist: Infinity };
+  for (const p of cands) {
+    const D = buys.filter(o => o.lim >= p - 1e-9).reduce((a, o) => a + o.qty, 0), Sp = sells.filter(o => o.lim <= p + 1e-9).reduce((a, o) => a + o.qty, 0);
+    const vol = Math.min(D, Sp), imb = Math.abs(D - Sp), dist = Math.abs(p - r);
+    if (vol > best.vol || (vol === best.vol && vol > 0 && (imb < best.imb || (imb === best.imb && dist < best.dist)))) best = { vol, p, imb, dist };
+  }
+  const fills = {}, pairs = [], add = (gid, side, qty, price, w) => { (fills[gid] = fills[gid] || []).push({ side, qty, price, w }); };
+  const left = new Map(list.map(o => [o, o.qty]));
+  if (best.vol > 0) {
+    const bq = buys.filter(o => o.lim >= best.p - 1e-9).sort((a, b) => b.lim - a.lim || a.t - b.t);
+    const sq = sells.filter(o => o.lim <= best.p + 1e-9).sort((a, b) => a.lim - b.lim || a.t - b.t);
+    let need = best.vol, i = 0, j = 0;
+    while (need > 0 && i < bq.length && j < sq.length) {
+      const q = Math.min(left.get(bq[i]), left.get(sq[j]), need);
+      add(bq[i].gid, "buy", q, best.p, sq[j].gid); add(sq[j].gid, "sell", q, best.p, bq[i].gid); pairs.push({ b: bq[i].gid, s: sq[j].gid, q });
+      left.set(bq[i], left.get(bq[i]) - q); left.set(sq[j], left.get(sq[j]) - q); need -= q;
+      if (!left.get(bq[i])) i++; if (!left.get(sq[j])) j++;
+    }
+  }
+  const ask = exAsk(c, r), bid = exBid(c, r); let mmBuy = 0, mmSell = 0, unfilled = 0;
+  for (const o of list) {
+    const q = left.get(o); if (!q) continue;
+    if (o.side === "buy" && o.lim >= ask - 1e-9) { add(o.gid, "buy", q, ask, "mm"); mmSell += q; }
+    else if (o.side === "sell" && o.lim <= bid + 1e-9) { add(o.gid, "sell", q, bid, "mm"); mmBuy += q; }
+    else unfilled += q;
+  }
+  return { p: best.vol ? best.p : null, vol: best.vol, ask, bid, mmBuy, mmSell, unfilled, fills, pairs };
+}
+// Settle a whole quarter. decs = {gid: {orders}}, groups = [{gid, role}]
+export function exSettle(R, decs, groups) {
+  const market = {}, byGid = {}, B = exBudget(R); let mmPnl = 0;
+  for (const c of COMMS) {
+    const list = [];
+    for (const g of groups) { const o = ((decs[g.gid] || {}).orders || {})[c.k]; if (o) list.push({ ...o, gid: g.gid, t: (decs[g.gid] || {}).t || 0 }); }
+    market[c.k] = matchOne(c, R, list);
+    const S = R.S[c.k]; for (const f of Object.values(market[c.k].fills).flat()) if (f.w === "mm") mmPnl -= (f.side === "buy" ? 1 : -1) * (S - f.price) * c.size * f.qty;
+  }
+  for (const g of groups) {
+    const nat = g.role === "sell" ? 1 : -1; let risk = 0, fill = 0, fut = 0; const lines = [];
+    for (const c of COMMS) {
+      const r = R.r[c.k], S = R.S[c.k], fl = market[c.k].fills[g.gid] || [], N = R.N[c.k];
+      const x = fl.reduce((a, f) => a + (f.side === "buy" ? f.qty : -f.qty), 0);
+      const rk = (S - r) * c.size * (nat * N + x), fg = fl.reduce((a, f) => a + (r - f.price) * c.size * (f.side === "buy" ? f.qty : -f.qty), 0);
+      const fp = fl.reduce((a, f) => a + (S - f.price) * c.size * (f.side === "buy" ? f.qty : -f.qty), 0);
+      const ord = ((decs[g.gid] || {}).orders || {})[c.k] || null, filled = fl.reduce((a, f) => a + f.qty, 0);
+      risk += Math.abs(rk); fill += fg; fut += fp;
+      lines.push({ c, N, ord, fills: fl, filled, x, net: nat * N + x, risk: rk || 0, fillGain: fg || 0, fut: fp || 0, wrong: ord && ((nat < 0 && ord.side === "sell") || (nat > 0 && ord.side === "buy")) });
+    }
+    const points = Math.max(0, Math.round(1000 - EX_K * risk / B + EX_K * fill / B));
+    byGid[g.gid] = { points, risk, fill, fut, lines, budget: B };
+  }
+  return { market, byGid, mmPnl, budget: B };
+}
 
 // ---------- 2. The Options Floor ----------
 const OPT = (v, label, type, K, p, n = 1) => ({ v, label, type, K, p, n });
@@ -345,7 +468,7 @@ const cds = {
   }
 };
 
-const DESK = { futures, options, swaps, cds };
+const DESK = { futures: exchange, options, swaps, cds };
 
 /* =====================================================================
    The eight games

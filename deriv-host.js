@@ -1,10 +1,10 @@
 // Unit 5 Derivatives Live: host (projector) screen for all eight games
 import { call, offlineCaller, $, $$, store } from "./deriv-client.js";
 import { qrSVG } from "./qr.js";
-import { GAMES, ORDER, Q_SECS, fmt, esc, SHAPES, game, round, dec, answerable, deskResult, standings, bench, show, deltaText, roundLabel, secsLeft, briefHTML, resultTable, storyCardHTML, needed } from "./deriv-view.js";
+import { GAMES, ORDER, Q_SECS, fmt, esc, SHAPES, game, round, dec, answerable, deskResult, standings, bench, show, deltaText, roundLabel, secsLeft, briefHTML, resultTable, storyCardHTML, needed, settle, exBudget, exAsk, exBid, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML } from "./deriv-view.js";
 
 let api = call, offline = false, S = null, sess = null, pollT = null, netErr = "", skew = 0;
-const ui = { lastKey: "", menu: false, pick: null };
+const ui = { lastKey: "", menu: false, pick: null, nr: 4 };
 let tLen = 180, tLeft = 180, tRun = null, qTick = null;
 const SKEY = "dv_host";
 const TOPICS = [["futures", "Futures"], ["options", "Options"], ["swaps", "Swaps"], ["cds", "Credit Default Swaps"]];
@@ -18,7 +18,7 @@ async function boot() {
   if (sess) { try { S = await api("state", { code: sess.code, hostKey: sess.hostKey }); if (!S.host) throw 0; skew = S.now - Date.now(); startPoll(); } catch { store.del(SKEY); sess = null; S = null; } }
   renderMenu();
 }
-const kindLine = G => G.kind === "story" ? "Story game · one player per iPad · about 20 minutes" : `Trading desk · one iPad per group · ${G.rounds.length} rounds · about 40 minutes`;
+const kindLine = G => G.kind === "exchange" ? "Exchange · buyers trade with sellers · one iPad per group · about 20 minutes per quarter" : G.kind === "story" ? "Story game · one player per iPad · about 20 minutes" : `Trading desk · one iPad per group · ${G.rounds.length} rounds · about 40 minutes`;
 function renderMenu(msg = "") {
   ui.menu = true; $("#menuBtn").style.display = "none"; clearInterval(qTick);
   const live = !!(sess && S), P = GAMES[ui.pick];
@@ -34,23 +34,25 @@ function renderMenu(msg = "") {
         <h2 style="font-size:40px;line-height:1.05;margin:4px 0 8px">${esc(P.title)}</h2>
         <div style="font-size:18px;line-height:1.5">${P.kind === "story" ? "Students join on their own iPads. You tell the story on the board one chapter at a time; they answer each question on their iPad. Faster right answers earn more points (500 to 1,000). Run it before the trading desk." : esc(P.pitch) + " " + esc(P.rule)}</div>
         <div class="small" style="margin-top:8px;font-size:15px">${kindLine(P)}</div>
+        ${P.kind === "exchange" ? `<div class="nrpick"><span>How many quarters?</span>${Array.from({ length: P.rounds.length }, (_, i) => `<button class="${ui.nr === i + 1 ? "on" : ""}" data-nr="${i + 1}">${i + 1}</button>`).join("")}<span class="small" style="color:#CFCFCF">About ${ui.nr * 20} minutes</span></div>` : ""}
         <div class="actions" style="justify-content:flex-start"><button class="btn big" id="newGame">${live ? "End it &amp; start this game" : "Start this game"}</button></div>
         ${msg ? `<div class="err">${esc(msg)}</div>` : ""}</div>
       <div class="card"><div class="label">No Wi-Fi or iPads today?</div>
         <div style="font-size:17px;line-height:1.5">Run the game on this screen only. Add players or groups by hand, then tap each one to enter its answer.</div>
         <div class="actions" style="justify-content:flex-start"><button class="btn ghost" id="offGame">${live ? "End it &amp; play without iPads" : "Play without iPads"}</button></div></div></div>`;
   $$(".gpick").forEach(b => b.onclick = () => { ui.pick = b.dataset.g; history.replaceState(null, "", "?g=" + ui.pick); renderMenu(); });
+  $$("[data-nr]").forEach(b => b.onclick = () => { ui.nr = +b.dataset.nr; renderMenu(msg); });
   if ($("#mResume")) $("#mResume").onclick = () => { ui.menu = false; ui.lastKey = ""; render(); };
   $("#newGame").onclick = async () => {
     if (live && !confirm("End this game and start a new one? Everyone's results will be erased.")) return;
     $("#newGame").disabled = true; await endCurrent();
-    try { const r = await api("create", { game: ui.pick }); sess = { code: r.code, hostKey: r.hostKey }; store.set(SKEY, sess); ui.menu = false; await refresh(true); startPoll(); }
+    try { const r = await api("create", { game: ui.pick, nr: ui.nr }); sess = { code: r.code, hostKey: r.hostKey }; store.set(SKEY, sess); ui.menu = false; await refresh(true); startPoll(); }
     catch (e) { renderMenu(e.code === "db_not_configured" ? "The game database isn't connected yet (see the README). You can still play without iPads." : e.message + " You can still play without iPads."); }
   };
   $("#offGame").onclick = async () => {
     if (live && !confirm("End this game and play without iPads? Everyone's results will be erased.")) return;
     await endCurrent(); offline = true; api = offlineCaller(); $("#offlineTag").style.display = "inline-block";
-    const r = await api("create", { game: ui.pick }); sess = { code: r.code, hostKey: r.hostKey }; ui.menu = false; await refresh(true);
+    const r = await api("create", { game: ui.pick, nr: ui.nr }); sess = { code: r.code, hostKey: r.hostKey }; ui.menu = false; await refresh(true);
   };
 }
 function summary() {
@@ -83,10 +85,11 @@ function render() {
   $("#gtitle").textContent = G.title;
   $("#menuBtn").style.display = sess ? "inline-block" : "none";
   const key = S.phase + ":" + S.r;
-  if (key !== ui.lastKey) { ui.lastKey = key; clearInterval(qTick); if (S.phase === "open" && G.kind === "desk") { tLen = 180; resetClock(); } }
+  if (key !== ui.lastKey) { ui.lastKey = key; clearInterval(qTick); if (S.phase === "open" && G.kind !== "story") { tLen = G.kind === "exchange" ? 360 : 180; resetClock(); } }
   if (S.phase === "lobby") renderLobby(G);
   else if (S.phase === "final") renderFinal(G);
   else if (G.kind === "story") renderStory(G);
+  else if (G.kind === "exchange") renderExchange(G);
   else renderDesk(G);
 }
 const joinUrl = () => location.origin + "/deriv?c=" + sess.code;
@@ -104,15 +107,16 @@ function renderLobby(G) {
         <div><div class="url">Scan the code, or go to<br><b>${esc(location.host)}/deriv</b></div><div class="small" style="font-size:16px">Game code</div><div class="code">${sess.code}</div></div></div>
       <div class="small" style="margin-top:12px;font-size:15px">${G.kind === "story" ? "One iPad each. Join with your first name and last initial." : "One iPad per group. Join with your group's first names, like \"Maya, Jake &amp; Ava.\""} Write down your 3-digit PIN in case an iPad restarts.</div></div>`}
     <div class="card"><div class="label">Joined: ${S.groups.length} ${who}</div>
-      <div class="tiles">${S.groups.map(g => `<div class="tile"><div style="min-width:0"><div class="nm">${esc(g.name)}</div><div class="st">PIN ${g.pin}${g.manual ? " · by hand" : ""}</div></div><button class="x" data-g="${g.gid}" title="Remove">✕</button></div>`).join("") || `<div class="small">Waiting for ${who} to join...</div>`}</div>
+      ${G.kind === "exchange" ? exLobbyTiles(G) : `<div class="tiles">${S.groups.map(g => `<div class="tile"><div style="min-width:0"><div class="nm">${esc(g.name)}</div><div class="st">PIN ${g.pin}${g.manual ? " · by hand" : ""}</div></div><button class="x" data-g="${g.gid}" title="Remove">✕</button></div>`).join("") || `<div class="small">Waiting for ${who} to join...</div>`}</div>`}
       <div style="display:flex;gap:8px;margin-top:12px"><input id="addName" maxlength="24" placeholder="Add by hand" style="flex:1;font-size:17px;padding:8px 10px;border:1px solid var(--rule);border-radius:8px"><button class="btn dk sm" id="addBtn">Add</button></div>
-      ${G.kind === "desk" ? `<div class="rulebox" style="margin-top:12px"><b>How it works.</b> ${esc(G.rule)}</div>` : ""}
-      <div class="actions"><button class="btn big" id="startBtn" ${S.groups.length ? "" : "disabled"}>${G.kind === "story" ? "Start the story" : "Open Round 1"}</button></div>
+      ${G.kind !== "story" ? `<div class="rulebox" style="margin-top:12px"><b>How it works.</b> ${esc(G.rule)}</div>` : ""}
+      <div class="actions"><button class="btn big" id="startBtn" ${S.groups.length ? "" : "disabled"}>${G.kind === "story" ? "Start the story" : G.kind === "exchange" ? "Open Quarter 1" : "Open Round 1"}</button></div>
       <div class="small" id="netErr">${esc(netErr)}</div></div></div>`;
   $$(".x").forEach(b => b.onclick = () => { if (confirm("Remove " + (G.kind === "story" ? "this player" : "this group") + "?")) op("remove", { gid: b.dataset.g }); });
   const add = () => { const n = $("#addName").value.trim(); if (n) op("add", { name: n }); };
   $("#addBtn").onclick = add; $("#addName").onkeydown = e => { if (e.key === "Enter") add(); };
   $("#startBtn").onclick = () => op("start");
+  $$("[data-role]").forEach(b => b.onclick = () => op("role", { gid: b.dataset.g, role: b.dataset.role }));
 }
 
 /* ---------- story game ---------- */
@@ -268,6 +272,7 @@ function closeEnter() { $("#enterModal").classList.remove("on"); ent = null; }
 
 /* ---------- final ---------- */
 function renderFinal(G) {
+  if (G.kind === "exchange") return renderExFinal(G);
   const lastR = G.rounds.length - 1, rows = standings(S, lastR), top = rows.slice(0, 3);
   const pod = i => top[i] ? `<div class="pod ${i === 0 ? "first" : ""}"><div class="p">${["1st", "2nd", "3rd"][i]}</div><div class="n">${esc(top[i].g.name)}</div><div class="v">${show(G, top[i].value)}</div></div>` : "<div></div>";
   let table = "", side = "";
@@ -287,6 +292,110 @@ function renderFinal(G) {
   $("#view").innerHTML = `<div class="topbar"><div class="yr"><div class="sub">${esc(G.topicName)} · ${G.kind === "story" ? "Story game" : "Trading desk"}</div><h2>Final results</h2></div><div>${navBack()}</div></div>
     <div class="podium">${pod(1)}${pod(0)}${pod(2)}</div>
     <div class="grid" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr);align-items:start">${table}${side}</div>
+    <div class="actions"><button class="btn ghost" id="again">Menu</button></div>`;
+  $("#again").onclick = () => renderMenu(); wireBack();
+}
+
+/* ---------- the Futures Exchange ---------- */
+const px = v => fmt.usd(v, true);
+const roleTag = r => `<span class="rtag ${r}">${r === "sell" ? "Seller" : "Buyer"}</span>`;
+function exLobbyTiles(G) {
+  const col = role => { const gs = S.groups.filter(g => (g.role || "buy") === role); return `<div class="rolecol"><div class="label">${role === "buy" ? "Buyers" : "Sellers"} · ${esc(G.roles[role].name)} · ${gs.length}</div>
+    ${gs.map(g => `<div class="tile"><div style="min-width:0"><div class="nm">${esc(g.name)}</div><div class="st">PIN ${g.pin}${g.manual ? " · by hand" : ""}</div></div><div style="display:flex;gap:4px"><button class="btn ghost sm" data-g="${g.gid}" data-role="${role === "buy" ? "sell" : "buy"}" title="Switch side">⇄</button><button class="x" data-g="${g.gid}" title="Remove">✕</button></div></div>`).join("") || `<div class="small">Nobody yet.</div>`}</div>`; };
+  const b = S.groups.filter(g => (g.role || "buy") === "buy").length, s2 = S.groups.length - b;
+  return `<div class="rolecols">${col("buy")}${col("sell")}</div>
+    <div class="small" style="margin-top:8px">${S.groups.length ? (b === s2 ? "Even teams." : `Uneven teams (${b} buyers, ${s2} sellers). That's OK: the market maker fills the gap. Tap ⇄ to switch a desk.`) : "New desks are split evenly between buyers and sellers as they join."}</div>`;
+}
+function exTop(G, R, extra = "") {
+  return `<div class="topbar"><div class="yr"><div class="sub">${esc(G.title)} · Quarter ${S.r + 1} of ${G.rounds.length} · ${esc(R.season)}</div><h2>${esc(R.title)}</h2></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${extra}</div></div>`;
+}
+function exPostedHTML(G, R) {
+  return `<div class="card"><div class="label">Posted futures prices · contracts each desk needs or sells</div><div class="facts">${G.comms.map(c => `<div class="fact"><div class="v">${px(R.r[c.k])}</div><div class="k">${c.name} · ${R.N[c.k]} contract${R.N[c.k] > 1 ? "s" : ""}</div></div>`).join("")}</div>
+    <div class="small" style="margin-top:8px">Each desk can trade up to <b>${R.margin}</b> of its ${Object.values(R.N).reduce((a, b) => a + b, 0)} contracts. The market maker buys 4% below and sells 4% above the posted price.</div></div>`;
+}
+function renderExchange(G) {
+  const R = round(S);
+  if (S.phase === "open") {
+    const done = new Set(S.answered), all = S.groups.length && done.size >= S.groups.length;
+    $("#view").innerHTML = exTop(G, R, codeChip() + clock()) + `<div class="board"><div class="grid" style="align-content:start">${exReportHTML(R, true)}${exPostedHTML(G, R)}</div>
+      <div class="grid" style="align-content:start"><div class="card"><div class="label">Desks locked in: ${done.size} of ${S.groups.length}</div>
+        <div class="tiles">${S.groups.map(g => `<button class="tile ${done.has(g.gid) ? "done" : ""}" data-g="${g.gid}"><span class="nm">${esc(g.name)}</span><span class="st">${roleTag(g.role || "buy")} ${done.has(g.gid) ? "🔒" : offline ? "Tap" : "..."}</span></button>`).join("")}</div>
+        <div class="small" style="margin-top:8px">${offline ? "Tap a desk to enter its orders." : "Tap a desk to enter or fix its orders."} Orders stay hidden until the market closes. No orders = no hedge.</div></div>
+        <div class="rulebox">${esc(G.rule)}</div>
+        <div class="actions" style="align-items:center">${navBack()}${done.size && !all ? `<button class="btn ghost sm" id="anyway">Close the market anyway</button>` : ""}
+          <button class="btn big" id="revBtn" ${all ? "" : "disabled"}>${all ? "Everyone's in: close the market" : `Waiting on ${S.groups.length - done.size}...`}</button></div>
+        <div class="small" id="netErr">${esc(netErr)}</div></div></div>`;
+    $$(".tile[data-g]").forEach(b => b.onclick = () => openExEnter(G, b.dataset.g));
+    const go = async () => { const n = S.answered.length; if (n < S.groups.length && !confirm(`${n} of ${S.groups.length} desks are locked. Desks without orders don't hedge this quarter. Close the market anyway?`)) return; clearInterval(tRun); tRun = null; await op("reveal"); };
+    $("#revBtn").onclick = go; if ($("#anyway")) $("#anyway").onclick = go;
+    wireClock(); wireBack(); return;
+  }
+  const step = S.step || "fills", X = settle(S, S.r), last = S.r >= G.rounds.length - 1;
+  const tabs = `<div style="display:flex;gap:6px">${[["fills", "1. Where it traded"], ["market", "2. Delivery"], ["stand", "3. Standings"]].map(([v, l]) => `<button class="btn ${step === v ? "dk" : "ghost"} sm" data-t="${v}">${l}</button>`).join("")}</div>`;
+  let body;
+  if (step === "fills") {
+    body = `<div class="card"><div class="label">The market closed. One price per commodity, set by the orders desks sent.</div><div class="tblwrap"><table class="standings"><tr><th>Commodity</th><th class="r">Posted</th><th class="r">Where desks traded</th><th class="r">Contracts between desks</th><th class="r">Market maker</th><th class="r">Orders not filled</th></tr>
+      ${G.comms.map(c => { const m = X.market[c.k]; return `<tr><td class="nm">${c.name}</td><td class="r">${px(R.r[c.k])}</td><td class="r val">${m.p == null ? "No match" : px(m.p)}${m.p != null && m.p !== R.r[c.k] ? `<div class="small">${m.p > R.r[c.k] ? "above" : "below"} posted</div>` : ""}</td><td class="r val">${m.vol}</td><td class="r">${m.mmSell ? `Sold ${m.mmSell} @ ${px(m.ask)}` : ""}${m.mmSell && m.mmBuy ? "<br>" : ""}${m.mmBuy ? `Bought ${m.mmBuy} @ ${px(m.bid)}` : ""}${!m.mmSell && !m.mmBuy ? "–" : ""}</td><td class="r">${m.unfilled || "–"}</td></tr>`; }).join("")}</table></div>
+      <div class="small" style="margin-top:8px">A price above posted means buyers wanted protection more than sellers did. Desks see their own fills on their iPads, but not who was on the other side.</div></div>
+      <div class="actions"><button class="btn dk big" id="toMarket">Reveal delivery prices →</button></div>`;
+  } else if (step === "market") {
+    const rows = S.groups.map(g => ({ g, x: X.byGid[g.gid] })), fut = rows.reduce((a, o) => a + o.x.fut, 0);
+    const win = rows.filter(o => o.x.fut > 0).reduce((a, o) => a + o.x.fut, 0), lose = rows.filter(o => o.x.fut < 0).reduce((a, o) => a + o.x.fut, 0);
+    body = `<div class="card"><div class="tblwrap"><table class="standings"><tr><th>Commodity</th><th class="r">Posted</th><th class="r">Traded</th><th class="r">Delivery</th><th>What happened</th></tr>
+      ${G.comms.map(c => { const m = X.market[c.k], mv = 100 * (R.S[c.k] / R.r[c.k] - 1); return `<tr><td class="nm">${c.name}</td><td class="r">${px(R.r[c.k])}</td><td class="r">${m.p == null ? "–" : px(m.p)}</td><td class="r val">${px(R.S[c.k])}<div class="small">${mv >= 0 ? "+" : ""}${mv.toFixed(1)}%</div></td><td style="font-size:16px">${esc(R.story[c.k])}</td></tr>`; }).join("")}</table></div></div>
+      <div class="board" style="margin-top:14px"><div class="card"><div class="label">Desk results this quarter</div><table class="standings"><tr><th>Desk</th><th>Side</th><th class="r">Hedged</th><th class="r">Futures gain/loss</th><th class="r">Points</th></tr>
+        ${rows.map(({ g, x }) => { const hedged = x.lines.reduce((a, l) => a + Math.min(Math.abs(l.x), l.N) * (l.wrong ? 0 : 1), 0), need = x.lines.reduce((a, l) => a + l.N, 0); return `<tr><td class="nm">${esc(g.name)}</td><td>${roleTag(g.role || "buy")}</td><td class="r">${hedged} of ${need}${x.lines.some(l => l.wrong) ? ' <span class="pill r">wrong side</span>' : ""}</td><td class="r ${x.fut < 0 ? "neg" : x.fut > 0 ? "pos" : ""}">${fmt.sgn(Math.round(x.fut))}</td><td class="r val">${fmt.num(x.points)}</td></tr>`; }).join("")}</table></div>
+        <div class="grid" style="align-content:start"><div class="card dark"><div class="label">Every contract has two sides</div><div style="font-size:18px;line-height:1.5">Desks that gained: <b>${fmt.sgn(Math.round(win))}</b><br>Desks that lost: <b>${fmt.sgn(Math.round(lose))}</b><br>Market maker: <b>${fmt.sgn(Math.round(X.mmPnl))}</b><br>Total: <b>${fmt.usd(Math.round(fut + X.mmPnl))}</b></div>
+          <div class="small" style="margin-top:8px">Futures money only moves between the two sides. But both sides can still hit their budget: that's why hedgers trade.</div></div>
+          <div class="lesson"><b>The lesson</b>${esc(R.lesson)}</div></div></div>
+      <div class="actions"><button class="btn dk big" id="toStand">Standings →</button></div>`;
+  } else {
+    const rows = standings(S, S.r), b = bench(G, S.r);
+    body = `<div class="card"><table class="standings"><tr><th>Place</th><th>Desk</th><th>Side</th><th class="r">This quarter</th><th class="r">Total points</th></tr>
+      ${rows.map(x => `<tr class="${x.place === 1 ? "top" : ""}"><td class="pl">${x.place}</td><td class="nm">${esc(x.g.name)}</td><td>${roleTag(x.g.role || "buy")}</td><td class="r">${fmt.num(x.last)}</td><td class="r val">${fmt.num(x.value)}</td></tr>`).join("")}
+      <tr class="bench"><td></td><td>${esc(G.benchLabel)}</td><td></td><td class="r">${fmt.num(bench(G, S.r) - (S.r ? bench(G, S.r - 1) : 0))}</td><td class="r val">${fmt.num(b)}</td></tr></table></div>
+      <div class="actions"><button class="btn ghost" id="reopen">Reopen this quarter</button><button class="btn big" id="nextBtn">${last ? "Final results →" : `Open Quarter ${S.r + 2} →`}</button></div>`;
+  }
+  $("#view").innerHTML = exTop(G, R, tabs) + body + `<div class="small" id="netErr">${esc(netErr)}</div>`;
+  $$("[data-t]").forEach(x => x.onclick = () => op("step", { step: x.dataset.t }));
+  if ($("#toMarket")) $("#toMarket").onclick = () => op("step", { step: "market" });
+  if ($("#toStand")) $("#toStand").onclick = () => op("step", { step: "stand" });
+  if ($("#reopen")) $("#reopen").onclick = () => { if (confirm("Reopen this quarter so desks can change their orders?")) op("reopen"); };
+  if ($("#nextBtn")) $("#nextBtn").onclick = () => op("next");
+}
+let exEnt = null;
+function openExEnter(G, gid) {
+  const g = S.groups.find(x => x.gid === gid); if (!g) return;
+  const cur = dec(S, S.r, gid); exEnt = { gid, d: cur ? { orders: { ...(cur.orders || {}) } } : { orders: {} }, had: !!cur };
+  drawExEnter(G, g); $("#enterModal").classList.add("on");
+}
+function drawExEnter(G, g) {
+  const R = round(S), ok = exUsed(exEnt.d) <= R.margin;
+  $("#enterBox").innerHTML = `<div class="label">Enter orders for · ${(g.role || "buy") === "sell" ? "Seller" : "Buyer"}</div><h2 style="font-size:30px;color:var(--brown)">${esc(g.name)}</h2>${exTicketHTML(G, R, exEnt.d)}
+    <div class="actions" style="justify-content:space-between"><div style="display:flex;gap:8px"><button class="btn ghost" id="eCancel">Cancel</button>${exEnt.had ? `<button class="btn ghost" id="eClear">Clear orders</button>` : ""}</div><button class="btn big" id="eSave" ${ok ? "" : "disabled"}>Lock in</button></div>`;
+  $$("#enterBox [data-act]").forEach(b => b.onclick = () => { exEnt.d = exTap(G, R, exEnt.d, b.dataset.act, b.dataset.k, b.dataset.v); drawExEnter(G, g); });
+  $("#eCancel").onclick = closeEnter;
+  if ($("#eClear")) $("#eClear").onclick = async () => { await op("clear", { gid: exEnt.gid }); closeEnter(); };
+  $("#eSave").onclick = async () => { await op("enter", { gid: exEnt.gid, pick: exEnt.d }); closeEnter(); };
+}
+function renderExFinal(G) {
+  const lastR = G.rounds.length - 1, rows = standings(S, lastR), top = rows.slice(0, 3);
+  const pod = i => top[i] ? `<div class="pod ${i === 0 ? "first" : ""}"><div class="p">${["1st", "2nd", "3rd"][i]}</div><div class="n">${esc(top[i].g.name)}</div><div class="v">${fmt.num(top[i].value)} pts</div></div>` : "<div></div>";
+  const per = gid => G.rounds.map((_, r) => (settle(S, r).byGid[gid] || { points: 0 }).points);
+  // Who traded with whom, over the whole game
+  const pairs = {}, nm = id => (S.groups.find(g => g.gid === id) || {}).name || "?";
+  G.rounds.forEach((_, r) => { const X = settle(S, r); for (const c of G.comms) for (const p of X.market[c.k].pairs) { const k = p.b + "|" + p.s; pairs[k] = (pairs[k] || 0) + p.q; } });
+  const plist = Object.entries(pairs).map(([k, q]) => ({ b: k.split("|")[0], s: k.split("|")[1], q })).sort((a, b) => b.q - a.q);
+  $("#view").innerHTML = `<div class="topbar"><div class="yr"><div class="sub">Futures · ${G.rounds.length} quarter${G.rounds.length > 1 ? "s" : ""} on the exchange</div><h2>Final results</h2></div><div>${navBack()}</div></div>
+    <div class="podium">${pod(1)}${pod(0)}${pod(2)}</div>
+    <div class="grid" style="grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);align-items:start">
+      <div class="card"><div class="tblwrap"><table class="standings"><tr><th>Place</th><th>Desk</th><th>Side</th>${G.rounds.map((_, r) => `<th class="r" style="padding:7px 4px">Q${r + 1}</th>`).join("")}<th class="r">Points</th></tr>
+        ${rows.map(x => `<tr class="${x.place === 1 ? "top" : ""}"><td class="pl">${x.place}</td><td class="nm">${esc(x.g.name)}</td><td>${roleTag(x.g.role || "buy")}</td>${per(x.g.gid).map(v => `<td class="r" style="font-size:15px;padding:6px 4px">${fmt.num(v)}</td>`).join("")}<td class="r val">${fmt.num(x.value)}</td></tr>`).join("")}
+        <tr class="bench"><td></td><td>${esc(G.benchLabel)}</td><td></td>${G.rounds.map((_, r) => `<td class="r" style="font-size:15px;padding:6px 4px">${fmt.num(bench(G, r) - (r ? bench(G, r - 1) : 0))}</td>`).join("")}<td class="r val">${fmt.num(bench(G, lastR))}</td></tr></table></div></div>
+      <div class="grid" style="align-content:start"><div class="card dark"><div class="label">The big reveal: who traded with whom</div>
+        ${plist.length ? `<table class="brk" style="color:#fff">${plist.slice(0, 12).map(p => `<tr><td style="color:#fff;border-color:#333"><b>${esc(nm(p.b))}</b> (buyer side) ↔ <b>${esc(nm(p.s))}</b> (seller side)</td><td class="r" style="color:#fff;border-color:#333">${p.q} contract${p.q > 1 ? "s" : ""}</td></tr>`).join("")}</table>` : `<div class="small">No desk-to-desk trades this game.</div>`}
+        <div class="small" style="margin-top:8px">Every dollar one of these desks made on futures, the other lost. Both still could have hit their budgets.</div></div>
+        <div class="card"><div class="label">What the exchange teaches</div><ul style="font-size:15px;line-height:1.4;padding-left:20px;margin:0">${G.rounds.map(R => `<li style="margin-bottom:6px">${esc(R.lesson)}</li>`).join("")}</ul></div></div></div>
     <div class="actions"><button class="btn ghost" id="again">Menu</button></div>`;
   $("#again").onclick = () => renderMenu(); wireBack();
 }
