@@ -1,10 +1,14 @@
 # District 214 Finance & Investing
 
-The class site for Finance & Investing: a home page, live class games, review games, and practice-on-your-own pages, in the same look as the District 214 Accounting site.
+The class site for Finance & Investing: a home page, live class games, review games, and practice-on-your-own pages, in the same look as the District 214 Accounting site. The home page and menu are grouped by unit: **Unit 5: Derivatives** first, then **Unit 3: Bonds**.
 
 | Page | Who | What |
 |---|---|---|
 | `/` | Students | Home page with every game and practice |
+| `/deriv` | Students | Join any Unit 5 Derivatives Live game (the host QR code goes here) |
+| `/deriv-host` | Teacher (projector) | Derivatives Live host screen: eight games. For each derivative, a **story game** (one student per iPad, Kahoot style: story cards on the board, answers on iPads, 500 to 1,000 points for a right answer, faster = more) and a **trading desk** (one iPad per group, six rounds: read the briefing and news, lock in a choice, you reveal what happened and the standings). Futures: The Prom Bus / The Futures Pit. Options: The Sneaker Drop / The Options Floor. Swaps: The Tip Jar Trade / The Swap Desk. CDS: The Cousin Loan / The Default Desk. All content, numbers and wording live in `deriv-data.js`. Same database as The Bond Desk, separate keys. Has a Play without iPads mode. |
+| `/lock-it-in` | Projector | Lock It In: Unit 5 review of all four derivatives, 23 questions, teams answer with shapes. Self-contained, no database. |
+| `/practice-hedging-desk` | Students | The Hedging Desk: futures, options, swaps and CDS practice desks with sliders and worked math, plus endless test-style practice problems. |
 | `/credit` | Students | Join Credit Desk Live (the host QR code goes here) |
 | `/credit-host` | Teacher (projector) | Credit Desk Live host screen: groups rate each borrower on iPads, then buy; you run the reveal. Uses the same database as The Bond Desk. |
 | `/join` | Students | Join a live Bond Desk game (the host QR code goes here) |

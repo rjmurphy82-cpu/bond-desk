@@ -36,6 +36,19 @@ section{margin-top:34px;scroll-margin-top:70px}
 .card.live{border-top-color:var(--red)}
 .livetag{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--redtext)}
 .livetag::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px var(--redsoft)}
+.unit{margin-top:40px}
+.unithead{display:flex;align-items:center;gap:8px 16px;flex-wrap:wrap;background:var(--black);color:var(--onblack);border-radius:10px;padding:14px 20px;border-bottom:5px solid var(--red)}
+.unithead h2{font-family:var(--display);font-weight:700;font-size:34px;margin:0;line-height:1;text-transform:uppercase;letter-spacing:.02em}
+.uchip{background:var(--red);color:#fff;font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.06em;text-transform:uppercase;border-radius:4px;padding:3px 10px}
+.usub{color:#CFCFCF;font-weight:600;font-size:15px}
+.unit .sechead{margin-top:22px}
+.sechead h3{font-family:var(--display);font-weight:600;font-size:24px;margin:0;line-height:1.1}
+.grid.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:700px){.grid.g2{grid-template-columns:minmax(0,1fr)}}
+.jump{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.jump a{display:flex;gap:8px;align-items:baseline;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:8px 16px;color:inherit;text-decoration:none;font-weight:600}
+.jump a b{font-family:var(--display);font-weight:600;color:var(--redtext)}
+.jump a:hover{border-color:var(--ink)}
 @media (prefers-reduced-motion: reduce){.card{transition:none}.card:hover{transform:none}}
 </style>
 </head>
@@ -45,11 +58,63 @@ section{margin-top:34px;scroll-margin-top:70px}
     <header>
       <div class="eyebrow">High School District 214</div>
       <h1>Finance &amp; Investing review and practice</h1>
-      <p class="lede">Live class games your teacher runs on the board, review games for the whole class, and practice pages you can work through on your own, as many times as you want.</p>
+      <p class="lede">Live class games your teacher runs on the board, review games for the whole class, and practice pages you can work through on your own, as many times as you want. Pick your unit.</p>
     </header>
 
-    <section id="live">
-      <div class="sechead"><h2>Live Class Games</h2><span>Teacher-led. Join with the code on the board</span></div>
+    <nav class="jump" aria-label="Units"><a href="#unit5"><b>Unit 5</b> Derivatives</a><a href="#unit3"><b>Unit 3</b> Bonds</a></nav>
+
+    <section class="unit" id="unit5">
+      <div class="unithead"><span class="uchip">Unit 5</span><h2>Derivatives</h2><span class="usub">Futures, options, swaps and credit default swaps</span></div>
+      <div class="sechead"><h3>Live Class Games</h3><span>Teacher-led. Join with the code on the board</span></div>
+      <div class="grid g2">
+        <a class="card live" href="/deriv">
+          <div class="ctop"><span class="chip">Unit 5</span><span class="kind">Futures</span><span class="livetag">Live</span></div>
+          <h3>The Prom Bus · The Futures Pit</h3>
+          <p>Start with the story: your prom group locks in a party bus price. Then run real businesses on the trading desk and decide when to hedge with futures.</p>
+          <div class="cfoot"><span class="meta">Story game + 6-round desk</span><span class="go">Join →</span></div>
+        </a>
+        <a class="card live" href="/deriv">
+          <div class="ctop"><span class="chip">Unit 5</span><span class="kind">Options</span><span class="livetag">Live</span></div>
+          <h3>The Sneaker Drop · The Options Floor</h3>
+          <p>Start with a $20 sneaker reservation and a phone trade-in deal. Then trade calls and puts on HRSY news, and protect shares you own.</p>
+          <div class="cfoot"><span class="meta">Story game + 6-round desk</span><span class="go">Join →</span></div>
+        </a>
+        <a class="card live" href="/deriv">
+          <div class="ctop"><span class="chip">Unit 5</span><span class="kind">Swaps</span><span class="livetag">Live</span></div>
+          <h3>The Tip Jar Trade · The Swap Desk</h3>
+          <p>Start with two coworkers trading tips for a steady paycheck. Then run Bison Logistics for six years and decide when to swap your variable loan to fixed.</p>
+          <div class="cfoot"><span class="meta">Story game + 6-year desk</span><span class="go">Join →</span></div>
+        </a>
+        <a class="card live" href="/deriv">
+          <div class="ctop"><span class="chip">Unit 5</span><span class="kind">Credit default swaps</span><span class="livetag">Live</span></div>
+          <h3>The Cousin Loan · The Default Desk</h3>
+          <p>Start with a $500 loan to your cousin and a friend who insures it. Then run a bond fund and decide which companies are worth protecting.</p>
+          <div class="cfoot"><span class="meta">Story game + 6-round desk</span><span class="go">Join →</span></div>
+        </a>
+      </div>
+      <div class="sechead"><h3>Review Games</h3><span>Played as a class on the board</span></div>
+      <div class="grid">
+        <a class="card" href="/lock-it-in">
+          <div class="ctop"><span class="chip">Unit 5</span><span class="kind">Unit review</span></div>
+          <h3>Lock It In</h3>
+          <p>All four derivatives in one projector game: prom buses, sneaker drops, tip money and a cousin who owes you $500. Teams answer with shapes. No iPads needed.</p>
+          <div class="cfoot"><span class="meta">5 rounds · 23 questions</span><span class="go">Play →</span></div>
+        </a>
+      </div>
+      <div class="sechead"><h3>Practice On Your Own</h3><span>Work at your own pace, with answers and the why</span></div>
+      <div class="grid">
+        <a class="card live" href="/practice-hedging-desk">
+          <div class="ctop"><span class="chip">Unit 5</span><span class="kind">Futures · Options · Swaps · CDS</span><span class="livetag">New</span></div>
+          <h3>The Hedging Desk</h3>
+          <p>Four practice desks with sliders: see what a hedge does as the price moves, with the math worked out. Then test yourself with endless test-style problems.</p>
+          <div class="cfoot"><span class="meta">4 desks + practice problems</span><span class="go">Open →</span></div>
+        </a>
+      </div>
+    </section>
+
+    <section class="unit" id="unit3">
+      <div class="unithead"><span class="uchip">Unit 3</span><h2>Bonds</h2><span class="usub">Bond basics, ratings, pricing and the yield curve</span></div>
+      <div class="sechead"><h3>Live Class Games</h3><span>Teacher-led. Join with the code on the board</span></div>
       <div class="grid">
         <a class="card live" href="/radar">
           <div class="ctop"><span class="chip">Unit 3</span><span class="kind">The yield curve</span><span class="livetag">Live</span></div>
@@ -88,10 +153,7 @@ section{margin-top:34px;scroll-margin-top:70px}
           <div class="cfoot"><span class="meta">10 years</span><span class="go">Join →</span></div>
         </a>
       </div>
-    </section>
-
-    <section id="games">
-      <div class="sechead"><h2>Review Games</h2><span>Played as a class on the board</span></div>
+      <div class="sechead"><h3>Review Games</h3><span>Played as a class on the board</span></div>
       <div class="grid">
         <a class="card" href="/bond-feud">
           <div class="ctop"><span class="chip">Unit 3</span><span class="kind">Unit review</span></div>
@@ -105,16 +167,9 @@ section{margin-top:34px;scroll-margin-top:70px}
           <p>Groups score real-looking case files on the six-factor scorecard, lock in a rating, then watch the reveal and the why.</p>
           <div class="cfoot"><span class="meta">5 rounds + blitz</span><span class="go">Play →</span></div>
         </a>
-        <div class="card soon">
-          <div class="ctop"><span class="chip">More units</span><span class="kind">More games</span></div>
-          <h3>Coming soon</h3>
-          <p>Games for the other units will show up here.</p>
-        </div>
-      </div>
-    </section>
 
-    <section id="practices">
-      <div class="sechead"><h2>Practice On Your Own</h2><span>Work at your own pace, with answers and the why</span></div>
+      </div>
+      <div class="sechead"><h3>Practice On Your Own</h3><span>Work at your own pace, with answers and the why</span></div>
       <div class="grid">
         <a class="card live" href="/practice-recession-radar">
           <div class="ctop"><span class="chip">Unit 3</span><span class="kind">The yield curve</span><span class="livetag">New</span></div>
@@ -158,6 +213,13 @@ section{margin-top:34px;scroll-margin-top:70px}
           <p>Explain what happened in the games in your own words, then check your answer against a model answer and the key points.</p>
           <div class="cfoot"><span class="meta">14 questions</span><span class="go">Open →</span></div>
         </a>
+
+      </div>
+    </section>
+
+    <section id="done">
+      <div class="sechead"><h3>When You're Done</h3><span>Any unit</span></div>
+      <div class="grid">
         <a class="card live" href="/my-report">
           <div class="ctop"><span class="chip">Done?</span><span class="kind">Send your work</span></div>
           <h3>My Report</h3>

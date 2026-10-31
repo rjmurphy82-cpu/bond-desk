@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Hedging Desk | District 214 Finance &amp; Investing</title>
+<meta name="description" content="Unit 5 derivatives practice: futures, options, swaps and credit default swaps, with test-style problems.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow:wght@400;600;700&family=Roboto+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a trading ticket on the left, the settlement readout on the right; the test's brown/orange/brown band anchors the header. */
+:root{
+  --bg:#F4F3F3; --surface:#FFFFFF; --sunk:#EDEDED; --ink:#111111; --muted:#5C5C5C; --line:#D9D9D9;
+  --brown:#111111; --orange:#C1102F; --orange-ink:#B00E2A; --on-orange:#FFFFFF;
+  --gain:#1F7A4A; --gain-bg:#E3F2EA; --loss:#B3261E; --loss-bg:#FBE7E5;
+  --display:"Oswald","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",Arial,sans-serif;
+  --mono:Consolas,"Roboto Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121212; --surface:#1E1E1E; --sunk:#262626; --ink:#F2F2F2; --muted:#A8A8A8; --line:#333333;
+  --brown:#2B2B2B; --orange:#E0213F; --orange-ink:#FF5C70; --on-orange:#FFFFFF;
+  --gain:#5BC98C; --gain-bg:#16301F; --loss:#FF8A80; --loss-bg:#3A1A17; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121212; --surface:#1E1E1E; --sunk:#262626; --ink:#F2F2F2; --muted:#A8A8A8; --line:#333333;
+  --brown:#2B2B2B; --orange:#E0213F; --orange-ink:#FF5C70; --on-orange:#FFFFFF;
+  --gain:#5BC98C; --gain-bg:#16301F; --loss:#FF8A80; --loss-bg:#3A1A17; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px}
+.band{display:grid;gap:5px;width:220px}
+.band i{display:block;height:9px;background:var(--brown)}
+.band b{display:block;background:var(--orange);color:var(--on-orange);font:600 22px/1.25 var(--display);letter-spacing:-.01em;padding:4px 10px;text-transform:uppercase}
+h1{font:700 clamp(30px,5vw,46px)/1 var(--display);text-transform:uppercase;margin:0;letter-spacing:.005em;text-wrap:balance}
+.kicker{font:500 13px/1 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--orange-ink);margin:0 0 8px}
+nav.tabs{display:flex;gap:0;border-bottom:3px solid var(--brown);margin-bottom:22px;overflow-x:auto}
+nav.tabs a{font:600 16px/1 var(--display);text-transform:uppercase;letter-spacing:.04em;padding:12px 16px 11px;color:var(--muted);text-decoration:none;white-space:nowrap;border:0}
+nav.tabs a[aria-current="page"]{background:var(--brown);color:#fff}
+nav.tabs a:hover:not([aria-current="page"]){color:var(--ink);background:var(--sunk)}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+.desk{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:20px;align-items:start}
+@media (max-width:860px){.desk{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);padding:18px}
+.card h2{font:600 19px/1.2 var(--display);text-transform:uppercase;margin:0 0 4px;letter-spacing:.02em}
+.card h3{font:600 14px/1.2 var(--display);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 10px}
+.sub{color:var(--muted);margin:0 0 14px;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{font:500 13px/1 var(--body);padding:8px 11px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--brown);border-color:var(--brown);color:#fff}
+.brief{background:var(--sunk);border-left:4px solid var(--orange);padding:10px 12px;margin-bottom:14px;font-size:14px}
+.brief strong{font-family:var(--display);font-weight:600;letter-spacing:.02em;text-transform:uppercase}
+.field{display:grid;gap:4px;margin-bottom:12px}
+.field label,.lbl{font:600 12px/1.2 var(--body);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+input[type=number],select{font:600 16px var(--mono);padding:8px 10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%;font-variant-numeric:tabular-nums}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:2px solid var(--brown)}
+.seg button{font:600 14px/1.2 var(--display);text-transform:uppercase;letter-spacing:.04em;padding:10px 6px;border:0;background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--brown);color:#fff}
+.slider{background:var(--brown);color:#fff;padding:14px 16px;margin-bottom:16px}
+.slider .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.slider .lbl{color:#E6E6E6}
+.slider output{font:600 30px/1 var(--mono);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--orange);margin-top:10px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:14px}
+.stat{background:var(--surface);padding:12px 14px;display:grid;gap:4px;align-content:start}
+.stat .v{font:600 22px/1.1 var(--mono);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.stat .n{font-size:12px;color:var(--muted);font-family:var(--mono);overflow-wrap:anywhere}
+.stat.hl{background:var(--sunk)}
+.pos{color:var(--gain)} .neg{color:var(--loss)}
+.verdict{padding:12px 14px;font-size:15px;border:1px solid}
+.verdict.good{background:var(--gain-bg);border-color:var(--gain);color:var(--ink)}
+.verdict.bad{background:var(--loss-bg);border-color:var(--loss);color:var(--ink)}
+.verdict.neutral{background:var(--sunk);border-color:var(--line)}
+.verdict b{font-family:var(--display);font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-right:4px}
+.math{font:13px/1.6 var(--mono);color:var(--muted);background:var(--sunk);padding:10px 12px;margin-top:12px;overflow-x:auto;white-space:pre}
+.chart{width:100%;height:auto;display:block;margin-top:4px}
+.chart text{font:11px var(--mono);fill:var(--muted)}
+table.sw{width:100%;border-collapse:collapse;font-size:14px}
+.tbl{overflow-x:auto;margin-bottom:14px}
+table.sw th{font:600 12px var(--body);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;padding:8px;border-bottom:2px solid var(--brown)}
+table.sw td{padding:10px 8px;border-bottom:1px solid var(--line);font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+table.sw td:first-child{font-family:var(--body);font-weight:700;white-space:normal}
+.timeline{display:flex;gap:4px;margin:6px 0 14px;flex-wrap:wrap}
+.yr{flex:1 1 52px;min-width:52px;padding:8px 6px;text-align:center;font:600 12px/1.3 var(--mono);border:1px solid var(--line);background:var(--sunk);color:var(--muted)}
+.yr.paid{background:var(--orange);color:var(--on-orange);border-color:var(--orange)}
+.yr.def{background:var(--brown);color:#fff;border-color:var(--brown)}
+.yr span{display:block;font:500 11px var(--display);letter-spacing:.06em;text-transform:uppercase}
+.rule{font:500 13px/1.4 var(--display);letter-spacing:.03em;text-transform:uppercase;display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.rule span{background:var(--sunk);padding:6px 9px;border:1px solid var(--line)}
+/* practice */
+.practice{margin-top:22px;border-top:9px solid var(--brown);background:var(--surface);border-left:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:18px}
+.practice .head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.practice h2{font:600 19px/1.2 var(--display);text-transform:uppercase;margin:0}
+.streak{font:600 13px var(--mono);color:var(--muted)}
+.q{font-size:16px;margin:0 0 12px;max-width:75ch}
+.opts{display:grid;gap:8px;max-width:520px}
+.opt{display:flex;gap:10px;align-items:center;text-align:left;font:15px var(--body);padding:10px 12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+.opt b{font-family:var(--display);min-width:18px}
+.opt.right{border-color:var(--gain);background:var(--gain-bg)}
+.opt.wrong{border-color:var(--loss);background:var(--loss-bg)}
+.opt:disabled{cursor:default}
+.fb{margin-top:12px}
+.btn{font:600 14px/1 var(--display);text-transform:uppercase;letter-spacing:.05em;padding:11px 16px;border:0;background:var(--orange);color:var(--on-orange);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--brown)}
+footer{margin-top:28px;color:var(--muted);font-size:13px}
+@media (prefers-reduced-motion:no-preference){.stat .v,.verdict{transition:color .15s,background .15s}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div>
+    <p class="kicker"><a href="/" style="color:inherit">District 214 Finance &amp; Investing</a> · Unit 5: Derivatives · Practice</p>
+    <h1>The Hedging Desk</h1>
+  </div>
+  <div class="band" aria-hidden="true"><i></i><b>Finance &amp; Investing</b><i></i></div>
+</header>
+
+<nav class="tabs" aria-label="Desks">
+  <a href="#futures" data-tab="futures">Futures</a>
+  <a href="#options" data-tab="options">Options</a>
+  <a href="#swaps" data-tab="swaps">Swaps</a>
+  <a href="#cds" data-tab="cds">Credit Default Swaps</a>
+</nav>
+
+<!-- FUTURES -->
+<section id="p-futures" class="panel">
+  <div class="desk">
+    <div class="card">
+      <h2>Futures Ticket</h2>
+      <p class="sub">Pick a business, choose the side that protects it, then move the delivery price.</p>
+      <div class="chips" id="fu-chips"></div>
+      <div class="brief" id="fu-brief"></div>
+      <div class="field"><span class="lbl">Your trade</span>
+        <div class="seg" role="group" aria-label="Futures side">
+          <button type="button" id="fu-long">Buy futures (long)</button>
+          <button type="button" id="fu-short">Sell futures (short)</button>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="fu-f">Futures price</label><input type="number" id="fu-f" step="0.01" min="0.01"></div>
+        <div class="field"><label for="fu-q">Quantity</label><input type="number" id="fu-q" step="1000" min="1"></div>
+      </div>
+    </div>
+    <div>
+      <div class="slider">
+        <div class="top"><span class="lbl">Market price at delivery</span><output id="fu-s-out"></output></div>
+        <input type="range" id="fu-s" aria-label="Market price at delivery">
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="lbl">Futures gain / loss</span><span class="v" id="fu-pnl"></span><span class="n" id="fu-pnl-n"></span></div>
+        <div class="stat"><span class="lbl" id="fu-cash-l">Cash market</span><span class="v" id="fu-cash"></span><span class="n" id="fu-cash-n"></span></div>
+        <div class="stat hl"><span class="lbl" id="fu-eff-l">Effective price</span><span class="v" id="fu-eff"></span><span class="n" id="fu-eff-n"></span></div>
+      </div>
+      <div class="verdict" id="fu-verdict"></div>
+      <div class="math" id="fu-math"></div>
+    </div>
+  </div>
+  <div class="practice" data-desk="futures"></div>
+</section>
+
+<!-- OPTIONS -->
+<section id="p-options" class="panel" hidden>
+  <div class="desk">
+    <div class="card">
+      <h2>Options Ticket</h2>
+      <p class="sub">Every contract covers 100 shares. You are always the buyer, so the premium is the most you can lose on the option.</p>
+      <div class="chips" id="op-chips"></div>
+      <div class="brief" id="op-brief"></div>
+      <div class="row2">
+        <div class="field"><label for="op-k">Strike price</label><input type="number" id="op-k" step="0.5" min="1"></div>
+        <div class="field"><label for="op-p">Premium per share</label><input type="number" id="op-p" step="0.25" min="0"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="op-n">Contracts</label><input type="number" id="op-n" step="1" min="1"></div>
+        <div class="field" id="op-cost-f"><label for="op-cost">Share purchase price</label><input type="number" id="op-cost" step="0.5" min="1"></div>
+      </div>
+    </div>
+    <div>
+      <div class="slider">
+        <div class="top"><span class="lbl">HRSY at expiration</span><output id="op-s-out"></output></div>
+        <input type="range" id="op-s" aria-label="Stock price at expiration">
+      </div>
+      <div class="stats" id="op-stats"></div>
+      <div class="card" style="padding:12px 14px;margin-bottom:14px">
+        <h3 id="op-chart-h">Profit or loss at expiration</h3>
+        <svg class="chart" id="op-chart" viewBox="0 0 640 250" role="img" aria-label="Payoff chart"></svg>
+      </div>
+      <div class="verdict" id="op-verdict"></div>
+      <div class="math" id="op-math"></div>
+    </div>
+  </div>
+  <div class="practice" data-desk="options"></div>
+</section>
+
+<!-- SWAPS -->
+<section id="p-swaps" class="panel" hidden>
+  <div class="desk">
+    <div class="card">
+      <h2>Interest Rate Swap</h2>
+      <p class="sub">Two companies with the same size loan trade interest payments. After the swap, each one pays what the other used to pay.</p>
+      <div class="brief"><strong>The deal.</strong> Bison Logistics has a variable loan and wants a predictable payment. Lakes Corp has a fixed loan and is willing to take on the variable rate.</div>
+      <div class="field"><label for="sw-n">Loan size (each company)</label><input type="number" id="sw-n" step="1000000" min="1000000"></div>
+      <div class="row2">
+        <div class="field"><label for="sw-sp">Bison spread over fed funds (%)</label><input type="number" id="sw-sp" step="0.25" min="0"></div>
+        <div class="field"><label for="sw-fx">Lakes fixed rate (%)</label><input type="number" id="sw-fx" step="0.25" min="0"></div>
+      </div>
+    </div>
+    <div>
+      <div class="slider">
+        <div class="top"><span class="lbl">Federal Funds Rate</span><output id="sw-r-out"></output></div>
+        <input type="range" id="sw-r" min="0" max="10" step="0.25" aria-label="Federal Funds Rate">
+      </div>
+      <div class="tbl"><table class="sw">
+        <thead><tr><th>Company</th><th>Paid before swap</th><th>Pays after swap</th><th>Result of swap</th></tr></thead>
+        <tbody id="sw-body"></tbody>
+      </table></div>
+      <div class="verdict" id="sw-verdict"></div>
+      <div class="rule"><span>Rates rise: fixed-rate payer wins</span><span>Rates fall: floating-rate payer wins</span></div>
+      <div class="math" id="sw-math"></div>
+    </div>
+  </div>
+  <div class="practice" data-desk="swaps"></div>
+</section>
+
+<!-- CDS -->
+<section id="p-cds" class="panel" hidden>
+  <div class="desk">
+    <div class="card">
+      <h2>Credit Default Swap</h2>
+      <p class="sub">You own Northside Retail bonds and buy insurance against default. You pay a premium every year. If Northside defaults, the CDS pays you the full face value.</p>
+      <div class="row2">
+        <div class="field"><label for="cd-n">Bonds insured (face value)</label><input type="number" id="cd-n" step="1000000" min="1000000"></div>
+        <div class="field"><label for="cd-t">Years of protection</label><input type="number" id="cd-t" step="1" min="1" max="10"></div>
+      </div>
+      <div class="field"><label for="cd-r">Northside credit rating</label>
+        <select id="cd-r">
+          <option value="0.5">AAA · premium 0.5% per year</option>
+          <option value="1">A · premium 1.0% per year</option>
+          <option value="1.5" selected>BBB · premium 1.5% per year</option>
+          <option value="2">BB · premium 2.0% per year</option>
+          <option value="3">B · premium 3.0% per year</option>
+          <option value="5">CCC · premium 5.0% per year</option>
+        </select>
+      </div>
+      <div class="field"><span class="lbl">Does Northside default?</span>
+        <div class="seg" role="group" aria-label="Default">
+          <button type="button" id="cd-no">No default</button>
+          <button type="button" id="cd-yes">Defaults</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="slider" id="cd-yr-box">
+        <div class="top"><span class="lbl">Default happens after year</span><output id="cd-y-out"></output></div>
+        <input type="range" id="cd-y" min="1" max="5" step="1" aria-label="Default after year">
+      </div>
+      <div class="timeline" id="cd-time"></div>
+      <div class="stats" id="cd-stats"></div>
+      <div class="verdict" id="cd-verdict"></div>
+      <div class="rule"><span>Worse credit: higher premium</span><span>Better credit: lower premium</span></div>
+      <div class="math" id="cd-math"></div>
+    </div>
+  </div>
+  <div class="practice" data-desk="cds"></div>
+</section>
+
+<footer>Numbers follow the course rules: futures settle once at delivery, option buyers only, premiums are given, and a CDS pays full face value on default.</footer>
+</div>
+
+<script>
+/* ---------- pure math (mirrors the test) ---------- */
+const M = {
+  futPnl(side, F, S, q){ return (side==='long' ? (S-F) : (F-S)) * q; },
+  callPayoff(K,S){ return Math.max(S-K,0); },
+  putPayoff(K,S){ return Math.max(K-S,0); },
+  swap(n, ff, spread, fixed){
+    const xBefore = n*(ff+spread)/100, yBefore = n*fixed/100;
+    return {xBefore, yBefore, xAfter:yBefore, yAfter:xBefore, xGain:xBefore-yBefore, yGain:yBefore-xBefore};
+  },
+  cds(n, ratePct, years, def, defYear){
+    const annual = n*ratePct/100;
+    const paidYears = def ? Math.min(defYear, years) : years;
+    const paid = annual*paidYears, payout = def ? n : 0;
+    return {annual, paid, payout, net: payout-paid, paidYears};
+  }
+};
+
+/* ---------- formatting ---------- */
+const r2 = x => Math.round(x*100)/100;
+function money(x, cents){
+  const a = Math.abs(r2(x));
+  const d = (cents || a % 1 !== 0) ? 2 : 0;
+  return '$' + a.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+}
+const signed = x => (r2(x) > 0 ? '+' : r2(x) < 0 ? '−' : '') + money(x);
+const gl = x => r2(x) > 0 ? 'Gain of ' + money(x) : r2(x) < 0 ? 'Loss of ' + money(x) : 'Break even';
+const cls = x => r2(x) > 0 ? 'v pos' : r2(x) < 0 ? 'v neg' : 'v';
+const num = x => Math.abs(x).toLocaleString('en-US');
+const $ = id => document.getElementById(id);
+const val = (id, d) => { const v = parseFloat($(id).value); return isFinite(v) ? v : d; };
+function setStat(id, x){ const el=$(id); el.textContent = signed(x); el.className = cls(x); }
+function verdict(id, kind, head, text){ const el=$(id); el.className='verdict '+kind; el.innerHTML='<b>'+head+'</b> '+text; }
+
+/* ---------- tabs ---------- */
+const TABS = ['futures','options','swaps','cds'];
+function showTab(){
+  let t = (location.hash||'').slice(1); if(!TABS.includes(t)) t='futures';
+  TABS.forEach(k => { $('p-'+k).hidden = k!==t; });
+  document.querySelectorAll('nav.tabs a').forEach(a => { if(a.dataset.tab===t) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current'); });
+}
+window.addEventListener('hashchange', showTab);
+
+/* ---------- FUTURES DESK ---------- */
+const FU = [
+  {id:'cereal', name:'Cereal maker', who:'Prairie Crunch Cereal', act:'buy', item:'wheat', unit:'bushel', units:'bushels', q:10000, F:6.50, spot:6.30, worry:'Drought reports could push wheat well above $8.'},
+  {id:'coffee', name:'Coffee grower', who:'Alto Verde Coffee', act:'sell', item:'coffee beans', unit:'pound', units:'pounds', q:20000, F:2.10, spot:2.15, worry:'A record harvest in Brazil could crush prices. Hedged with 4 contracts of 5,000 pounds each.'},
+  {id:'trucking', name:'Trucking company', who:'Route 53 Freight', act:'buy', item:'diesel', unit:'gallon', units:'gallons', q:50000, F:3.20, spot:3.10, worry:'A refinery outage could send diesel past $4.'},
+  {id:'soy', name:'Soybean farmer', who:'Lindqvist Family Farm', act:'sell', item:'soybeans', unit:'bushel', units:'bushels', q:20000, F:11.00, spot:11.20, worry:'Big harvests across the Midwest could drop prices at harvest time.'}
+];
+let fu = {sc:FU[0], side:null};
+function fuLoad(sc){
+  fu.sc = sc; fu.side = null;
+  $('fu-f').value = sc.F; $('fu-q').value = sc.q;
+  const s = $('fu-s'); s.min = r2(sc.F*0.6); s.max = r2(sc.F*1.4); s.step = sc.F < 5 ? 0.05 : 0.10; s.value = sc.F;
+  document.querySelectorAll('#fu-chips .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.id===sc.id));
+  $('fu-brief').innerHTML = '<strong>'+sc.who+'</strong><br>Plans to <b>'+sc.act+'</b> '+num(sc.q)+' '+sc.units+' of '+sc.item+' in three months. Today '+sc.item+' trades at '+money(sc.spot,true)+' per '+sc.unit+'. '+sc.worry;
+  fuRender();
+}
+function fuRender(){
+  const sc = fu.sc, F = val('fu-f', sc.F), q = val('fu-q', sc.q), S = parseFloat($('fu-s').value);
+  $('fu-s-out').textContent = money(S,true);
+  $('fu-long').setAttribute('aria-pressed', fu.side==='long');
+  $('fu-short').setAttribute('aria-pressed', fu.side==='short');
+  const buyer = sc.act==='buy';
+  $('fu-cash-l').textContent = buyer ? 'Cost in the cash market' : 'Sales in the cash market';
+  $('fu-cash').textContent = money(S*q); $('fu-cash').className='v';
+  $('fu-cash-n').textContent = num(q)+' × '+money(S,true);
+  $('fu-eff-l').textContent = buyer ? 'Effective cost per '+sc.unit : 'Effective price per '+sc.unit;
+  if(!fu.side){
+    $('fu-pnl').textContent='Pick a side'; $('fu-pnl').className='v'; $('fu-pnl-n').textContent='';
+    $('fu-eff').textContent = money(S,true); $('fu-eff').className='v';
+    $('fu-eff-n').textContent = 'Unhedged: you take the market price';
+    verdict('fu-verdict','neutral','Your call.', sc.who+' needs to '+sc.act+' '+sc.item+'. Which futures position protects it from a bad price?');
+    $('fu-math').textContent = 'Long futures:  (Delivery price − Futures price) × Quantity\nShort futures: (Futures price − Delivery price) × Quantity';
+    return;
+  }
+  const pnl = M.futPnl(fu.side, F, S, q);
+  setStat('fu-pnl', pnl);
+  $('fu-pnl-n').textContent = gl(pnl);
+  const eff = buyer ? (S*q - pnl)/q : (S*q + pnl)/q;
+  $('fu-eff').textContent = money(eff,true); $('fu-eff').className='v';
+  $('fu-eff-n').textContent = (buyer?'Cash cost − futures gain':'Cash sales + futures gain');
+  const right = (buyer && fu.side==='long') || (!buyer && fu.side==='short');
+  if(right){
+    let extra = '';
+    if(r2(pnl) < 0) extra = ' The futures lost money, but the cash market was better by the same amount. That is the hedge doing its job.';
+    else if(r2(pnl) > 0) extra = ' The cash market went against you, and the futures gain covered it.';
+    verdict('fu-verdict','good','Hedged.', 'Locked in at '+money(F,true)+' per '+sc.unit+' no matter where the market goes.'+extra);
+  } else {
+    verdict('fu-verdict','bad','Wrong side.', 'A '+(buyer?'buyer':'seller')+' who '+(fu.side==='long'?'buys':'sells')+' futures adds risk instead of removing it. When the cash market hurts you, the futures hurt you too. Effective price: '+money(eff,true)+' versus a locked '+money(F,true)+'.');
+  }
+  const d = fu.side==='long' ? '('+money(S,true)+' − '+money(F,true)+')' : '('+money(F,true)+' − '+money(S,true)+')';
+  $('fu-math').textContent = (fu.side==='long'?'Long':'Short')+' futures: '+d+' × '+num(q)+' = '+signed(pnl)+'\n'+
+    (buyer ? 'Effective cost: '+money(S*q)+' − ('+signed(pnl)+') = '+money(eff*q)+'  →  '+money(eff,true)+' per '+sc.unit
+           : 'Effective sales: '+money(S*q)+' + ('+signed(pnl)+') = '+money(eff*q)+'  →  '+money(eff,true)+' per '+sc.unit);
+}
+$('fu-chips').innerHTML = FU.map(s=>'<button type="button" class="chip" data-id="'+s.id+'">'+s.name+'</button>').join('');
+$('fu-chips').addEventListener('click', e => { const b=e.target.closest('.chip'); if(b) fuLoad(FU.find(s=>s.id===b.dataset.id)); });
+$('fu-long').onclick = () => { fu.side='long'; fuRender(); };
+$('fu-short').onclick = () => { fu.side='short'; fuRender(); };
+['fu-f','fu-q','fu-s'].forEach(id => $(id).addEventListener('input', fuRender));
+
+/* ---------- OPTIONS DESK ---------- */
+const OP = [
+  {id:'call', name:'Speculate: buy a call', brief:'HRSY trades at $48. You think good news is coming, so you buy a $50 call for $2.00 per share.', K:50, p:2, n:1, cost:48, S:48},
+  {id:'put', name:'Bet on a drop: buy a put', brief:'HRSY trades at $50. You expect a bad earnings report, so you buy a $52 put for $3.00 per share.', K:52, p:3, n:1, cost:50, S:50},
+  {id:'prot', name:'Protect shares: protective put', brief:'You bought 100 shares of HRSY at $50. To limit your downside, you buy a $46 put for $1.50 per share.', K:46, p:1.5, n:1, cost:50, S:50}
+];
+let op = {sc:OP[0]};
+function opLoad(sc){
+  op.sc = sc;
+  $('op-k').value = sc.K; $('op-p').value = sc.p; $('op-n').value = sc.n; $('op-cost').value = sc.cost;
+  $('op-cost-f').hidden = sc.id!=='prot';
+  const s=$('op-s'); s.min = Math.max(1, Math.round(sc.K*0.6)); s.max = Math.round(sc.K*1.4); s.step=0.5; s.value=sc.S;
+  document.querySelectorAll('#op-chips .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.id===sc.id));
+  $('op-brief').textContent = sc.brief;
+  opRender();
+}
+function opCalc(type, K, p, sh, cost, S){
+  const pay = type==='call' ? M.callPayoff(K,S) : M.putPayoff(K,S);
+  const optNet = (pay - p)*sh;
+  const stock = type==='prot' ? (S-cost)*sh : 0;
+  return {pay:pay*sh, prem:p*sh, optNet, stock, total: optNet+stock};
+}
+function opRender(){
+  const t = op.sc.id, K=val('op-k',op.sc.K), p=val('op-p',op.sc.p), n=Math.max(1,Math.round(val('op-n',1))), cost=val('op-cost',op.sc.cost);
+  const sh = n*100, S = parseFloat($('op-s').value);
+  $('op-s-out').textContent = money(S,true);
+  const c = opCalc(t,K,p,sh,cost,S);
+  const be = t==='call' ? K+p : K-p;
+  const tile = (l,v,n,k) => '<div class="stat'+(k?' hl':'')+'"><span class="lbl">'+l+'</span><span class="'+v[1]+'">'+v[0]+'</span><span class="n">'+n+'</span></div>';
+  let html = '';
+  html += tile('Option payoff', [money(c.pay),'v'], t==='call'?'max(Price − Strike, 0) × '+sh:'max(Strike − Price, 0) × '+sh);
+  html += tile('Premium paid', [money(c.prem),'v neg'], money(p,true)+' × '+sh+' shares');
+  if(t==='prot'){
+    html += tile('Stock gain / loss', [signed(c.stock),cls(c.stock)], '('+money(S,true)+' − '+money(cost,true)+') × '+sh);
+    html += tile('Net position', [signed(c.total),cls(c.total)], 'Stock + payoff − premium', true);
+    html += tile('Put breakeven (option alone)', [money(be,true),'v'], 'Strike − premium');
+    html += tile('Net value of shares + put', [money(S*sh + c.pay - c.prem),'v'], 'Share value + payoff − premium');
+  } else {
+    html += tile('Net profit', [signed(c.optNet),cls(c.optNet)], 'Payoff − premium', true);
+    html += tile('Breakeven price', [money(be,true),'v'], t==='call'?'Strike + premium':'Strike − premium');
+    html += tile('Maximum loss', [money(c.prem),'v'], 'The premium paid');
+  }
+  $('op-stats').innerHTML = html;
+  // verdict
+  if(t==='prot'){
+    const floor = (K-cost-p)*sh;
+    verdict('op-verdict', S<K?'good':'neutral', S<K?'Protected.':'Insurance unused.',
+      S<K ? 'Below '+money(K,true)+' the put gains a dollar for every dollar the stock loses. Your worst case is '+signed(floor)+', no matter how far HRSY falls.'
+          : 'HRSY stayed above the '+money(K,true)+' strike, so the put expires worthless. You keep any stock gains, minus the '+money(c.prem)+' you paid for protection.');
+  } else {
+    const itm = t==='call' ? S>K : S<K;
+    const prof = r2(c.optNet)>0;
+    verdict('op-verdict', prof?'good':(itm?'neutral':'bad'), prof?'In the money, profitable.':(itm?'In the money, not profitable yet.':'Out of the money.'),
+      prof ? 'The payoff is larger than the premium you paid.'
+      : itm ? 'The option has value, but not enough to cover the premium. You need HRSY '+(t==='call'?'above ':'below ')+money(be,true)+' to profit.'
+      : 'The option expires worthless. Your loss stops at the premium: '+money(c.prem)+'.');
+  }
+  $('op-math').textContent = t==='call'
+    ? 'Payoff:  max('+money(S,true)+' − '+money(K,true)+', 0) × '+sh+' = '+money(c.pay)+'\nNet:     '+money(c.pay)+' − '+money(c.prem)+' = '+signed(c.optNet)
+    : t==='put'
+    ? 'Payoff:  max('+money(K,true)+' − '+money(S,true)+', 0) × '+sh+' = '+money(c.pay)+'\nNet:     '+money(c.pay)+' − '+money(c.prem)+' = '+signed(c.optNet)
+    : 'Stock:   ('+money(S,true)+' − '+money(cost,true)+') × '+sh+' = '+signed(c.stock)+'\nPut:     max('+money(K,true)+' − '+money(S,true)+', 0) × '+sh+' = '+money(c.pay)+'\nNet:     '+signed(c.stock)+' + '+money(c.pay)+' − '+money(c.prem)+' = '+signed(c.total);
+  opChart(t,K,p,sh,cost,S, t==='prot'? cost+p : be);
+}
+function opChart(t,K,p,sh,cost,S,be){
+  const svg=$('op-chart'), W=640,H=250, L=64,R=16,T=16,B=34;
+  const lo=parseFloat($('op-s').min), hi=parseFloat($('op-s').max);
+  const f = x => opCalc(t,K,p,sh,cost,x).total;
+  const xs=[]; for(let i=0;i<=80;i++) xs.push(lo+(hi-lo)*i/80);
+  const ys=xs.map(f); let ymin=Math.min(0,...ys), ymax=Math.max(0,...ys);
+  const pad=(ymax-ymin)*0.1||100; ymin-=pad; ymax+=pad;
+  const X=x=>L+(x-lo)/(hi-lo)*(W-L-R), Y=y=>T+(ymax-y)/(ymax-ymin)*(H-T-B);
+  let g='';
+  // y ticks
+  const step = niceStep((ymax-ymin)/4);
+  for(let v=Math.ceil(ymin/step)*step; v<=ymax; v+=step){
+    g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--line)" stroke-width="1"/>';
+    g+='<text x="'+(L-6)+'" y="'+(Y(v)+4)+'" text-anchor="end">'+(v<0?'−':'')+'$'+Math.abs(v).toLocaleString('en-US')+'</text>';
+  }
+  g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(0)+'" y2="'+Y(0)+'" stroke="var(--muted)" stroke-width="1.5"/>';
+  // x ticks
+  const xstep = niceStep((hi-lo)/6);
+  for(let v=Math.ceil(lo/xstep)*xstep; v<=hi; v+=xstep) g+='<text x="'+X(v)+'" y="'+(H-12)+'" text-anchor="middle">$'+v+'</text>';
+  // area + line
+  const pts = xs.map((x,i)=>X(x).toFixed(1)+','+Y(ys[i]).toFixed(1));
+  g+='<polygon points="'+X(lo)+','+Y(0)+' '+pts.join(' ')+' '+X(hi)+','+Y(0)+'" fill="var(--orange)" fill-opacity=".12"/>';
+  g+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="var(--orange)" stroke-width="3" stroke-linejoin="round"/>';
+  // strike + breakeven
+  if(K>=lo&&K<=hi) g+='<line x1="'+X(K)+'" x2="'+X(K)+'" y1="'+T+'" y2="'+(H-B)+'" stroke="var(--brown)" stroke-dasharray="4 4"/><text x="'+(X(K)+4)+'" y="'+(T+10)+'">strike</text>';
+  if(be>=lo&&be<=hi) g+='<circle cx="'+X(be)+'" cy="'+Y(0)+'" r="4" fill="var(--surface)" stroke="var(--ink)" stroke-width="2"/><text x="'+(X(be)+(X(be)>W-170?-8:8))+'" y="'+(Y(0)-10)+'" text-anchor="'+(X(be)>W-170?'end':'start')+'">breakeven '+money(be,true)+'</text>';
+  const yS=f(S);
+  g+='<circle cx="'+X(S)+'" cy="'+Y(yS)+'" r="6" fill="var(--orange)" stroke="var(--surface)" stroke-width="2"/>';
+  svg.innerHTML=g;
+}
+function niceStep(raw){ const p=Math.pow(10,Math.floor(Math.log10(raw||1))); const m=raw/p; return (m<=1?1:m<=2?2:m<=5?5:10)*p; }
+$('op-chips').innerHTML = OP.map(s=>'<button type="button" class="chip" data-id="'+s.id+'">'+s.name+'</button>').join('');
+$('op-chips').addEventListener('click', e => { const b=e.target.closest('.chip'); if(b) opLoad(OP.find(s=>s.id===b.dataset.id)); });
+['op-k','op-p','op-n','op-cost','op-s'].forEach(id => $(id).addEventListener('input', opRender));
+
+/* ---------- SWAPS DESK ---------- */
+function swRender(){
+  const n=val('sw-n',10e6), sp=val('sw-sp',1.5), fx=val('sw-fx',6), ff=parseFloat($('sw-r').value);
+  $('sw-r-out').textContent = ff.toFixed(2)+'%';
+  const s = M.swap(n,ff,sp,fx);
+  const res = g => r2(g)>0 ? '<span class="pos">Saves '+money(g)+'</span>' : r2(g)<0 ? '<span class="neg">Costs '+money(g)+' more</span>' : 'Even';
+  $('sw-body').innerHTML =
+    '<tr><td>Bison Logistics<br><small style="font-weight:400;color:var(--muted)">variable loan, now pays fixed</small></td><td>'+money(s.xBefore)+'<br><small>FF + '+sp+'% = '+r2(ff+sp)+'%</small></td><td>'+money(s.xAfter)+'<br><small>fixed '+fx+'%</small></td><td>'+res(s.xGain)+'</td></tr>'+
+    '<tr><td>Lakes Corp<br><small style="font-weight:400;color:var(--muted)">fixed loan, now pays variable</small></td><td>'+money(s.yBefore)+'<br><small>fixed '+fx+'%</small></td><td>'+money(s.yAfter)+'<br><small>FF + '+sp+'% = '+r2(ff+sp)+'%</small></td><td>'+res(s.yGain)+'</td></tr>';
+  const cross = r2(fx-sp);
+  if(r2(s.xGain)>0) verdict('sw-verdict','good','Bison wins by '+money(s.xGain)+'.','Rates are high enough that the variable rate ('+r2(ff+sp)+'%) costs more than '+fx+'% fixed. Bison locked in fixed payments right in time.');
+  else if(r2(s.yGain)>0) verdict('sw-verdict','good','Lakes wins by '+money(s.yGain)+'.','The variable rate ('+r2(ff+sp)+'%) is below the '+fx+'% fixed rate, so the floating-rate payer comes out ahead. Bison paid '+money(-s.xGain)+' extra for predictable payments.');
+  else verdict('sw-verdict','neutral','Neither benefits.','At '+ff.toFixed(2)+'% the variable rate equals the fixed rate, so both companies pay the same as before.');
+  $('sw-math').textContent = 'Bison after swap: '+money(n)+' × '+fx+'% = '+money(s.xAfter)+'\nLakes after swap: '+money(n)+' × ('+ff+'% + '+sp+'%) = '+money(s.yAfter)+'\nThe swap is even when fed funds = '+fx+'% − '+sp+'% = '+cross+'%';
+}
+['sw-n','sw-sp','sw-fx','sw-r'].forEach(id => $(id).addEventListener('input', swRender));
+
+/* ---------- CDS DESK ---------- */
+let cdDef = false;
+function cdRender(){
+  const n=val('cd-n',5e6), t=Math.min(10,Math.max(1,Math.round(val('cd-t',5)))), rate=parseFloat($('cd-r').value);
+  const y=$('cd-y'); y.max=t; if(+y.value>t) y.value=t;
+  const dy=parseInt(y.value,10);
+  $('cd-y-out').textContent = 'Year '+dy;
+  $('cd-yr-box').hidden = !cdDef;
+  $('cd-no').setAttribute('aria-pressed', !cdDef); $('cd-yes').setAttribute('aria-pressed', cdDef);
+  const c = M.cds(n,rate,t,cdDef,dy);
+  let tl='';
+  for(let i=1;i<=t;i++){
+    if(cdDef && i===dy) tl+='<div class="yr def"><span>Year '+i+'</span>Paid + default</div>';
+    else if(i<=c.paidYears) tl+='<div class="yr paid"><span>Year '+i+'</span>'+money(c.annual)+'</div>';
+    else tl+='<div class="yr"><span>Year '+i+'</span>Contract over</div>';
+  }
+  $('cd-time').innerHTML=tl;
+  const tile=(l,v,k,nn)=>'<div class="stat'+(nn?' hl':'')+'"><span class="lbl">'+l+'</span><span class="'+k+'">'+v+'</span></div>';
+  $('cd-stats').innerHTML = tile('Annual premium',money(c.annual),'v')+tile('Total premiums paid',money(c.paid),'v neg')+tile('CDS payout',money(c.payout),c.payout?'v pos':'v')+tile('Net gain / loss',signed(c.net),cls(c.net),true);
+  if(cdDef) verdict('cd-verdict','good','Insurance paid off.','Northside defaulted, so the CDS pays the full '+money(n)+'. After '+c.paidYears+' years of premiums, you come out '+money(c.net)+' ahead on the CDS.');
+  else verdict('cd-verdict','neutral','No default.','The CDS never paid, so your total cost of protection is '+money(c.paid)+'. Like car insurance, the cost of being protected is the premium.');
+  $('cd-math').textContent = 'Annual premium: '+money(n)+' × '+rate+'% = '+money(c.annual)+'\nPremiums paid:  '+money(c.annual)+' × '+c.paidYears+' years = '+money(c.paid)+
+    (cdDef ? '\nNet gain:       '+money(n)+' − '+money(c.paid)+' = '+money(c.net) : '\nTotal cost:     '+money(c.paid));
+}
+$('cd-no').onclick=()=>{cdDef=false;cdRender();};
+$('cd-yes').onclick=()=>{cdDef=true;cdRender();};
+['cd-n','cd-t','cd-r','cd-y'].forEach(id => $(id).addEventListener('input', cdRender));
+
+/* ---------- PRACTICE GENERATORS ---------- */
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const ri = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function build(q, correct, wrongs, why){
+  const seen=new Set([correct]), opts=[correct];
+  for(const w of wrongs){ if(opts.length===4) break; if(!seen.has(w)){seen.add(w);opts.push(w);} }
+  return {q, opts:shuffle(opts), correct, why};
+}
+const GEN = {
+  futures(){
+    if(Math.random()<0.25) return pick([
+      ()=>build('A chocolate company is worried cocoa prices will rise before it buys next season. What futures position hedges that risk?','Buy cocoa futures (long)',['Sell cocoa futures (short)','Buy a put option on cocoa','No hedge is possible'],'A future buyer is hurt by rising prices. A long futures position gains when prices rise, which offsets the higher cost.'),
+      ()=>build('A business hedges with futures and prices move in its favor in the cash market. What happens on the futures contract?','It loses money, offsetting the cash market savings',['It also gains money','It is cancelled automatically','It pays a dividend'],'A hedge locks in a price. When the cash market helps you, the futures position loses about the same amount.'),
+      ()=>build('Who is most likely to SELL futures as a hedge?','A farmer who will harvest and sell a crop',['An airline that buys jet fuel','A bakery that buys flour','A restaurant that buys beef'],'Sellers of a commodity fear falling prices. A short futures position gains when prices fall.')
+    ])();
+    const sc = pick([
+      {w:'An oil refiner',a:'buy',it:'crude oil',u:'barrel',q:[5000,10000,20000],F:[70,75,80]},
+      {w:'A cattle rancher',a:'sell',it:'cattle',u:'pound',q:[50000,100000],F:[1.80,2.00,2.40]},
+      {w:'A bakery',a:'buy',it:'wheat',u:'bushel',q:[10000,20000,50000],F:[6.00,6.50,7.00]},
+      {w:'A corn farmer',a:'sell',it:'corn',u:'bushel',q:[10000,20000,40000],F:[4.00,4.50,5.00]},
+      {w:'An airline',a:'buy',it:'jet fuel',u:'gallon',q:[100000,200000],F:[2.50,3.00]},
+      {w:'A coffee grower',a:'sell',it:'coffee',u:'pound',q:[10000,20000,40000],F:[1.60,2.00,2.20]}
+    ]);
+    const q=pick(sc.q), F=pick(sc.F), side=sc.a==='buy'?'long':'short';
+    const moves = F>=10 ? [5,10,15] : F>=4 ? [0.25,0.50,1.00] : [0.10,0.20,0.30,0.50];
+    const S = r2(F + pick(moves)*pick([-1,1]));
+    const pnl = M.futPnl(side,F,S,q);
+    const verb = sc.a==='buy' ? 'buys' : 'sells';
+    const qt = sc.w+' plans to '+sc.a+' '+num(q)+' '+sc.u+'s of '+sc.it+'. To hedge, it '+verb+' futures at '+money(F,true)+' per '+sc.u+'. At delivery, '+sc.it+' trades at '+money(S,true)+'. What is the gain or loss on the futures position?';
+    return build(qt, gl(pnl), [gl(-pnl), gl(pnl*2), gl(-pnl*2), gl(pnl/2)],
+      (side==='long'?'Long':'Short')+' futures: '+(side==='long'?'('+money(S,true)+' − '+money(F,true)+')':'('+money(F,true)+' − '+money(S,true)+')')+' × '+num(q)+' = '+signed(pnl)+'.');
+  },
+  options(){
+    const type = pick(['concept','call','putbe','prot','hedgecost','callbe']);
+    if(type==='concept') return pick([
+      ()=>build('What is the most a put option buyer can lose?','The premium paid',['The strike price','Unlimited','Nothing, buyers cannot lose'],'A buyer can always let the option expire. The premium is the most they can lose.'),
+      ()=>build('HRSY reports disappointing sales and the stock falls. What likely happens to HRSY put options?','They increase in value',['They decrease in value','They stay the same','They become worthless'],'Puts gain value as the stock price falls.'),
+      ()=>build('Why might an investor who owns shares buy a put?','To limit losses if the stock falls',['To collect dividends','To double gains if the stock rises','To lock in a bond yield'],'A protective put works like insurance on shares you own.')
+    ])();
+    if(type==='call'){
+      const K=pick([20,25,30,40,50]), p=pick([1,1.5,2,3]), S=K+pick([-3,2,4,6,8,10]), mkt=K-pick([1,2]);
+      const net=(Math.max(S-K,0)-p)*100;
+      return build('You speculate by buying a call option for 100 shares with a '+money(K)+' strike and a '+money(p,true)+' premium when the stock trades at '+money(mkt)+'. The stock moves to '+money(S)+'. What is your net profit or loss?',
+        signed(net), [signed(Math.max(S-K,0)*100), signed((S-mkt)*100-p*100), signed(-p*100), signed(net+p*200)],
+        'Payoff: max('+money(S)+' − '+money(K)+', 0) × 100 = '+money(Math.max(S-K,0)*100)+'. Minus the premium of '+money(p*100)+' gives '+signed(net)+'.');
+    }
+    if(type==='putbe'){ const K=pick([40,50,60,75,100]), p=pick([2,3,4,5]);
+      return build('You buy a put with a '+money(K)+' strike and pay a '+money(p)+' premium. What is your breakeven price on the put?', money(K-p), [money(K+p), money(K), money(p)], 'For a put, breakeven = strike − premium = '+money(K)+' − '+money(p)+' = '+money(K-p)+'.'); }
+    if(type==='callbe'){ const K=pick([30,45,50,80]), p=pick([2,3,4,5]);
+      return build('You buy a call with a '+money(K)+' strike and pay a '+money(p)+' premium. What is your breakeven price?', money(K+p), [money(K-p), money(K), money(p)], 'For a call, breakeven = strike + premium = '+money(K)+' + '+money(p)+' = '+money(K+p)+'.'); }
+    if(type==='hedgecost'){ const sh=pick([200,300,500,1000]), p=pick([1.5,2,3,4]), K=pick([40,50,60]);
+      return build('What is the total cost to hedge '+num(sh)+' shares with puts if each has a '+money(p,true)+' premium and a '+money(K)+' strike?', money(sh*p), [money(p*100), money(sh*K), money(sh*p*2), money(sh*p/10), money(sh*(K+p))], 'You pay the premium on every share: '+num(sh)+' × '+money(p,true)+' = '+money(sh*p)+'. The strike is not a cost.'); }
+    const cost=pick([40,50,60]), K=cost-pick([2,4]), p=pick([1,1.5,2,2.5]), S=cost-pick([5,8,10]);
+    const stock=(S-cost)*100, pay=Math.max(K-S,0)*100, net=stock+pay-p*100;
+    return build('ALL AT 100 SHARES. You bought shares at '+money(cost)+' and buy a protective put with a '+money(K)+' strike for a '+money(p,true)+' premium. The stock falls to '+money(S)+'. What is your net position?',
+      signed(net), [signed(stock), signed(stock+pay), signed(stock-p*100), signed(-p*100)],
+      'Stock: '+signed(stock)+'. Put payoff: ('+money(K)+' − '+money(S)+') × 100 = '+money(pay)+'. Premium: '+money(p*100)+'. Net: '+signed(net)+'.');
+  },
+  swaps(){
+    const type = pick(['concept','after','who']);
+    if(type==='concept') return pick([
+      ()=>build('A company with a variable-rate loan expects rates to climb. Which swap should it enter?','Pay fixed, receive variable',['Pay variable, receive fixed','A currency swap','No swap is needed'],'Paying fixed locks in the payment so rising rates no longer hurt.'),
+      ()=>build('In a fixed-for-floating swap, who benefits if interest rates rise quickly?','The fixed-rate payer',['The floating-rate payer','Both equally','Neither'],'The fixed payer keeps paying the same rate while the floating side gets more expensive.'),
+      ()=>build('What is the main reason a company enters an interest rate swap?','To turn uncertain payments into predictable ones',['To eliminate borrowing costs','To guarantee rates will fall','To raise its stock price'],'Swaps manage interest rate risk. They do not remove the cost of borrowing.')
+    ])();
+    const n=pick([2,4,5,10])*1e6, ff=pick([3,4,4.5,5,5.5]), sp=pick([1,1.5,2,2.5]), fx=r2(ff+sp+pick([-1,-0.5,0.5,1]));
+    const s=M.swap(n,ff,sp,fx);
+    const setup='Company A has a '+money(n)+' loan at the Federal Funds Rate + '+sp+'%. Company B has a '+money(n)+' loan at a fixed '+fx+'%. They swap payments. The Federal Funds Rate is '+ff+'%. ';
+    if(type==='after') return build(setup+'After the swap, what does Company A effectively pay each year?', money(s.xAfter), [money(s.xBefore), money(n*ff/100), money(n*sp/100), money(n*(fx+sp)/100), money(s.xAfter*2)], 'After the swap, Company A pays Company B\'s fixed rate: '+money(n)+' × '+fx+'% = '+money(s.xAfter)+'.');
+    const d=Math.abs(s.xGain), win = s.xGain>0?'Company A benefits by '+money(d):'Company B benefits by '+money(d);
+    return build(setup+'Who benefits from the swap, and by how much?', win, [s.xGain>0?'Company B benefits by '+money(d):'Company A benefits by '+money(d),'Both benefit equally','Neither benefits'],
+      'Variable: '+r2(ff+sp)+'% = '+money(s.xBefore)+'. Fixed: '+fx+'% = '+money(s.yBefore)+'. The company that ends up paying the lower amount benefits by the '+money(d)+' difference.');
+  },
+  cds(){
+    const type=pick(['concept','cost','net','net']);
+    if(type==='concept') return pick([
+      ()=>build('A company\'s credit rating is cut from A to BB. What likely happens to the cost of CDS protection on its bonds?','It increases',['It decreases','It stays the same','The CDS becomes worthless'],'Higher default risk means the seller of protection charges a higher premium.'),
+      ()=>build('Which comparison best describes a credit default swap?','An insurance policy on a bond',['A savings account','A futures contract on wheat','A stock option'],'You pay a premium each year, and you get paid if the bond issuer defaults.')
+    ])();
+    const n=pick([2,4,5,8,10])*1e6, rate=pick([1,1.5,2,2.5,3]), annual=n*rate/100;
+    if(type==='cost'){ const t=pick([3,4,5]);
+      return build('You buy a CDS on '+money(n)+' of bonds and pay '+money(annual)+' per year. No default occurs over '+t+' years. What is your total cost of protection?', money(annual*t), [money(annual), money(n), money(annual*t*2)], money(annual)+' × '+t+' years = '+money(annual*t)+'.'); }
+    const y=pick([1,2,3,4]), c=M.cds(n,rate,10,true,y);
+    return build('You buy a CDS on '+money(n)+' of bonds, paying '+rate+'% per year. The issuer defaults after '+y+' years. What is your net gain on the CDS?', money(c.net), [money(n), money(c.paid), money(n+c.paid)],
+      'Premiums: '+money(n)+' × '+rate+'% × '+y+' = '+money(c.paid)+'. Net: '+money(n)+' − '+money(c.paid)+' = '+money(c.net)+'.');
+  }
+};
+const TITLES={futures:'Futures',options:'Options',swaps:'Swaps',cds:'CDS'};
+document.querySelectorAll('.practice').forEach(box=>{
+  const desk=box.dataset.desk; let st={right:0,tried:0,streak:0};
+  function next(){
+    const p=GEN[desk]();
+    box.innerHTML='<div class="head"><h2>Test yourself: '+TITLES[desk]+'</h2><span class="streak">'+st.right+' of '+st.tried+' correct · streak '+st.streak+'</span></div>'+
+      '<p class="q"></p><div class="opts"></div><div class="fb"></div>';
+    box.querySelector('.q').textContent=p.q;
+    const o=box.querySelector('.opts');
+    p.opts.forEach((t,i)=>{ const b=document.createElement('button'); b.type='button'; b.className='opt'; b.innerHTML='<b>'+'ABCD'[i]+')</b><span></span>'; b.querySelector('span').textContent=t;
+      b.onclick=()=>{
+        const ok=t===p.correct; st.tried++; if(ok){st.right++;st.streak++;} else st.streak=0;
+        o.querySelectorAll('.opt').forEach(x=>{x.disabled=true; if(x.querySelector('span').textContent===p.correct) x.classList.add('right');});
+        if(!ok) b.classList.add('wrong');
+        box.querySelector('.streak').textContent=st.right+' of '+st.tried+' correct · streak '+st.streak;
+        const fb=box.querySelector('.fb');
+        fb.innerHTML='<div class="verdict '+(ok?'good':'bad')+'"><b>'+(ok?'Correct.':'Not quite.')+'</b> <span></span></div><p style="margin:12px 0 0"><button type="button" class="btn">Next problem</button></p>';
+        fb.querySelector('span').textContent=p.why;
+        fb.querySelector('.btn').onclick=next;
+      };
+      o.appendChild(b); });
+  }
+  next();
+});
+
+/* ---------- init ---------- */
+$('sw-n').value=10000000; $('sw-sp').value=1.5; $('sw-fx').value=6; $('sw-r').value=4.5;
+$('cd-n').value=5000000; $('cd-t').value=5; $('cd-y').value=3;
+fuLoad(FU[0]); opLoad(OP[0]); swRender(); cdRender(); showTab();
+</script>
+
+</body>
+</html>

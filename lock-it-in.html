@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lock It In | District 214 Finance &amp; Investing</title>
+<meta name="description" content="Unit 5 derivatives review game for the projector: futures, options, swaps and credit default swaps through stories students know.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:wght@400;600;700&family=Roboto+Mono:wght@600&display=swap">
+<style>
+/* Single light stage, built for a classroom projector: brown band on top, four answer tiles in a 2x2 grid. */
+:root{
+  color-scheme:light;
+  --bg:#F4F3F3; --stage:#FFFFFF; --ink:#111111; --muted:#5C5C5C; --line:#D9D9D9;
+  --brown:#111111; --orange:#C1102F; --orange-deep:#C1102F;
+  --t0:#C1102F; --t1:#1F5FAD; --t2:#9A6B00; --t3:#23763A;
+  --good:#15803D; --good-bg:#DCFCE7; --gold:#B7791F;
+  --display:"Oswald","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",Arial,sans-serif;
+  --mono:"Roboto Mono",Consolas,ui-monospace,monospace;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body)}
+.app{min-height:100%;display:flex;flex-direction:column}
+.top{background:var(--brown);color:#fff;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.top .brand{font:600 18px/1 var(--display);letter-spacing:.08em;text-transform:uppercase}
+.top .brand i{font-style:normal;background:var(--orange);color:#fff;padding:3px 8px;margin-right:8px}
+.top .meta{font:500 15px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;opacity:.9}
+main{flex:1;display:flex;flex-direction:column;padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));max-width:1400px;width:100%;margin:0 auto;gap:18px}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));border-top:1px solid var(--line);background:var(--stage)}
+.bar .hint{color:var(--muted);font-size:13px}
+.btn{font:600 17px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;padding:13px 22px;border:0;background:var(--orange-deep);color:#fff;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--brown)}
+.btn:disabled{opacity:.4;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--orange);outline-offset:2px}
+h1,h2{font-family:var(--display);text-transform:uppercase;margin:0;text-wrap:balance;letter-spacing:.01em}
+.eyebrow{font:600 16px/1 var(--display);letter-spacing:.16em;text-transform:uppercase;color:var(--orange-deep);margin:0}
+
+/* lobby */
+.lobby{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:820px){.lobby{grid-template-columns:minmax(0,1fr)}}
+.hero h1{font-size:clamp(48px,9vw,112px);line-height:.9}
+.hero h1 span{color:var(--orange-deep)}
+.hero p{font-size:clamp(17px,2vw,22px);max-width:34ch;color:var(--muted);margin:16px 0 0}
+.panel{background:var(--stage);border:1px solid var(--line);padding:20px;display:grid;gap:14px}
+.panel h2{font-size:20px}
+.teams{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.teams input{font:600 16px var(--body);padding:9px 10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
+.ctrl{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+.ctrl label{display:grid;gap:4px;font:600 12px var(--body);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.ctrl select{font:600 16px var(--body);padding:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.howto{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.howto div{color:#fff;padding:10px 6px;text-align:center;font:600 14px var(--display);letter-spacing:.05em;text-transform:uppercase;display:grid;justify-items:center;gap:6px}
+
+/* round intro + name cards */
+.card-big{flex:1;display:grid;align-content:center;gap:20px;max-width:1100px}
+.card-big .num{font:700 clamp(18px,2vw,24px)/1 var(--display);letter-spacing:.2em;text-transform:uppercase;color:var(--orange-deep)}
+.card-big h1{font-size:clamp(46px,8vw,104px);line-height:.92}
+.story{font-size:clamp(20px,2.4vw,30px);line-height:1.4;max-width:46ch;background:var(--stage);border-left:8px solid var(--orange);padding:18px 22px;margin:0}
+.term{background:var(--brown);color:#fff;padding:26px 28px;display:grid;gap:12px}
+.term .lbl{font:600 15px var(--display);letter-spacing:.16em;text-transform:uppercase;color:#FF8A99}
+.term h1{font-size:clamp(44px,7.5vw,96px);color:#fff}
+.term p{font-size:clamp(19px,2.2vw,27px);line-height:1.4;margin:0;max-width:52ch}
+.ex{display:flex;flex-wrap:wrap;gap:8px}
+.ex span{background:var(--stage);border:1px solid var(--line);padding:8px 12px;font-size:clamp(15px,1.6vw,19px)}
+
+/* question */
+.qhead{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center}
+.qtext{font:600 clamp(24px,3.4vw,44px)/1.2 var(--display);margin:0;text-wrap:balance}
+.timer{width:clamp(76px,9vw,110px);aspect-ratio:1;max-width:100%;border-radius:50%;display:grid;place-items:center;font:600 clamp(30px,4vw,48px)/1 var(--mono);color:#fff;background:conic-gradient(var(--orange-deep) calc(var(--p,1)*360deg),var(--line) 0)}
+.timer b{width:78%;aspect-ratio:1;border-radius:50%;background:var(--brown);display:grid;place-items:center;font-weight:600}
+.timer.done b{background:var(--muted)}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:1;min-height:0}
+@media (max-width:640px){.tiles{grid-template-columns:minmax(0,1fr)}}
+.tile{display:flex;align-items:center;gap:16px;padding:18px 20px;color:#fff;font:600 clamp(19px,2.6vw,34px)/1.2 var(--body);min-height:84px;transition:opacity .2s,transform .2s}
+.tile svg{flex:0 0 auto;width:clamp(30px,3.4vw,48px);height:auto}
+.tile .mark{margin-left:auto;font-size:clamp(26px,3vw,42px)}
+.tile.dim{opacity:.22}
+.tile.win{outline:6px solid var(--good);outline-offset:-6px}
+.why{background:var(--good-bg);border:2px solid var(--good);padding:14px 18px;font-size:clamp(17px,2vw,24px);line-height:1.4}
+.why b{font-family:var(--display);text-transform:uppercase;letter-spacing:.04em;color:var(--good);margin-right:6px}
+.score{display:grid;gap:8px}
+.score .lbl{font:600 13px var(--body);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:600 16px var(--body);padding:10px 14px;border:2px solid var(--line);background:var(--stage);color:var(--ink);cursor:pointer;display:flex;gap:8px;align-items:center}
+.chip[data-m="1"]{border-color:var(--good);background:var(--good-bg)}
+.chip[data-m="2"]{border-color:var(--gold);background:#FEF3C7}
+.chip .pts{font:600 13px var(--mono);color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.tile{transition:none}}
+
+/* leaderboard + podium */
+.board{display:grid;gap:10px;max-width:900px;width:100%;margin:0 auto}
+.row{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:14px;align-items:center;background:var(--stage);border:1px solid var(--line);padding:12px 16px}
+.row .rk{font:700 30px/1 var(--display);color:var(--muted)}
+.row .nm{font:600 clamp(20px,2.4vw,30px)/1.1 var(--display);text-transform:uppercase;overflow-wrap:anywhere}
+.row .pt{font:600 clamp(20px,2.4vw,30px)/1 var(--mono);font-variant-numeric:tabular-nums}
+.row .barfill{grid-column:2/4;height:8px;background:var(--line)}
+.row .barfill i{display:block;height:100%;background:var(--orange)}
+.row:first-child{border-color:var(--orange);border-width:3px}
+.podium{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end;max-width:900px;width:100%;margin:0 auto}
+.pod{background:var(--brown);color:#fff;text-align:center;padding:16px 10px;display:grid;gap:6px;align-content:start}
+.pod .pl{font:700 clamp(36px,5vw,64px)/1 var(--display)}
+.pod .nm{font:600 clamp(18px,2.2vw,28px)/1.1 var(--display);text-transform:uppercase;overflow-wrap:anywhere}
+.pod .pt{font:600 18px var(--mono);color:#FF8A99}
+.pod.p1{background:var(--orange-deep);min-height:280px}
+.pod.p2{min-height:220px}.pod.p3{min-height:170px}
+</style>
+<meta name="robots" content="noindex">
+</head>
+<body>
+
+<div class="app">
+  <div class="top">
+    <div class="brand"><i>F&amp;I</i>Lock It In</div>
+    <div class="meta" id="meta">Intro to Derivatives</div>
+  </div>
+  <main id="main"></main>
+  <div class="bar">
+    <button type="button" class="btn ghost" id="back">Back</button>
+    <span class="hint" id="hint">Space or → to advance</span>
+    <button type="button" class="btn" id="next">Next</button>
+  </div>
+</div>
+
+<script>
+/* ---------------- content ---------------- */
+const ROUNDS = [
+ {title:'Lock It In', story:'It\'s January. Your prom group finds a party bus for $600. The company offers a deal: sign today, and you pay $600 on prom night no matter what buses cost in May. Your group signs.',
+  term:'Futures Contract', def:'An agreement made today to buy or sell something later, at a price you lock in now.',
+  ex:['Airlines lock in jet fuel','Farmers lock in crop prices','Bakeries lock in wheat'],
+  before:[
+   {q:'Prom season hits. Every school wants a party bus, and the going rate jumps to $900. What does your group pay?', a:['$600','$900','$750','Nothing, the deal is off'], c:0, why:'You locked in $600 in January. The higher market price can\'t touch your deal. Your group saved $300.'},
+   {q:'Different year: buses are cheap, and the going rate drops to $450. What does your group pay?', a:['$450','$600','$525','You can cancel for free'], c:1, why:'A locked price works both ways. You still pay $600. You gave up $150 of savings in exchange for knowing your cost ahead of time.'}],
+  after:[
+   {q:'Chipotle buys tons of avocados every month. What price move is Chipotle afraid of?', a:['Avocado prices falling','Avocado prices staying flat','Avocado prices rising','Chipotle doesn\'t care'], c:2, why:'A buyer gets hurt when prices rise. Locking in a price now protects Chipotle from a spike.'},
+   {q:'A farmer will sell her corn at harvest in October. What price move scares her?', a:['Corn prices rising','Corn prices falling','Corn prices staying flat','Nothing, farmers are safe'], c:1, why:'A seller gets hurt when prices fall. The farmer can lock in a selling price today with a futures contract.'},
+   {q:'What is the main reason a business uses a futures contract?', a:['To get rich fast','To borrow money cheaply','To avoid paying taxes','To lock in a price and avoid surprises'], c:3, why:'Futures are about certainty. The business knows its price ahead of time, whether the market goes up or down.'}]},
+ {title:'Pay to Hold It', story:'A limited sneaker drops next month for $200. The shop sells reservations: pay $20 now (not refundable) for the right to buy one pair at $200 on release day. You don\'t have to buy. You pay the $20.',
+  term:'Option', def:'The right, but not the obligation, to buy or sell at a set price before a deadline. What you pay for that right is the premium.',
+  ex:['Call option: the right to BUY (your sneaker reservation)','Put option: the right to SELL'],
+  before:[
+   {q:'Release day: the hype is real and the shoes resell for $350. You buy at $200 and sell right away. What\'s your profit after the $20 reservation?', a:['$150','$350','$130','$170'], c:2, why:'$350 − $200 = $150 from the flip. Subtract the $20 you paid to hold your spot: $130.'},
+   {q:'Different drop: the reviews are bad and the shoes resell for only $150. What do you do?', a:['Walk away, out only the $20','Buy at $200 and lose $70','You must buy, it\'s the rule','Ask for your $20 back'], c:0, why:'A reservation is a right, not an obligation. You let it expire. The most you can lose is the $20 you paid.'}],
+  after:[
+   {q:'In the sneaker deal, what was the $20?', a:['The strike price','The premium','Your profit','A deposit you get back'], c:1, why:'The premium is what you pay for the option. The $200 set buying price is called the strike price.'},
+   {q:'For $15, your phone store promises you can trade in your phone for $300 any time in the next 6 months. You crack the screen and it\'s now worth $80. What did you buy?', a:['A call option','A futures contract','A put option: the right to SELL at $300','Nothing useful'], c:2, why:'A put is the right to SELL at a set price. It pays off when the value drops, like insurance on something you own.'},
+   {q:'When you BUY an option, what is the most you can ever lose?', a:['The premium you paid','The strike price','Unlimited','Nothing at all'], c:0, why:'If the deal goes badly, you just let the option expire. All you lose is the premium.'}]},
+ {title:'Trade It', story:'Maya and Jordan work weekend shifts at the same restaurant. Maya earns tips: some nights $40, some nights $140. Jordan earns a flat $80 a shift. Maya has a car payment and hates surprises. Jordan likes taking chances. They make a deal: every shift, Maya gives Jordan her tips, and Jordan gives Maya $80.',
+  term:'Swap', def:'Two sides agree to trade payments. The most common swap trades a payment that changes for a payment that stays fixed.',
+  ex:['Companies swap variable loan interest for fixed interest','The variable rate moves with the Federal Funds Rate'],
+  before:[
+   {q:'After the deal, how much does Maya take home each shift?', a:['Whatever her tips are','$80 every shift','$160','$40'], c:1, why:'Maya traded her up-and-down tips for a steady $80. She can plan her car payment now.'},
+   {q:'Friday is packed and the tips hit $140. Who wins that night, and by how much?', a:['Maya, by $60','Nobody, it\'s even','Jordan, by $140','Jordan, by $60'], c:3, why:'Jordan pays Maya $80 and gets $140 in tips. Jordan comes out $60 ahead.'},
+   {q:'Tuesday is dead and the tips are only $40. Who wins that night?', a:['Maya, by $40','Jordan, by $40','Maya, by $80','Nobody'], c:0, why:'Maya still gets $80, even though her tips were only $40. She comes out $40 ahead.'}],
+  after:[
+   {q:'A company\'s loan payment goes up every time interest rates rise. The CFO wants a payment that never changes. What should the company swap into?', a:['A bigger variable payment','A fixed payment','A credit card','Nothing can help'], c:1, why:'Just like Maya, the company trades its changing payment for a fixed one. Now rising rates don\'t hurt.'},
+   {q:'Interest rates drop a lot. In a fixed-for-variable swap, who wins?', a:['The side paying the fixed rate','Both sides equally','The side paying the variable rate','Neither side'], c:2, why:'When rates fall, variable payments shrink. The fixed side keeps paying the same higher amount.'}]},
+ {title:'Insure It', story:'You lend your cousin $500 to fix his car. He promises to pay you back next year. A friend offers a deal: pay me $10 a month, and if your cousin never pays you back, I\'ll give you the $500.',
+  term:'Credit Default Swap', def:'Insurance against a borrower not paying you back. You pay a premium on a schedule. If the borrower defaults, you get paid the full amount.',
+  ex:['Investors buy CDS on company bonds','Riskier borrowers mean higher premiums'],
+  before:[
+   {q:'Your cousin pays you back in full after 12 months. How much did the protection cost you?', a:['$0','$10','$120','$500'], c:2, why:'$10 a month × 12 months = $120. That\'s the cost of being protected, even though you never needed it.'},
+   {q:'Instead, after 6 months your cousin says he can\'t pay you back. Your friend pays you $500. What\'s your net gain on the deal with your friend?', a:['$440','$500','$60','$560'], c:0, why:'You got $500 and paid $10 × 6 = $60 in premiums. $500 − $60 = $440.'}],
+  after:[
+   {q:'Your other cousin has already skipped paying back two people. Should protection on a loan to HIM cost more or less?', a:['Less','The same','More','It should be free'], c:2, why:'A riskier borrower is more likely to default, so protection costs more. Same idea when a company\'s credit rating drops.'},
+   {q:'In finance, what does "default" mean?', a:['The normal setting','The borrower fails to pay back','A type of stock','The interest rate'], c:1, why:'Default means a borrower doesn\'t make the payments they promised.'}]},
+ {title:'Name It', lightning:true, story:'Lightning round. Four quick deals. Name the derivative.',
+  before:[
+   {q:'In March you agree to buy a used car in June for $8,000, no matter what car prices do.', a:['Futures contract','Option','Swap','Credit default swap'], c:0, why:'An agreement today at a locked price for a later purchase is a futures contract.'},
+   {q:'You pay $25 for the right to buy a concert ticket at face value next month. You can skip it if you want.', a:['Futures contract','Option','Swap','Credit default swap'], c:1, why:'A right but not an obligation, bought for a premium, is an option. This one is a call.'},
+   {q:'You trade your up-and-down commission pay for a coworker\'s steady paycheck.', a:['Futures contract','Option','Swap','Credit default swap'], c:2, why:'Trading a changing payment for a fixed one is a swap.'},
+   {q:'You pay a yearly fee so you get paid if a company can\'t repay the bonds you own.', a:['Futures contract','Option','Swap','Credit default swap'], c:3, why:'Insurance against a borrower defaulting is a credit default swap.'}]}
+];
+
+/* ---------------- screens ---------------- */
+const SCREENS=[{type:'lobby'}]; let qCount=0;
+ROUNDS.forEach((r,ri)=>{
+  SCREENS.push({type:'round',ri});
+  r.before.forEach(q=>SCREENS.push({type:'q',ri,q,id:'q'+(++qCount)}));
+  if(r.term){ SCREENS.push({type:'name',ri}); r.after.forEach(q=>SCREENS.push({type:'q',ri,q,id:'q'+(++qCount)})); }
+  SCREENS.push({type:ri===ROUNDS.length-1?'podium':'board',ri});
+});
+const TOTALQ=qCount;
+
+/* ---------------- state ---------------- */
+const KEY='lockItIn.v1';
+const DEF_TEAMS=['Bulls','Bears','Hawks','Sharks','Wolves','Foxes','Owls','Tigers','Lions','Eagles'];
+let S={i:0,n:6,names:DEF_TEAMS.slice(),time:20,sound:true,marks:{}};
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null'); if(s&&Array.isArray(s.names)) S=Object.assign(S,s);}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+let phase='answer', left=0, tick=null;
+
+const COLORS=['--t0','--t1','--t2','--t3'];
+const SHAPES=[
+ '<svg viewBox="0 0 40 40" aria-hidden="true"><polygon points="20,4 37,35 3,35" fill="#fff"/></svg>',
+ '<svg viewBox="0 0 40 40" aria-hidden="true"><polygon points="20,2 38,20 20,38 2,20" fill="#fff"/></svg>',
+ '<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="17" fill="#fff"/></svg>',
+ '<svg viewBox="0 0 40 40" aria-hidden="true"><rect x="4" y="4" width="32" height="32" fill="#fff"/></svg>'];
+const SHAPE_NAMES=['Triangle','Diamond','Circle','Square'];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const teams=()=>S.names.slice(0,S.n).map((n,i)=>n.trim()||('Team '+(i+1)));
+const PTS={0:0,1:1000,2:1250};
+function scores(){
+  const t=teams().map((name,i)=>({name,i,pts:0}));
+  for(const id in S.marks){ const m=S.marks[id]; for(const k in m){ if(t[k]) t[k].pts+=PTS[m[k]]||0; } }
+  return t.sort((a,b)=>b.pts-a.pts||a.i-b.i);
+}
+
+/* ---------------- sound ---------------- */
+let ac=null;
+function beep(f,d,v){ if(!S.sound) return; try{ ac=ac||new (window.AudioContext||window.webkitAudioContext)(); const o=ac.createOscillator(),g=ac.createGain(); o.frequency.value=f; o.type='triangle'; g.gain.value=v||.08; o.connect(g); g.connect(ac.destination); o.start(); g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+d); o.stop(ac.currentTime+d);}catch(e){} }
+
+/* ---------------- render ---------------- */
+const main=document.getElementById('main');
+function render(){
+  clearInterval(tick); tick=null;
+  const sc=SCREENS[S.i]; const r=ROUNDS[sc.ri];
+  document.getElementById('back').disabled=S.i===0;
+  const nextBtn=document.getElementById('next');
+  nextBtn.textContent = sc.type==='lobby'?'Start game':sc.type==='podium'?'Play again':(sc.type==='q'&&phase==='answer')?'Reveal answer':'Next';
+  document.getElementById('meta').textContent = sc.type==='lobby'?'Intro to Derivatives':'Round '+(sc.ri+1)+' of '+ROUNDS.length+' · '+r.title;
+  document.getElementById('hint').textContent = sc.type==='q'&&phase==='reveal'?'Tap teams that got it right. Tap twice for the fastest correct team (+250).':'Space or → to advance';
+  if(sc.type==='lobby') return lobby();
+  if(sc.type==='round') return roundCard(sc,r);
+  if(sc.type==='name') return nameCard(r);
+  if(sc.type==='q') return question(sc);
+  if(sc.type==='board') return board(sc);
+  if(sc.type==='podium') return podium();
+}
+function lobby(){
+  main.innerHTML=`<div class="lobby">
+   <div class="hero"><p class="eyebrow">Unit 5 review · All four derivatives</p>
+     <h1>Lock<br>It <span>In</span></h1>
+     <p>Prom buses, sneaker drops, tip money, and a cousin who owes you $500. All four derivatives in one game: futures, options, swaps and credit default swaps.</p></div>
+   <div class="panel">
+     <h2>Set up teams</h2>
+     <div class="ctrl">
+       <label for="n">Teams<select id="n">${[2,3,4,5,6,7,8,9,10].map(v=>`<option ${v==S.n?'selected':''}>${v}</option>`).join('')}</select></label>
+       <label for="time">Seconds per question<select id="time">${[15,20,30,45].map(v=>`<option ${v==S.time?'selected':''}>${v}</option>`).join('')}</select></label>
+       <label for="snd">Sound<select id="snd"><option value="1" ${S.sound?'selected':''}>On</option><option value="0" ${S.sound?'':'selected'}>Off</option></select></label>
+     </div>
+     <div class="teams" id="tn"></div>
+     <div class="howto">${SHAPES.map((s,i)=>`<div style="background:var(${COLORS[i]})">${s.replace('viewBox','width="28" viewBox')}${SHAPE_NAMES[i]}</div>`).join('')}</div>
+     <p style="margin:0;color:var(--muted);font-size:14px">Each team holds up or draws the shape of its answer when the timer ends. Correct answers earn 1,000 points. The fastest correct team earns 250 more.</p>
+     <button type="button" class="btn ghost" id="reset">Reset scores</button>
+   </div></div>`;
+  const tn=document.getElementById('tn');
+  tn.innerHTML=Array.from({length:S.n},(_,i)=>`<input id="team${i}" aria-label="Team ${i+1} name" maxlength="18" value="${esc(S.names[i]||'')}">`).join('');
+  tn.querySelectorAll('input').forEach((el,i)=>el.addEventListener('input',()=>{S.names[i]=el.value;save();}));
+  document.getElementById('n').onchange=e=>{S.n=+e.target.value; while(S.names.length<S.n) S.names.push('Team '+(S.names.length+1)); save(); lobby();};
+  document.getElementById('time').onchange=e=>{S.time=+e.target.value;save();};
+  document.getElementById('snd').onchange=e=>{S.sound=e.target.value==='1';save();};
+  const rb=document.getElementById('reset');
+  rb.onclick=()=>{ if(rb.dataset.armed){S.marks={};save();rb.textContent='Scores cleared';delete rb.dataset.armed;} else {rb.dataset.armed='1';rb.textContent='Tap again to clear all scores';} };
+}
+function roundCard(sc,r){
+  main.innerHTML=`<div class="card-big"><div class="num">Round ${sc.ri+1} of ${ROUNDS.length}</div><h1>${esc(r.title)}</h1><p class="story">${esc(r.story)}</p></div>`;
+}
+function nameCard(r){
+  main.innerHTML=`<div class="card-big"><div class="term"><div class="lbl">What you just did has a name</div><h1>${esc(r.term)}</h1><p>${esc(r.def)}</p></div><div class="ex">${r.ex.map(x=>`<span>${esc(x)}</span>`).join('')}</div></div>`;
+}
+function question(sc){
+  const qn=+sc.id.slice(1); const q=sc.q;
+  const m=S.marks[sc.id]||{};
+  main.innerHTML=`<div class="qhead"><div><p class="eyebrow">Question ${qn} of ${TOTALQ}</p><p class="qtext">${esc(q.q)}</p></div>
+    <div class="timer${phase==='reveal'?' done':''}" id="tm" style="--p:${phase==='reveal'?0:1}"><b id="tmv">${phase==='reveal'?'0':S.time}</b></div></div>
+    <div class="tiles">${q.a.map((a,i)=>`<div class="tile ${phase==='reveal'?(i===q.c?'win':'dim'):''}" style="background:var(${COLORS[i]})">${SHAPES[i]}<span>${esc(a)}</span>${phase==='reveal'&&i===q.c?'<span class="mark">✓</span>':''}</div>`).join('')}</div>
+    ${phase==='reveal'?`<div class="why"><b>${SHAPE_NAMES[q.c]}.</b>${esc(q.why)}</div>
+    <div class="score"><span class="lbl">Who got it right?</span><div class="chips">${teams().map((t,i)=>`<button type="button" class="chip" data-t="${i}" data-m="${m[i]||0}">${esc(t)}<span class="pts">${m[i]==2?'⚡ +1,250':m[i]==1?'+1,000':''}</span></button>`).join('')}</div></div>`:''}`;
+  if(phase==='answer'){
+    left=S.time;
+    tick=setInterval(()=>{
+      left--; const el=document.getElementById('tmv'), tm=document.getElementById('tm');
+      if(!el){clearInterval(tick);return;}
+      el.textContent=Math.max(left,0); tm.style.setProperty('--p',Math.max(left,0)/S.time);
+      if(left>0&&left<=5) beep(660,.12);
+      if(left<=0){ clearInterval(tick); reveal(); }
+    },1000);
+  } else {
+    main.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{
+      const t=+ch.dataset.t, cur=+(S.marks[sc.id]||{})[t]||0, nx=(cur+1)%3;
+      S.marks[sc.id]=S.marks[sc.id]||{};
+      if(nx===2) for(const k in S.marks[sc.id]) if(S.marks[sc.id][k]===2) S.marks[sc.id][k]=1;
+      S.marks[sc.id][t]=nx; save(); render();
+    });
+  }
+}
+function reveal(){ phase='reveal'; beep(880,.35,.1); setTimeout(()=>beep(1320,.4,.08),120); render(); }
+function rows(list){
+  const max=Math.max(1,...list.map(t=>t.pts));
+  return list.map((t,k)=>`<div class="row"><span class="rk">${k+1}</span><span class="nm">${esc(t.name)}</span><span class="pt">${t.pts.toLocaleString('en-US')}</span><span class="barfill"><i style="width:${t.pts/max*100}%"></i></span></div>`).join('');
+}
+function board(sc){
+  main.innerHTML=`<p class="eyebrow" style="text-align:center">After Round ${sc.ri+1}</p><h1 style="text-align:center;font-size:clamp(36px,5vw,64px)">Leaderboard</h1><div class="board">${rows(scores())}</div>`;
+}
+function podium(){
+  const s=scores(), top=[s[1],s[0],s[2]];
+  main.innerHTML=`<p class="eyebrow" style="text-align:center">Final standings</p><h1 style="text-align:center;font-size:clamp(36px,5vw,64px)">Podium</h1>
+   <div class="podium">${top.map((t,k)=>t?`<div class="pod p${[2,1,3][k]}"><span class="pl">${[2,1,3][k]}</span><span class="nm">${esc(t.name)}</span><span class="pt">${t.pts.toLocaleString('en-US')}</span></div>`:'<div></div>').join('')}</div>
+   ${s.length>3?`<div class="board" style="margin-top:6px">${rows(s.slice(3)).replace(/<span class="rk">(\d+)<\/span>/g,(m,d)=>'<span class="rk">'+(+d+3)+'</span>')}</div>`:''}`;
+}
+
+/* ---------------- nav ---------------- */
+function go(d){
+  const sc=SCREENS[S.i];
+  if(d>0&&sc.type==='q'&&phase==='answer'){ reveal(); return; }
+  if(d>0&&sc.type==='podium'){ S.marks={}; S.i=0; phase='answer'; save(); render(); return; }
+  const ni=Math.min(SCREENS.length-1,Math.max(0,S.i+d)); if(ni===S.i) return;
+  S.i=ni; phase = (d<0&&SCREENS[ni].type==='q') ? 'reveal' : 'answer'; save(); render();
+  if(SCREENS[ni].type==='q'&&phase==='answer') beep(520,.15);
+}
+document.getElementById('next').onclick=()=>go(1);
+document.getElementById('back').onclick=()=>go(-1);
+document.addEventListener('keydown',e=>{
+  if(e.target.matches('input,select')) return;
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='Enter'){ if(e.target.matches('button')&&e.key!=='ArrowRight') return; e.preventDefault(); go(1);}
+  if(e.key==='ArrowLeft'){e.preventDefault(); go(-1);}
+});
+if(SCREENS[S.i]&&SCREENS[S.i].type==='q') phase='reveal';
+if(!SCREENS[S.i]) S.i=0;
+render();
+</script>
+
+</body>
+</html>
