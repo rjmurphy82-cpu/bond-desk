@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Bonds Live</title>
-<meta name="description" content="Unit 3 bonds class quiz for District 214 Finance &amp; Investing: join your teacher's game with a code, then practice your weakest skills.">
+<meta name="description" content="Unit 4 bonds class quiz for District 214 Finance &amp; Investing: join your teacher's game with a code, then practice your weakest skills.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -267,13 +267,13 @@ body.host-reveal #app{display:grid;grid-template-columns:minmax(0,1fr) minmax(30
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><img src="/logo-214.png" alt="District 214" class="d214"><a href="/">District 214 Finance &amp; Investing</a> | Unit 3: Bonds Live<span class="sp"></span><span class="pill" id="who" hidden></span><button class="rejoin" id="rejoin" hidden>↻ Rejoin</button></div>
+  <div class="top"><img src="/logo-214.png" alt="District 214" class="d214"><a href="/">District 214 Finance &amp; Investing</a> | Unit 4: Bonds Live<span class="sp"></span><span class="pill" id="who" hidden></span><button class="rejoin" id="rejoin" hidden>↻ Rejoin</button></div>
   <main id="app"></main>
 </div>
 <script>
 "use strict";
 /* ============================================================ QUESTION BANK
-   Unit 3: Bonds. First option is always the correct one; options are shuffled when a game is built.
+   Unit 4: Bonds. First option is always the correct one; options are shuffled when a game is built.
    Questions test the bond concepts and math, not the rules of the class games. Every number a question needs is in the question. */
 const SKILLS={
  yield:{name:"Fair Yield",short:"Fair yield",secs:20,desc:"Treasury rate + the spread for the bond's risk.",
@@ -427,7 +427,7 @@ const MOCK=/[?&]mock=1/.test(location.search);
 const ROLE=window.BRL_ROLE||"student";
 const GAME="bondslive"; // keeps each live game's codes separate
 const hdr=()=>`<h1 class="title">Bonds <span>Live.</span></h1>
-  <p class="lede">${ROLE==="teacher"?"Teacher screen. Put this on the projector, create a game, and students join on their devices with the code. Six rounds on Unit 3 bonds (fair yield, good deal or overpriced, ratios, ratings, rates and prices, bond basics); right answers earn 600 points plus up to 400 for speed, and wrong answers cost a lot (set below), so students should never guess.":"Six quick rounds on bonds, run by your teacher. Have a calculator ready. Right answers earn 600 points plus up to 400 more for speed. Wrong answers cost a lot of points, so never guess. If you are not sure, let the clock run out and you get 0. At the end you get a report on what to practice, and you can practice it right here."}</p>`;
+  <p class="lede">${ROLE==="teacher"?"Teacher screen. Put this on the projector, create a game, and students join on their devices with the code. Six rounds on Unit 4 bonds (fair yield, good deal or overpriced, ratios, ratings, rates and prices, bond basics); right answers earn 600 points plus up to 400 for speed, and wrong answers cost a lot (set below), so students should never guess.":"Six quick rounds on bonds, run by your teacher. Have a calculator ready. Right answers earn 600 points plus up to 400 more for speed. Wrong answers cost a lot of points, so never guess. If you are not sure, let the clock run out and you get 0. At the end you get a report on what to practice, and you can practice it right here."}</p>`;
 function home(){
   stopTick();KEYPICK=KEYNEXT=null;setFit(false);$("#who").hidden=true;
   ROLE==="teacher"?hostSetup():joinForm();

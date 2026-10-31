@@ -1,5 +1,5 @@
 /* Bond Ladder: everything the game asks. Shared by the student page and the teacher screen.
-   Three kinds of rounds, one for each Unit 3 class game:
+   Three kinds of rounds, one for each Unit 4 class game:
      Rating Room  - score an issuer on the six-factor scorecard; the app turns your scores into a rating
      Bond Desk    - one Bond Desk year: $0, $100K or $200K in each of three bonds, the rest stays in Treasuries
      Yield Curve  - a Recession Radar mystery curve: name the shape, call the timing, bet 1 to 3 chips

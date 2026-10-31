@@ -1,4 +1,4 @@
-/* Bond Ladder: a table-tournament review for Unit 3 (Bonds), built on the Marketing Ladder engine.
+/* Bond Ladder: a table-tournament review for Unit 4 (Bonds), built on the Marketing Ladder engine.
    Every student plays on their own device but sits at a table of 3. Each round:
      1. Quick Fire  - a few fast questions from that round's game (speed counts)
      2. Main task   - Rate the Issuer (Rating Room), Make the Trade (Bond Desk), or Read the Curve (Yield Curve)

@@ -1,6 +1,6 @@
 # District 214 Finance & Investing
 
-The class site for Finance & Investing: a home page, live class games, review games, and practice-on-your-own pages, in the same look as the District 214 Accounting site. The home page and menu are grouped by unit: **Unit 5: Derivatives** first, then **Unit 3: Bonds**.
+The class site for Finance & Investing: a home page, live class games, review games, and practice-on-your-own pages, in the same look as the District 214 Accounting site. The home page and menu are grouped by unit: **Unit 5: Derivatives** first, then **Unit 4: Bonds**.
 
 | Page | Who | What |
 |---|---|---|
@@ -12,8 +12,8 @@ The class site for Finance & Investing: a home page, live class games, review ga
 | `/credit` | Students | Join Credit Desk Live (the host QR code goes here) |
 | `/credit-host` | Teacher (projector) | Credit Desk Live host screen: groups rate each borrower on iPads, then buy; you run the reveal. Uses the same database as The Bond Desk. |
 | `/join` | Students | Join a live Bond Desk game (the host QR code goes here) |
-| `/bond-feud` | Projector | Bond Feud: Unit 3 review game. Six Family Feud boards plus an 18-question Lightning Round, 2 to 8 teams. Self-contained, no database. |
-| `/bond-ladder` | Students | Bond Ladder: Unit 3 review at tables of 3 (host at `/bond-ladder/teacher`). Each round is 2 to 4 Quick Fire questions plus one main task: rate a Rating Room issuer with the scorecard, make a Bond Desk trade, or read a Recession Radar mystery curve. Ladder moves: winner up a table, 2nd stays, last down (or regroup by place). Issuers, years and curves come from `rating-data.js`, `game-data.js` and `radar-data.js`; the Quick Fire bank in `bond-ladder/data.js` is copied from Bonds Live and Curves Live. Same database as Bonds Live. |
+| `/bond-feud` | Projector | Bond Feud: Unit 4 review game. Six Family Feud boards plus an 18-question Lightning Round, 2 to 8 teams. Self-contained, no database. |
+| `/bond-ladder` | Students | Bond Ladder: Unit 4 review at tables of 3 (host at `/bond-ladder/teacher`). Each round is 2 to 4 Quick Fire questions plus one main task: rate a Rating Room issuer with the scorecard, make a Bond Desk trade, or read a Recession Radar mystery curve. Ladder moves: winner up a table, 2nd stays, last down (or regroup by place). Issuers, years and curves come from `rating-data.js`, `game-data.js` and `radar-data.js`; the Quick Fire bank in `bond-ladder/data.js` is copied from Bonds Live and Curves Live. Same database as Bonds Live. |
 | `/curves-live` | Students | Curves Live: the Kahoot-style yield curve wrap-up quiz (host at `/teacher/curves-live`). Same engine and database as Bonds Live, separate game codes. Questions are listed at the top of the script in `curves-live.html` (keep `teacher/curves-live.html` in sync). |
 | `/radar` | Students | Join Recession Radar Live (the host QR code goes here) |
 | `/radar-host` | Teacher (projector) | Recession Radar Live host screen: ten real Treasury yield curves from mystery dates (two traps). Groups name the shape, call the timing, and bet 1 to 3 chips on iPads, with three Spot the Analyst rounds; you reveal the date and what happened. Ends with today's curve, the class forecast and the what-if simulator. Same database as The Bond Desk. |
@@ -47,7 +47,7 @@ Old links and QR codes that point at `/?c=12345` still work: the home page forwa
 
 # The Bond Desk
 
-A live classroom bond-investing game for Hersey Finance & Investing (Unit 3: Bonds).
+A live classroom bond-investing game for Hersey Finance & Investing (Unit 4: Bonds).
 Each desk (group) runs a $1,000,000 bond fund for ten years on an iPad. Each year three bonds hit the market; desks read the news, compare each bond's yield to its fair yield, and choose Pass, Buy $100K, or Buy $200K. The host screen reveals what happened and explains why.
 
 The game gets harder as it goes. **Rookie Desk** (Years 1–2) shows each bond's fair yield and rate sensitivity. **Analyst** (Years 3–5) drops the fair yield. **Senior Analyst** (Years 6–8) drops the rate-sensitivity hint and adds more noise. **Portfolio Manager** (Years 9–10) uses quiet clues that take two headlines, or memory of an earlier year, to read.
@@ -117,7 +117,7 @@ QR codes are generated in the browser with "QRCode for JavaScript" by Kazuhiko A
 
 # Recession Radar
 
-A live yield curve game for Unit 3: Bonds. **Projector:** `/radar-host` · **iPads:** `/radar`
+A live yield curve game for Unit 4: Bonds. **Projector:** `/radar-host` · **iPads:** `/radar`
 
 - Ten real Treasury curves (monthly averages from FRED: 3M, 1Y, 2Y, 5Y, 7Y, 10Y), in mystery order: Dec 2003, Feb 2007, Dec 1992, Jun 1999 (trap), Aug 2000, Jun 1998, Jun 1989, Aug 2019, Sep 2007 (trap), Jul 2023. Recession dates are NBER's.
 - The rule: spread = 10-year minus 3-month. Below 0 = inverted, 0 to +0.99 = flat, +1.00 or more = normal.

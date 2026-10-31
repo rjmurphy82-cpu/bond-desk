@@ -34,7 +34,7 @@
 <body data-page="my-report">
 <div class="shell">
   <main class="main"><div class="inner"><div class="wrap">
-    <div class="crumb"><a href="/#practices">Practice On Your Own</a> / Unit 3: Bonds</div>
+    <div class="crumb"><a href="/#unit4">Practice On Your Own</a> / Unit 4: Bonds</div>
     <h1>My Report</h1>
     <p class="lede">Everything you've done on the practice pages, from this device. When you're finished, type your name, pick your period, and send it to your teacher. You can send again later; your teacher sees your newest report.</p>
     <div class="panel"><div class="pbody">
@@ -126,7 +126,7 @@ $("#send").onclick = async () => {
   if (!period) return say("Pick your class period first.", true);
   $("#send").disabled = true;
   try {
-    const r = await fetch("/api/report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "submit", report: { v: 1, name, period, unit: "Unit 3: Bonds", ...R } }) });
+    const r = await fetch("/api/report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "submit", report: { v: 1, name, period, unit: "Unit 4: Bonds", ...R } }) });
     let j = null; try { j = await r.json(); } catch (e) {}
     if (!r.ok) throw new Error((j && j.message) || "Couldn't send. Try again.");
     set("d214-fin-sent", Date.now()); draw(); say("Sent! Your teacher has your report.");
