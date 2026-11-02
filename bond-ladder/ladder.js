@@ -459,7 +459,7 @@ function hostEnd() {
     <div class="podium">${slot(top[1], 1, "p2")}${slot(top[0], 0, "p1")}${slot(top[2], 2, "p3")}</div>
     <div class="rest">${top.slice(3).map((x, k2) => `<div class="row45" data-i="${k2 + 3}"><span class="r">${rk[k2 + 3]}</span><span class="n">${esc(nameOf(x.p))}</span><span class="s">${num(x.s)}</span></div>`).join("")}</div>
     <div class="fbar"><button class="btn" id="cr">Class results</button><button class="btn" id="erase">Erase game</button><button class="btn" id="done">Done</button></div></div>`;
-  [4, 3, 2, 1, 0].filter(i => top[i]).forEach((i, n) => setTimeout(() => { const el = app.querySelector(`.finale [data-i="${i}"]`); if (el) el.classList.add("in"); beep(i === 0 ? 1047 : 600, .2); }, 600 + n * 1000));
+  [4, 3, 2, 1, 0].filter(i => top[i]).forEach((i, n) => setTimeout(() => { const el = app.querySelector(`.finale [data-i="${i}"]`); if (el) el.classList.add("in"); beep(i === 0 ? 1047 : 600, .2); }, [1500, 5500, 10000, 14500, 20000][n]));
   $("#cr").onclick = classResults; $("#erase").onclick = hostErase; $("#done").onclick = () => { cleanupHost(); home(); };
 }
 async function classResults() {

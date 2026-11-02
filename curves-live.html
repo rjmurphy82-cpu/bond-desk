@@ -718,7 +718,7 @@ function finale(ps){
   // reveal 5th -> 1st
   const order=[4,3,2,1,0].filter(i=>top[i]);
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const at=reduce?[0,0,0,0,0]:[900,1900,3100,4400,6200];
+  const at=reduce?[0,0,0,0,0]:[1500,5500,10000,14500,20000];
   FIN.forEach(clearTimeout);FIN=order.map((i,n)=>setTimeout(()=>{const el=app.querySelector(`.finale [data-i="${i}"]`);if(!el)return;el.classList.add("in");
     if(i===0){fanfare();startFireworks(reduce?0:1)}else beep(i<3?660:520,.12)},at[n+(5-top.length)]||at[n]));
 }
