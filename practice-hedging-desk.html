@@ -135,8 +135,8 @@ footer{margin-top:28px;color:var(--muted);font-size:13px}
       <div class="brief" id="fu-brief"></div>
       <div class="field"><span class="lbl">Your trade</span>
         <div class="seg" role="group" aria-label="Futures side">
-          <button type="button" id="fu-long">Buy futures (long)</button>
-          <button type="button" id="fu-short">Sell futures (short)</button>
+          <button type="button" id="fu-long">Buy futures</button>
+          <button type="button" id="fu-short">Sell futures</button>
         </div>
       </div>
       <div class="row2">
@@ -344,7 +344,7 @@ function fuRender(){
     $('fu-eff').textContent = money(S,true); $('fu-eff').className='v';
     $('fu-eff-n').textContent = 'Unhedged: you take the market price';
     verdict('fu-verdict','neutral','Your call.', sc.who+' needs to '+sc.act+' '+sc.item+'. Which futures position protects it from a bad price?');
-    $('fu-math').textContent = 'Long futures:  (Delivery price − Futures price) × Quantity\nShort futures: (Futures price − Delivery price) × Quantity';
+    $('fu-math').textContent = 'Bought futures: (Delivery price − Futures price) × Quantity\nSold futures:   (Futures price − Delivery price) × Quantity';
     return;
   }
   const pnl = M.futPnl(fu.side, F, S, q);
@@ -363,7 +363,7 @@ function fuRender(){
     verdict('fu-verdict','bad','Wrong side.', 'A '+(buyer?'buyer':'seller')+' who '+(fu.side==='long'?'buys':'sells')+' futures adds risk instead of removing it. When the cash market hurts you, the futures hurt you too. Effective price: '+money(eff,true)+' versus a locked '+money(F,true)+'.');
   }
   const d = fu.side==='long' ? '('+money(S,true)+' − '+money(F,true)+')' : '('+money(F,true)+' − '+money(S,true)+')';
-  $('fu-math').textContent = (fu.side==='long'?'Long':'Short')+' futures: '+d+' × '+num(q)+' = '+signed(pnl)+'\n'+
+  $('fu-math').textContent = (fu.side==='long'?'Bought':'Sold')+' futures: '+d+' × '+num(q)+' = '+signed(pnl)+'\n'+
     (buyer ? 'Effective cost: '+money(S*q)+' − ('+signed(pnl)+') = '+money(eff*q)+'  →  '+money(eff,true)+' per '+sc.unit
            : 'Effective sales: '+money(S*q)+' + ('+signed(pnl)+') = '+money(eff*q)+'  →  '+money(eff,true)+' per '+sc.unit);
 }
@@ -529,9 +529,9 @@ function build(q, correct, wrongs, why){
 const GEN = {
   futures(){
     if(Math.random()<0.25) return pick([
-      ()=>build('A chocolate company is worried cocoa prices will rise before it buys next season. What futures position hedges that risk?','Buy cocoa futures (long)',['Sell cocoa futures (short)','Buy a put option on cocoa','No hedge is possible'],'A future buyer is hurt by rising prices. A long futures position gains when prices rise, which offsets the higher cost.'),
+      ()=>build('A chocolate company is worried cocoa prices will rise before it buys next season. What futures position hedges that risk?','Buy cocoa futures',['Sell cocoa futures','Buy a put option on cocoa','No hedge is possible'],'A future buyer is hurt by rising prices. Buying futures gains when prices rise, which offsets the higher cost.'),
       ()=>build('A business hedges with futures and prices move in its favor in the cash market. What happens on the futures contract?','It loses money, offsetting the cash market savings',['It also gains money','It is cancelled automatically','It pays a dividend'],'A hedge locks in a price. When the cash market helps you, the futures position loses about the same amount.'),
-      ()=>build('Who is most likely to SELL futures as a hedge?','A farmer who will harvest and sell a crop',['An airline that buys jet fuel','A bakery that buys flour','A restaurant that buys beef'],'Sellers of a commodity fear falling prices. A short futures position gains when prices fall.')
+      ()=>build('Who is most likely to SELL futures as a hedge?','A farmer who will harvest and sell a crop',['An airline that buys jet fuel','A bakery that buys flour','A restaurant that buys beef'],'Sellers of a commodity fear falling prices. Selling futures gains when prices fall.')
     ])();
     const sc = pick([
       {w:'An oil refiner',a:'buy',it:'crude oil',u:'barrel',q:[5000,10000,20000],F:[70,75,80]},
@@ -548,7 +548,7 @@ const GEN = {
     const verb = sc.a==='buy' ? 'buys' : 'sells';
     const qt = sc.w+' plans to '+sc.a+' '+num(q)+' '+sc.u+'s of '+sc.it+'. To hedge, it '+verb+' futures at '+money(F,true)+' per '+sc.u+'. At delivery, '+sc.it+' trades at '+money(S,true)+'. What is the gain or loss on the futures position?';
     return build(qt, gl(pnl), [gl(-pnl), gl(pnl*2), gl(-pnl*2), gl(pnl/2)],
-      (side==='long'?'Long':'Short')+' futures: '+(side==='long'?'('+money(S,true)+' − '+money(F,true)+')':'('+money(F,true)+' − '+money(S,true)+')')+' × '+num(q)+' = '+signed(pnl)+'.');
+      (side==='long'?'Bought':'Sold')+' futures: '+(side==='long'?'('+money(S,true)+' − '+money(F,true)+')':'('+money(F,true)+' − '+money(S,true)+')')+' × '+num(q)+' = '+signed(pnl)+'.');
   },
   options(){
     const type = pick(['concept','call','putbe','prot','hedgecost','callbe']);

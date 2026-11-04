@@ -189,7 +189,7 @@ function renderPit(G) {
         <div class="tstep" style="margin-top:6px"><span class="tl">Price per ${c.unit}</span><button data-pp="-1">−</button><b>${px(pit.price)}</b><button data-pp="1">+</button></div>
         <div class="actions"><button class="btn big" id="postBtn" style="width:100%" ${open ? "" : "disabled"}>Post ${pit.qty} @ ${px(pit.price)}</button></div>
         <div class="small">If your price matches an order already on the board, you trade right away at that order's price.</div>
-        <div class="label" style="margin-top:12px">Your position in ${c.name.toLowerCase()}</div><div style="font-size:16px">You ${role === "buy" ? "need" : "will sell"} ${R.N[c.k]} contracts. Futures: ${(p => p > 0 ? "long " + p : p < 0 ? "short " + -p : "none yet")(myPos(G, R, c.k))}.</div></div></div>
+        <div class="label" style="margin-top:12px">Your position in ${c.name.toLowerCase()}</div><div style="font-size:16px">You ${role === "buy" ? "need" : "will sell"} ${R.N[c.k]} contracts. Futures: ${(p => p > 0 ? "bought " + p : p < 0 ? "sold " + -p : "none yet")(myPos(G, R, c.k))}.</div></div></div>
     <div class="card" style="margin-top:12px"><div class="label">Trade tape</div>${tapeHTML(S, G, 8, me.gid)}</div>
     <div class="cols" style="margin-top:12px">${exReportHTML(R, false, S.news)}${exIntelHTML(R, role)}</div>
     <details style="margin-top:12px"><summary class="label" style="cursor:pointer">Your cost sheet</summary><div style="margin-top:8px">${exSheetHTML(G, R, role)}</div></details>${status()}`;
