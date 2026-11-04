@@ -5,6 +5,7 @@
     { group: "Unit 5: Derivatives" },
     { sub: "Live class games" },
     { href: "/deriv", ch: "5", label: "Derivatives Live", page: "deriv" },
+    { href: "/futures-live", ch: "5", label: "Futures Live (quiz)", page: "futures-live" },
     { sub: "Review games" },
     { href: "/lock-it-in", ch: "5", label: "Lock It In", page: "lock-it-in" },
     { sub: "Practice on your own" },
