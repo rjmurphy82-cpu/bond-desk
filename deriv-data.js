@@ -6,7 +6,8 @@
 //                     turns a group's choices into its result for the round. Missing answer = the desk's `dflt`.
 
 export const UNIT = "Unit 5: Derivatives";
-export const Q_SECS = 25;          // seconds per story question
+export const Q_SECS = 25;          // seconds per story question (a question can set its own with secs)
+export const qSecs = R => (R && R.secs) || Q_SECS;
 export const PTS_MAX = 1000, PTS_MIN = 500;   // story points: right answer = 500 to 1,000 (faster = more)
 
 const usd = (v, cents) => { const a = Math.abs(v), d = cents || (a % 1 !== 0 && a < 1000) ? 2 : 0; return (v < 0 ? "−" : "") + "$" + a.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); };
@@ -103,6 +104,34 @@ const STORY = {
     { t: "q", q: "You pay $50,000 a year to protect $5 million of bonds. The company defaults after 2 years. What's your net gain on the CDS?", a: ["$5,000,000", "$4,900,000", "$4,950,000", "$100,000"], c: 1, why: "Premiums: $50,000 × 2 = $100,000. Net: $5,000,000 − $100,000 = $4,900,000." },
     { t: "q", q: "No default over 4 years at $50,000 a year. What was the total cost of protection?", a: ["$50,000", "$5,000,000", "$0", "$200,000"], c: 3, why: "$50,000 × 4 years = $200,000." },
     { t: "q", q: "Which borrower would have the CHEAPEST CDS protection?", a: ["A company rated AAA", "A company rated CCC", "A company that just missed a payment", "Cousin Ricky"], c: 0, why: "AAA is the safest rating, so default protection costs the least." }
+  ] }
+};
+
+/* =====================================================================
+   WARM-UP GAMES (Kahoot style review to open class; same engine as the story games)
+   ===================================================================== */
+const WARMUP = {
+  futures: { title: "Futures Face-Off", rounds: [
+    { t: "card", title: "Futures Face-Off", text: "Speed review. Every question is about a real business that buys or sells something whose price it can't control. Some questions need math, so they give you more time. Faster right answers earn more points." },
+    { t: "q", q: "A coffee chain reads that a drought in Brazil could push coffee bean prices way up next year. What should it do today?", a: ["Sell coffee futures", "Buy coffee futures", "Wait and buy beans next year", "Raise its prices right now"], c: 1, why: "The chain BUYS coffee, so rising prices hurt it. Buying futures locks in what it pays before the drought pushes prices up." },
+    { t: "q", q: "A chocolate maker and a cocoa farm both read: \"Heavy rain is ruining the cocoa harvest in Ivory Coast, the world's top grower.\" Who is most eager to lock in a price TODAY?", a: ["The farm, by selling futures", "Neither one", "The chocolate maker, by buying futures", "Both, by selling futures"], c: 2, secs: 30, why: "A smaller harvest means higher prices. The buyer (chocolate maker) wants to lock in now. The seller (farm) would rather wait and sell later at the higher price." },
+    { t: "q", q: "A soybean farmer also runs trucks that burn diesel. Which pair of hedges fits her business?", a: ["Sell soybean futures, buy diesel futures", "Buy both", "Sell both", "Buy soybean futures, sell diesel futures"], c: 0, secs: 30, why: "She SELLS soybeans (falling prices hurt), so she sells soybean futures. She BUYS diesel (rising prices hurt), so she buys diesel futures." },
+    { t: "card", title: "The Corn Farm", text: "One corn futures contract covers 5,000 bushels. A farmer expects to harvest 40,000 bushels in October. Today corn futures trade at $4.50 a bushel." },
+    { t: "q", q: "How many corn futures contracts should she sell?", a: ["4", "5", "8", "40"], c: 2, secs: 40, why: "40,000 bushels ÷ 5,000 per contract = 8 contracts." },
+    { t: "q", q: "What total amount did she lock in for her 40,000 bushels?", a: ["$45,000", "$180,000", "$200,000", "$18,000"], c: 1, secs: 40, why: "40,000 × $4.50 = $180,000." },
+    { t: "card", title: "October: Prices Fall", text: "A huge harvest across the Corn Belt drops corn to $4.00 a bushel." },
+    { t: "q", q: "How much do her futures contracts gain?", a: ["$4,000", "$2,000", "$160,000", "$20,000"], c: 3, secs: 40, why: "She sold at $4.50 and the price is $4.00. ($4.50 − $4.00) × 40,000 = $20,000 gained." },
+    { t: "q", q: "She sells her real corn at the market for $4.00 ($160,000). Add the futures gain. What does she end up with?", a: ["$180,000", "$160,000", "$140,000", "$200,000"], c: 0, secs: 40, why: "$160,000 + $20,000 = $180,000. That's exactly the amount she locked in." },
+    { t: "board" },
+    { t: "q", q: "Rewind. Corn RISES to $5.00 instead, and her futures lose $20,000. Why is she still OK?", a: ["She can cancel the contract", "The buyer covers her loss", "She sells her real corn for $200,000, so she still ends up with $180,000", "She isn't OK. She lost $20,000"], c: 2, secs: 35, why: "40,000 × $5.00 = $200,000 for the corn, minus the $20,000 futures loss = $180,000. The hedge locked in her amount either way." },
+    { t: "q", q: "An airline buys futures for 1,000,000 gallons of jet fuel at $2.50. By delivery, fuel costs $3.10. How much do the futures gain?", a: ["$60,000", "$600,000", "$3,100,000", "$6,000,000"], c: 1, secs: 40, why: "($3.10 − $2.50) × 1,000,000 = $600,000." },
+    { t: "q", q: "The airline buys its fuel at the market for $3.10 a gallon. After the futures gain, what did it REALLY pay per gallon?", a: ["$3.10", "$0.60", "$2.80", "$2.50"], c: 3, secs: 35, why: "It paid $3.10 but gained $0.60 a gallon on the futures. $3.10 − $0.60 = $2.50, the price it locked in." },
+    { t: "q", q: "A school district bought heating oil futures at $3.00 a gallon. The winter is mild and prices fall to $2.40. A board member says the hedge \"wasted money.\" What's the best reply?", a: ["She's right. We should never hedge", "We can ask the seller for a refund", "Our futures actually made money", "We paid $3.00, exactly what we budgeted. The hedge did its job"], c: 3, secs: 35, why: "A hedge isn't a bet to win. The district traded the chance to save for knowing its cost. Its budget came in right on target." },
+    { t: "board" },
+    { t: "q", q: "A speculator who owns no corn buys 2 corn futures (10,000 bushels) at $4.50. Corn falls to $4.20. What happens?", a: ["She gains $3,000", "She loses $3,000", "She loses $300", "Nothing. She has no corn"], c: 1, secs: 40, why: "She bought, and the price fell $0.30. $0.30 × 10,000 = $3,000 lost. She has no real corn to make up for it." },
+    { t: "q", q: "What's the big difference between a hedger and a speculator?", a: ["A hedger uses futures to cut risk. A speculator takes on risk to try to profit", "A speculator never loses money", "A hedger never loses on the contract", "Only speculators have to follow through"], c: 0, why: "The farmer and the airline were hedgers: they had real crops or real fuel needs. The speculator had nothing to protect." },
+    { t: "q", q: "A cereal maker buys wheat futures from a farm at $6.50 a bushel. At delivery, wheat is $7.60. Which is true about the contract?", a: ["Both sides gain", "The cereal maker gains $1.10 a bushel, and the farm loses $1.10", "The farm gains $1.10 a bushel", "Both sides lose"], c: 1, secs: 30, why: "Every futures contract has a buyer and a seller. Whatever one side gains on the contract, the other side loses." },
+    { t: "q", q: "On the delivery date, both sides of a futures contract...", a: ["Can walk away if the price moved against them", "Get their money back", "Must follow through on the deal", "Pay a fee to cancel"], c: 2, why: "Futures are an OBLIGATION for both sides. Next up, options: a deal where one side gets to choose." }
   ] }
 };
 
@@ -555,22 +584,23 @@ const cds = {
 const DESK = { futures: exchange, options, swaps, cds };
 
 /* =====================================================================
-   The eight games
+   The games (eight, plus warm-ups)
    ===================================================================== */
 const TOPIC = { futures: "Futures", options: "Options", swaps: "Swaps", cds: "Credit Default Swaps" };
 export const GAMES = {};
 for (const t of Object.keys(TOPIC)) {
   GAMES[t + "-story"] = { id: t + "-story", kind: "story", topic: t, topicName: TOPIC[t], title: STORY[t].title, rounds: STORY[t].rounds };
   GAMES[t + "-desk"] = { id: t + "-desk", kind: "desk", topic: t, topicName: TOPIC[t], ...DESK[t] };
+  if (WARMUP[t]) GAMES[t + "-warmup"] = { id: t + "-warmup", kind: "story", warmup: true, topic: t, topicName: TOPIC[t], title: WARMUP[t].title, rounds: WARMUP[t].rounds };
 }
-export const ORDER = ["futures-story", "futures-desk", "options-story", "options-desk", "swaps-story", "swaps-desk", "cds-story", "cds-desk"];
+export const ORDER = ["futures-warmup", "futures-story", "futures-desk", "options-story", "options-desk", "swaps-story", "swaps-desk", "cds-story", "cds-desk"];
 export const nRounds = id => GAMES[id].rounds.length;
 export const nQuestions = id => GAMES[id].kind === "story" ? GAMES[id].rounds.filter(r => r.t === "q").length : GAMES[id].rounds.length;
 
 // Points for a story answer: 500 to 1,000 if right (faster = more), 0 if wrong.
 export function storyPoints(R, a, ms) {
   if (+a !== R.c) return 0;
-  const lim = Q_SECS * 1000, f = Math.max(0, Math.min(1, 1 - (ms || 0) / lim));
+  const lim = qSecs(R) * 1000, f = Math.max(0, Math.min(1, 1 - (ms || 0) / lim));
   return Math.round(PTS_MIN + (PTS_MAX - PTS_MIN) * f);
 }
 // The choices a desk round needs, given what's been picked so far

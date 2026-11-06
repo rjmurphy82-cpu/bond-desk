@@ -1,6 +1,6 @@
 // Unit 5 Derivatives Live: pieces shared by the projector (deriv-host.js) and the iPads (deriv-play.js).
-import { GAMES, ORDER, UNIT, Q_SECS, fmt, needed, exSettle, exBudget, exAsk, exBid, exSettleTrades, mmQuote, pitFrac, pitOpen, pitUsed, activeComms } from "./deriv-data.js";
-export { activeComms, GAMES, ORDER, UNIT, Q_SECS, fmt, needed, exSettle, exBudget, exAsk, exBid, exSettleTrades, mmQuote, pitFrac, pitOpen, pitUsed };
+import { GAMES, ORDER, UNIT, Q_SECS, qSecs, fmt, needed, exSettle, exBudget, exAsk, exBid, exSettleTrades, mmQuote, pitFrac, pitOpen, pitUsed, activeComms } from "./deriv-data.js";
+export { activeComms, GAMES, ORDER, UNIT, Q_SECS, qSecs, fmt, needed, exSettle, exBudget, exAsk, exBid, exSettleTrades, mmQuote, pitFrac, pitOpen, pitUsed };
 export const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 export const SHAPES = ["▲", "◆", "●", "■"];
 export const ord = n => n + (n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th");
@@ -47,7 +47,7 @@ export const qIndex = (G, r) => G.rounds.slice(0, r + 1).filter(x => x.t === "q"
 export const roundLabel = (G, r) => G.kind === "exchange" ? `Quarter ${r + 1} of ${G.rounds.length}` : G.kind === "desk" ? `Round ${r + 1} of ${G.rounds.length}` : G.rounds[r].t === "q" ? `Question ${qIndex(G, r)} of ${G.rounds.filter(x => x.t === "q").length}` : G.rounds[r].t === "card" ? "Story" : "Leaderboard";
 
 // Seconds left on a story question, using the server clock
-export function secsLeft(S, skew) { if (!S.openedAt) return Q_SECS; return Math.max(0, Math.ceil((Q_SECS * 1000 - (Date.now() + skew - S.openedAt)) / 1000)); }
+export function secsLeft(S, skew) { const L = qSecs(round(S)); if (!S.openedAt) return L; return Math.max(0, Math.ceil((L * 1000 - (Date.now() + skew - S.openedAt)) / 1000)); }
 
 // The briefing a desk group reads before deciding
 export function briefHTML(G, R, big) {

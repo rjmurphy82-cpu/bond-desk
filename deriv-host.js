@@ -1,7 +1,7 @@
 // Unit 5 Derivatives Live: host (projector) screen for all eight games
 import { call, offlineCaller, $, $$, store } from "./deriv-client.js";
 import { qrSVG } from "./qr.js";
-import { GAMES, ORDER, Q_SECS, fmt, esc, SHAPES, game, round, dec, answerable, deskResult, standings, bench, show, deltaText, roundLabel, secsLeft, briefHTML, resultTable, storyCardHTML, needed, settle, exBudget, exAsk, exBid, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML, mmQuote, pitFrac, pitNow, pitLeft, clockText, bookSide, lastPrice, tapeHTML, activeComms } from "./deriv-view.js";
+import { GAMES, ORDER, Q_SECS, qSecs, fmt, esc, SHAPES, game, round, dec, answerable, deskResult, standings, bench, show, deltaText, roundLabel, secsLeft, briefHTML, resultTable, storyCardHTML, needed, settle, exBudget, exAsk, exBid, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML, mmQuote, pitFrac, pitNow, pitLeft, clockText, bookSide, lastPrice, tapeHTML, activeComms } from "./deriv-view.js";
 const PIT_MM_START = 0.03, PIT_MM_END = 0.09;
 
 let api = call, offline = false, S = null, sess = null, pollT = null, netErr = "", skew = 0;
@@ -19,7 +19,7 @@ async function boot() {
   if (sess) { try { S = await api("state", { code: sess.code, hostKey: sess.hostKey }); if (!S.host) throw 0; skew = S.now - Date.now(); startPoll(); } catch { store.del(SKEY); sess = null; S = null; } }
   renderMenu();
 }
-const kindLine = G => G.kind === "exchange" ? "Exchange · buyers trade with sellers · one iPad per pair · about 20 minutes per quarter" : G.kind === "story" ? "Story game · one player per iPad · about 20 minutes" : `Trading desk · one iPad per group · ${G.rounds.length} rounds · about 40 minutes`;
+const kindLine = G => G.kind === "exchange" ? "Exchange · buyers trade with sellers · one iPad per pair · about 20 minutes per quarter" : G.warmup ? "Warm-up · one player per iPad · about 15 minutes" : G.kind === "story" ? "Story game · one player per iPad · about 20 minutes" : `Trading desk · one iPad per group · ${G.rounds.length} rounds · about 40 minutes`;
 function renderMenu(msg = "") {
   ui.menu = true; $("#menuBtn").style.display = "none"; clearInterval(qTick);
   const live = !!(sess && S), P = GAMES[ui.pick];
@@ -29,11 +29,11 @@ function renderMenu(msg = "") {
         <div><div style="font-family:Oswald,Arial;font-size:44px;line-height:1">${offline ? "Offline game" : "Game " + esc(sess.code)}</div><div style="font-size:19px;margin-top:4px">${esc(summary())}</div></div>
         <button class="btn big" id="mResume">Resume</button></div></div>` : ""}
     <div class="label">Pick a game</div>
-    <div class="picker">${TOPICS.map(([t, nm]) => `<div class="topic"><h3>${nm}</h3>${["story", "desk"].map(k => { const G = GAMES[t + "-" + k]; return `<button class="gpick ${ui.pick === G.id ? "on" : ""}" data-g="${G.id}"><span class="kind">${k === "story" ? "1 · Story game" : "2 · Trading desk"}</span><b>${esc(G.title)}</b><span>${k === "story" ? `${G.rounds.filter(r => r.t === "q").length} questions. Learn it from a story students know.` : esc(G.pitch)}</span></button>`; }).join("")}</div>`).join("")}</div>
+    <div class="picker">${TOPICS.map(([t, nm]) => `<div class="topic"><h3>${nm}</h3>${["warmup", "story", "desk"].filter(k => GAMES[t + "-" + k]).map(k => { const G = GAMES[t + "-" + k]; return `<button class="gpick ${ui.pick === G.id ? "on" : ""}" data-g="${G.id}"><span class="kind">${k === "warmup" ? "Warm-up · Review" : k === "story" ? "1 · Story game" : "2 · Trading desk"}</span><b>${esc(G.title)}</b><span>${k === "warmup" ? `${G.rounds.filter(r => r.t === "q").length} questions. A speed review to open class.` : k === "story" ? `${G.rounds.filter(r => r.t === "q").length} questions. Learn it from a story students know.` : esc(G.pitch)}</span></button>`; }).join("")}</div>`).join("")}</div>
     <div class="hero" style="margin-top:16px">
-      <div class="card dark"><div class="label">${esc(P.topicName)} · ${P.kind === "story" ? "Story game" : "Trading desk"}</div>
+      <div class="card dark"><div class="label">${esc(P.topicName)} · ${P.warmup ? "Warm-up" : P.kind === "story" ? "Story game" : "Trading desk"}</div>
         <h2 style="font-size:40px;line-height:1.05;margin:4px 0 8px">${esc(P.title)}</h2>
-        <div style="font-size:18px;line-height:1.5">${P.kind === "story" ? "Students join on their own iPads. You tell the story on the board one chapter at a time; they answer each question on their iPad. Faster right answers earn more points (500 to 1,000). Run it before the trading desk." : esc(P.pitch) + " " + esc(P.rule)}</div>
+        <div style="font-size:18px;line-height:1.5">${P.warmup ? "A speed review to open class. Students join on their own iPads and answer each question there. Math questions get extra time (up to 40 seconds). Faster right answers earn more points (500 to 1,000)." : P.kind === "story" ? "Students join on their own iPads. You tell the story on the board one chapter at a time; they answer each question on their iPad. Faster right answers earn more points (500 to 1,000). Run it before the trading desk." : esc(P.pitch) + " " + esc(P.rule)}</div>
         <div class="small" style="margin-top:8px;font-size:15px">${kindLine(P)}</div>
         ${P.kind === "exchange" ? `<div class="nrpick"><span>How many quarters?</span>${Array.from({ length: P.rounds.length }, (_, i) => `<button class="${ui.nr === i + 1 ? "on" : ""}" data-nr="${i + 1}">${i + 1}</button>`).join("")}<span class="small" style="color:#CFCFCF">About ${ui.nr * 20} minutes</span></div><div class="nrpick"><span>Trading style</span><button class="wide ${ui.mode === "pit" ? "on" : ""}" data-mode="pit">Live trading pit</button><button class="wide ${ui.mode === "sealed" ? "on" : ""}" data-mode="sealed">Sealed bids (backup)</button></div><div class="small" style="color:#CFCFCF;margin-top:4px">${ui.mode === "pit" ? "Desks post bids and offers and trade live during a timed window. Needs solid Wi-Fi." : "Each desk sends one set of orders a quarter. Use this if the Wi-Fi is slow. Play without iPads always uses sealed bids."}</div>` : ""}
         <div class="actions" style="justify-content:flex-start"><button class="btn big" id="newGame">${live ? "End it &amp; start this game" : "Start this game"}</button></div>
@@ -143,7 +143,7 @@ function renderStory(G) {
   const d = S.decisions[S.r] || {}, n = S.answered.length, all = S.groups.length > 0 && n >= S.groups.length;
   if (S.phase === "open") {
     const left = secsLeft(S, skew);
-    $("#view").innerHTML = storyTop(G, `<div class="ring" id="ring" style="--p:${left / Q_SECS}"><b id="ringV">${left}</b></div>`) +
+    $("#view").innerHTML = storyTop(G, `<div class="ring" id="ring" style="--p:${left / qSecs(R)}"><b id="ringV">${left}</b></div>`) +
       `<p class="qtext">${esc(R.q)}</p><div class="ans" style="margin-top:16px">${R.a.map((a, i) => `<div class="an" style="background:var(--c${i})"><span class="sh">${SHAPES[i]}</span><span>${esc(a)}</span></div>`).join("")}</div>
       <div class="actions" style="justify-content:space-between;align-items:center"><span style="font-family:Oswald,Arial;font-size:26px;color:var(--brown)">${n} of ${S.groups.length} answered</span>
         <div style="display:flex;gap:8px">${offline ? `<button class="btn ghost" id="enterBtn">Enter answers</button>` : ""}<button class="btn big" id="revBtn">Reveal now</button></div></div><div class="small" id="netErr">${esc(netErr)}</div>`;
@@ -153,7 +153,7 @@ function renderStory(G) {
     if (all && !offline) { op("reveal"); return; }
     qTick = setInterval(() => {
       const l = secsLeft(S, skew), el = $("#ringV"); if (!el) return clearInterval(qTick);
-      el.textContent = l; $("#ring").style.setProperty("--p", l / Q_SECS);
+      el.textContent = l; $("#ring").style.setProperty("--p", l / qSecs(R));
       if (l <= 0) { clearInterval(qTick); if (!offline) op("reveal"); }
     }, 250);
     return;
@@ -291,7 +291,7 @@ function renderFinal(G) {
     side = `<div class="card dark"><div class="label">Reteach first: the 3 hardest questions</div>${qs.map(o => `<p style="margin:0 0 10px;font-size:16px;line-height:1.4"><b style="font-family:Oswald,Arial">${o.pct}% right.</b> ${esc(o.R.q)}<br><span style="color:#CFCFCF">${esc(o.R.a[o.R.c])}</span></p>`).join("")}
       <div class="small" style="margin-top:10px">Next: <b style="color:#fff">${esc(GAMES[G.topic + "-desk"].title)}</b>, the ${esc(G.topicName.toLowerCase())} trading desk.</div></div>`;
   }
-  $("#view").innerHTML = `<div class="topbar"><div class="yr"><div class="sub">${esc(G.topicName)} · ${G.kind === "story" ? "Story game" : "Trading desk"}</div><h2>Final results</h2></div><div>${navBack()}</div></div>
+  $("#view").innerHTML = `<div class="topbar"><div class="yr"><div class="sub">${esc(G.topicName)} · ${G.warmup ? "Warm-up" : G.kind === "story" ? "Story game" : "Trading desk"}</div><h2>Final results</h2></div><div>${navBack()}</div></div>
     <div class="podium">${pod(1)}${pod(0)}${pod(2)}</div>
     <div class="grid" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr);align-items:start">${table}${side}</div>
     <div class="actions"><button class="btn ghost" id="again">Menu</button></div>`;
