@@ -1,9 +1,10 @@
 // Unit 5 Derivatives Live: game server logic for all eight games (four story games, four trading desks).
 // Same setup as the other live games (Upstash Redis on Vercel, in-memory store for offline mode and
 // local testing), with its own keys ("dv:") so the games never mix.
-// Each round: phase "open" (players answer) -> "reveal" (desk steps: market -> stand) -> next round.
+// Each round: phase "open" (players answer) -> "reveal" (desk steps: [check ->] market -> stand) -> next round.
+// Games with mathCheck (The Options Floor) start each reveal with "check": desks work out their own result first.
 // Story "card" and "board" rounds have no answers: the host goes straight to the next round.
-import { GAMES, nRounds, storyPoints, validPick, exValidate, CODENAMES, pitApply, pitOpen, pitFrac, emptyBook } from "./deriv-data.js";
+import { GAMES, nRounds, storyPoints, validPick, mathAnswer, mathRight, exValidate, CODENAMES, pitApply, pitOpen, pitFrac, emptyBook } from "./deriv-data.js";
 import { GameError, memoryKV } from "./core.js";
 export { GameError, memoryKV };
 const TTL = 43200;
@@ -14,7 +15,7 @@ const clean = s => String(s || "").replace(/[<>"'`]/g, "").replace(/\s+/g, " ").
 const fail = (c, m) => { throw new GameError(c, m); };
 const json = s => { try { return JSON.parse(s); } catch { return null; } };
 const hobj = arr => { const o = {}; if (Array.isArray(arr)) for (let i = 0; i < arr.length; i += 2) o[arr[i]] = json(arr[i + 1]); else if (arr && typeof arr === "object") for (const k in arr) o[k] = json(arr[k]); return o; };
-const allKeys = (code, n) => ["state", "v", "g", ...Array.from({ length: n }, (_, r) => "d" + r), ...Array.from({ length: n }, (_, r) => "b" + r)].map(k => K(code, k));
+const allKeys = (code, n) => ["state", "v", "g", ...Array.from({ length: n }, (_, r) => "d" + r), ...Array.from({ length: n }, (_, r) => "b" + r), ...Array.from({ length: n }, (_, r) => "m" + r)].map(k => K(code, k));
 async function touch(kv, code, n, extra = []) { await kv([...extra, ["INCR", K(code, "v")], ...allKeys(code, n).map(k => ["EXPIRE", k, TTL])]); }
 async function loadState(kv, code) {
   if (!/^\d{5}$/.test(String(code))) fail("no_game", "That game code doesn't exist.");
@@ -58,13 +59,14 @@ export async function getState(kv, { code, gid, key, hostKey, since }) {
   if (!s || !GAMES[s.game]) fail("no_game", "That game has ended.");
   const N = NR(s);
   const pit = s.mode === "pit";
-  const res = await kv([["HGETALL", K(code, "g")], ...Array.from({ length: N }, (_, r) => ["HGETALL", K(code, "d" + r)]), ...(pit ? Array.from({ length: N }, (_, r) => ["GET", K(code, "b" + r)]) : [])]);
+  const res = await kv([["HGETALL", K(code, "g")], ...Array.from({ length: N }, (_, r) => ["HGETALL", K(code, "d" + r)]), ...(pit ? Array.from({ length: N }, (_, r) => ["GET", K(code, "b" + r)]) : []), ...(GAMES[s.game].mathCheck ? Array.from({ length: N }, (_, r) => ["HGETALL", K(code, "m" + r)]) : [])]);
   const groups = hobj(res[0]), host = isHost(s, hostKey);
   const me = gid && groups[gid] && groups[gid].key === key ? gid : null;
   const showCodes = host || s.phase === "final";
   const out = { v: +v, phase: s.phase, r: s.r, step: s.step || null, game: s.game, nr: s.nr || null, mode: s.mode || null, news: s.news ?? null, tradeAt: s.tradeAt || null, win: s.win || null, host, openedAt: s.openedAt || null, now: Date.now(),
     groups: Object.entries(groups).sort((a, b) => (a[1].t || 0) - (b[1].t || 0)).map(([id, g]) => ({ gid: id, name: g.name, role: g.role || null, ...(showCodes || id === me ? { code: g.code || null } : {}), ...(host ? { pin: g.pin, manual: !!g.manual } : {}) })),
-    me: me ? { gid: me, name: groups[me].name, pin: groups[me].pin, code: groups[me].code || null } : null, decisions: [], answered: [], trades: [], book: null };
+    me: me ? { gid: me, name: groups[me].name, pin: groups[me].pin, code: groups[me].code || null } : null, decisions: [], answered: [], trades: [], book: null, checks: [], checked: [] };
+  const mOff = 1 + N + (pit ? N : 0);
   for (let r = 0; r < N; r++) {
     const d = hobj(res[1 + r]);
     const past = r < s.r || (r === s.r && (s.phase === "reveal" || s.phase === "final"));
@@ -72,6 +74,11 @@ export async function getState(kv, { code, gid, key, hostKey, since }) {
     else if (me && d[me]) { const mine = { ...d[me] }; delete mine.pts; out.decisions[r] = { [me]: mine }; }
     else out.decisions[r] = {};
     if (r === s.r) out.answered = Object.keys(d);
+    if (GAMES[s.game].mathCheck) { // math checks: a desk sees only its own until the board moves past the check
+      const m = hobj(res[mOff + r]), open = r === s.r && s.phase === "reveal" && s.step === "check";
+      out.checks[r] = host || !open ? m : (me && m[me] ? { [me]: m[me] } : {});
+      if (r === s.r) out.checked = Object.keys(m);
+    }
     if (pit) {
       const b = json(res[1 + N + r]) || emptyBook();
       if (past || host) out.trades[r] = b.trades;
@@ -138,8 +145,8 @@ export async function hostOp(kv, { code, hostKey, op, gid, a, pick, name, step, 
   const save = (extra = []) => touch(kv, code, N, [["SET", K(code, "state"), JSON.stringify(s), "EX", TTL], ...extra]);
   const openRound = r => { s.r = r; s.phase = "open"; s.openedAt = Date.now(); delete s.step; delete s.tradeAt; delete s.win; if (s.mode === "pit") { const R = G.rounds[r]; s.news = R.report ? Math.min(R.pre ?? 2, R.report.length) : 0; } };
   if (op === "start") { if (s.phase !== "lobby") fail("bad_op", "Already started."); openRound(0); await save(); }
-  else if (op === "reveal") { if (s.phase !== "open" || !answerable(G, s.r)) fail("bad_op", "Nothing to reveal."); s.phase = "reveal"; s.step = G.kind === "desk" ? "market" : G.kind === "exchange" ? "fills" : "answer"; await save(); }
-  else if (op === "step") { if (s.phase !== "reveal") fail("bad_op", "Reveal first."); if (!["fills", "market", "stand"].includes(step)) fail("bad_op", "Unknown step."); if (s.step !== step) { s.step = step; await save(); } }
+  else if (op === "reveal") { if (s.phase !== "open" || !answerable(G, s.r)) fail("bad_op", "Nothing to reveal."); s.phase = "reveal"; s.step = G.kind === "desk" ? (G.mathCheck ? "check" : "market") : G.kind === "exchange" ? "fills" : "answer"; await save(); }
+  else if (op === "step") { if (s.phase !== "reveal") fail("bad_op", "Reveal first."); if (!["fills", "check", "market", "stand"].includes(step)) fail("bad_op", "Unknown step."); if (s.step !== step) { s.step = step; await save(); } }
   else if (op === "trade") { // open the trading window in the live pit
     if (s.mode !== "pit" || s.phase !== "open") fail("bad_op", "Trading opens during a quarter.");
     s.win = Math.max(60, Math.min(900, Math.round(+secs || 300))); s.tradeAt = Date.now(); await save(); }
@@ -148,7 +155,7 @@ export async function hostOp(kv, { code, hostKey, op, gid, a, pick, name, step, 
     const R = G.rounds[s.r]; if ((s.news || 0) < R.report.length) { s.news = (s.news || 0) + 1; await save(); } }
   else if (op === "extend") { if (s.mode !== "pit" || s.phase !== "open" || !s.tradeAt) fail("bad_op", "Trading isn't open.");
     const now = Date.now(), end = s.tradeAt + s.win * 1000; if (end < now) { s.win = Math.round((now - s.tradeAt) / 1000) + (+secs || 60); } else s.win += (+secs || 60); await save(); }
-  else if (op === "reopen") { if (s.phase !== "reveal" || G.kind === "story") fail("bad_op", "Nothing to reopen."); s.phase = "open"; delete s.step; if (s.mode === "pit") { delete s.tradeAt; delete s.win; } await save(); }
+  else if (op === "reopen") { if (s.phase !== "reveal" || G.kind === "story") fail("bad_op", "Nothing to reopen."); s.phase = "open"; delete s.step; if (s.mode === "pit") { delete s.tradeAt; delete s.win; } await save(G.mathCheck ? [["DEL", K(code, "m" + s.r)]] : []); }
   else if (op === "next") {
     if (s.phase === "open" && answerable(G, s.r)) fail("bad_op", "Reveal first.");
     if (s.phase !== "open" && s.phase !== "reveal") fail("bad_op", "Not in a round.");
@@ -183,6 +190,20 @@ export async function hostOp(kv, { code, hostKey, op, gid, a, pick, name, step, 
   return { ok: true };
 }
 
+// A desk works out its own result for the round; one try, checked against the real answer
+export async function mathCheck(kv, { code, gid, key, r, v }) {
+  const s = await loadState(kv, code); await authGroup(kv, code, gid, key);
+  const G = GAMES[s.game];
+  if (!G.mathCheck) fail("bad_op", "This game has no math check.");
+  if (+r !== s.r || s.phase !== "reveal" || s.step !== "check") fail("closed", "The math check for this round is closed. Watch the board!");
+  const num = Math.round(+v * 100) / 100; if (v === "" || v === null || !Number.isFinite(num) || Math.abs(num) > 1e7) fail("bad_pick", "Type your answer as a number.");
+  const [old, dr] = await kv([["HGET", K(code, "m" + s.r), gid], ["HGET", K(code, "d" + s.r), gid]]);
+  if (json(old)) fail("locked", "You already checked your math this round.");
+  const ans = mathAnswer(G, s.r, json(dr)), ok = mathRight(num, ans);
+  await touch(kv, code, NR(s), [["HSET", K(code, "m" + s.r), gid, JSON.stringify({ v: num, ok, t: Date.now() })]]);
+  return { ok: true, right: ok, answer: ans };
+}
+
 // Live pit: post a bid or offer, take someone's order, cancel yours, or trade with the market maker
 export async function pitAction(kv, { code, gid, key, r, a }) {
   const s = await loadState(kv, code); const grp = await authGroup(kv, code, gid, key);
@@ -208,5 +229,6 @@ export async function dispatch(kv, action, p) {
   if (action === "undecide") return undecide(kv, p);
   if (action === "host") return hostOp(kv, p);
   if (action === "pit") return pitAction(kv, p);
+  if (action === "check") return mathCheck(kv, p);
   fail("bad_action", "Unknown request.");
 }

@@ -424,7 +424,7 @@ export function exSettle(R, decs, groups) {
 // ---------- 2. The Options Floor ----------
 const OPT = (v, label, type, K, p, n = 1) => ({ v, label, type, K, p, n });
 const options = {
-  title: "The Options Floor",
+  title: "The Options Floor", mathCheck: true,   // after each reveal, desks work out their own result before the board shows it
   pitch: "Six rounds of HRSY (Hersey Holdings Inc.) news. Each round, your desk buys a call, buys a put, or sits out. In two rounds you own HRSY shares and decide whether to protect them.",
   rule: "Every desk starts with a $10,000 trading account. Each contract covers 100 shares. You only BUY options, so the most you can lose on one is its premium. Highest account wins.",
   metric: { label: "Account", start: 10000, higher: true, show: v => usd(v) },
@@ -603,6 +603,9 @@ export function storyPoints(R, a, ms) {
   const lim = qSecs(R) * 1000, f = Math.max(0, Math.min(1, 1 - (ms || 0) / lim));
   return Math.round(PTS_MIN + (PTS_MAX - PTS_MIN) * f);
 }
+// The right answer to a desk's "work out your result" check (no answer = the desk's default choice)
+export function mathAnswer(G, r, d) { const R = G.rounds[r], pick = d && !d.a ? d : G.dflt; return G.result(R, pick).delta; }
+export const mathRight = (v, ans) => Number.isFinite(+v) && Math.abs(+v - ans) < 0.5;
 // The choices a desk round needs, given what's been picked so far
 export function needed(G, R, d) { return G.fields(R).filter(f => !(f.skip && Object.entries(f.skip).every(([k, v]) => d[k] === v))); }
 export function validPick(G, R, d) {

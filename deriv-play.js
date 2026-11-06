@@ -143,11 +143,58 @@ function renderDesk(G) {
     return;
   }
   const x = deskResult(G, S.r, d), rv = G.reveal(R), { mine: m, rows } = myStanding(S.r);
-  $("#view").innerHTML = deskHead(G, R) + `<div class="reveal"><div><div class="label">${esc(rv.label)}</div><div class="big" style="font-size:64px">${esc(rv.big)}</div></div><div class="sub" style="flex:1;min-width:200px">${esc(rv.sub)}</div></div>
+  const chk = G.mathCheck ? ((S.checks[S.r] || {})[me.gid] || null) : null;
+  if (G.mathCheck && S.step === "check" && !chk) return renderMathCheck(G, R, d, rv);
+  const chkHTML = chk ? mathVerdictHTML(chk, x.delta) : "";
+  $("#view").innerHTML = deskHead(G, R) + chkHTML + `<div class="reveal"><div><div class="label">${esc(rv.label)}</div><div class="big" style="font-size:64px">${esc(rv.big)}</div></div><div class="sub" style="flex:1;min-width:200px">${esc(rv.sub)}</div></div>
     <div class="card" style="margin-top:12px"><div class="label">Your desk · ${esc(x.pick)}${x.missing ? " (no answer)" : ""}</div>
       <div class="headline ${x.good ? "g" : x.bad ? "b" : ""}">${esc(x.head)}</div>${resultTable(x)}<div class="small" style="margin-top:6px;font-size:16px">This round: <b>${deltaText(G, x.delta)}</b></div>
       ${S.step === "stand" && m ? `<div class="headline" style="margin-top:10px">${ord(m.place)} of ${rows.length} · ${esc(G.metric.label)} ${show(G, m.value)}</div>` : `<div class="small" style="margin-top:8px">Standings come up on the board next.</div>`}</div>
     <div class="lesson" style="margin-top:12px"><b>The lesson</b>${esc(R.lesson)}</div>${status()}`;
+}
+
+/* ---------- math check (The Options Floor): work out your own result before the board shows it ---------- */
+let mc = { key: "", sign: null, amt: "", msg: "" };
+const sgnWord = v => v > 0 ? "made" : v < 0 ? "lost" : "broke even";
+function mathVerdictHTML(chk, ans) {
+  const said = chk.v === 0 ? "$0 (broke even)" : (chk.v > 0 ? "Made " : "Lost ") + fmt.usd(Math.abs(chk.v));
+  const right = ans === 0 ? "$0: you broke even" : `you ${sgnWord(ans)} ${fmt.usd(Math.abs(ans))}`;
+  return `<div class="verdictbig ${chk.ok ? "g" : "b"}" style="margin-bottom:12px;padding:16px"><h2 style="font-size:34px">${chk.ok ? "Your math is right! ✓" : "Not quite ✗"}</h2>
+    <div style="font-size:19px;margin-top:4px">You said: <b>${esc(said)}</b>${chk.ok ? "" : `. The right answer: <b>${esc(right)}</b>. Check the math below.`}</div></div>`;
+}
+function myTradeLines(G, R, d) {
+  const c = (R.choices || []).find(x => x.v === (d && d.trade)) || (R.choices || []).find(x => x.type === "none");
+  const L = [];
+  if (R.own) L.push(`Your shares: <b>${R.own.shares} HRSY shares bought at ${fmt.usd(R.own.cost, true)}</b>`);
+  if (!c || c.type === "none") L.push(`Your trade: <b>${R.own ? "No protection" : "Sat out"}</b>${d ? "" : " (you didn't lock in)"}`);
+  else L.push(`Your trade: <b>${esc(c.label)}</b>`, `Strike: <b>${fmt.usd(c.K, true)}</b> · Premium: <b>${fmt.usd(c.p, true)} a share</b> · Contracts: <b>${c.n}</b> (${c.n * 100} shares)`);
+  return L;
+}
+function renderMathCheck(G, R, d, rv, force) {
+  const key = S.r + ":" + me.gid;
+  if (!force && mc.key === key && $("#mcForm")) { $("#mcCount").textContent = `${S.checked.length} of ${S.groups.length} desks have checked their math.`; return; }
+  if (mc.key !== key) mc = { key, sign: null, amt: "", msg: "" };
+  $("#view").innerHTML = deskHead(G, R) + `<div class="reveal"><div><div class="label">${esc(rv.label)}</div><div class="big" style="font-size:64px">${esc(rv.big)}</div></div><div class="sub" style="flex:1;min-width:200px">${esc(rv.sub)}</div></div>
+    <div class="card" id="mcForm" style="margin-top:12px"><div class="label">Check your math</div>
+      <p style="font-size:20px;margin:4px 0 10px;font-weight:600">How much did your desk make or lose this round? Work it out before the board shows the answer. You get one try.</p>
+      <ul class="newsl" style="font-size:17px">${myTradeLines(G, R, d).map(l => `<li>${l}</li>`).join("")}<li>HRSY at expiration: <b>${esc(rv.big)}</b></li></ul>
+      <div class="rulebox" style="font-size:15px;line-height:1.5"><b>Call payoff</b> = (HRSY − strike) × shares, if HRSY is above the strike. Otherwise $0.<br><b>Put payoff</b> = (strike − HRSY) × shares, if HRSY is below the strike. Otherwise $0.<br><b>Your result</b> = payoff − premium paid${R.own ? " + the gain or loss on your shares" : ""}.</div>
+      <div class="chs" style="margin-top:12px;grid-template-columns:repeat(3,1fr)">${[["1", "We made money"], ["-1", "We lost money"], ["0", "We broke even"]].map(([v, l]) => `<button class="ch ${mc.sign === v ? "on" : ""}" data-s="${v}"><b>${l}</b></button>`).join("")}</div>
+      <label class="field" style="margin-top:12px;${mc.sign === "0" ? "display:none" : ""}"><span>How much? (dollars)</span><input id="mcAmt" inputmode="decimal" autocomplete="off" placeholder="e.g. 350" value="${esc(mc.amt)}"></label>
+      ${mc.msg ? `<div class="err">${esc(mc.msg)}</div>` : ""}
+      <div class="actions"><button class="btn big" id="mcGo" style="width:100%">Check my answer</button></div>
+      <div class="small" id="mcCount" style="margin-top:6px">${S.checked.length} of ${S.groups.length} desks have checked their math.</div></div>${status()}`;
+  $$("[data-s]").forEach(b => b.onclick = () => { mc.sign = b.dataset.s; mc.msg = ""; const y = scrollY; renderMathCheck(G, R, d, rv, true); scrollTo(0, y); if (mc.sign !== "0" && $("#mcAmt")) $("#mcAmt").focus(); });
+  if ($("#mcAmt")) $("#mcAmt").oninput = e => { mc.amt = e.target.value; };
+  $("#mcGo").onclick = async () => {
+    const amt = +String(mc.amt).replace(/[$,\s]/g, "");
+    const fail = m => { mc.msg = m; renderMathCheck(G, R, d, rv, true); };
+    if (mc.sign === null) return fail("Pick made, lost or broke even first.");
+    if (mc.sign !== "0" && !(amt > 0)) return fail("Type how many dollars, like 350.");
+    const v = mc.sign === "0" ? 0 : +mc.sign * amt;
+    try { $("#mcGo").disabled = true; await call("check", { code: me.code, gid: me.gid, key: me.key, r: S.r, v }); S = null; await refresh(true); }
+    catch (e) { if ($("#mcGo")) $("#mcGo").disabled = false; alert(e.message); S = null; await refresh(true); }
+  };
 }
 
 /* ---------- the live trading pit (iPad) ---------- */

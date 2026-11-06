@@ -208,14 +208,22 @@ function renderDesk(G) {
     $("#revBtn").onclick = () => doReveal(G); if ($("#anyway")) $("#anyway").onclick = () => doReveal(G);
     wireClock(); wireBack(); return;
   }
-  const step = S.step || "market", d = S.decisions[S.r] || {}, last = S.r >= G.rounds.length - 1, rv = G.reveal(R);
-  const tabs = `<div class="tabs2" style="display:flex;gap:6px">${[["market", "What happened"], ["stand", "Standings"]].map(([v, l]) => `<button class="btn ${step === v ? "dk" : "ghost"} sm" data-t="${v}">${l}</button>`).join("")}</div>`;
+  const step = S.step || "market", d = S.decisions[S.r] || {}, ck = (S.checks || [])[S.r] || {}, last = S.r >= G.rounds.length - 1, rv = G.reveal(R);
+  const tabs = `<div class="tabs2" style="display:flex;gap:6px">${[...(G.mathCheck ? [["check", "Math check"]] : []), ["market", "What happened"], ["stand", "Standings"]].map(([v, l]) => `<button class="btn ${step === v ? "dk" : "ghost"} sm" data-t="${v}">${l}</button>`).join("")}</div>`;
   let body;
-  if (step === "market") {
+  if (step === "check") {
+    const n = Object.keys(ck).length;
+    body = `<div class="reveal"><div><div class="label">${esc(rv.label)}</div><div class="big">${esc(rv.big)}</div></div><div class="sub" style="flex:1;min-width:240px">${esc(rv.sub)}<p style="margin:8px 0 0;font-size:24px;line-height:1.35;font-weight:600">Desks: work out how much you made or lost this round, then check it on your iPad. One try.</p></div></div>
+      <div class="board" style="margin-top:14px"><div class="card"><div class="label">Math checked: ${n} of ${S.groups.length}</div>
+        <div class="tiles">${S.groups.map(g => `<div class="tile ${ck[g.gid] ? "done" : ""}"><span class="nm">${esc(g.name)}</span><span class="st">${ck[g.gid] ? "✔ Checked" : "Working..."}</span></div>`).join("")}</div>
+        <div class="small" style="margin-top:8px">Right or wrong shows on each iPad. The class results come up on the next screen.</div></div>
+        <div class="card dark"><div class="label">The formulas</div><div style="font-size:18px;line-height:1.55"><b>Call payoff</b> = (HRSY − strike) × shares, if HRSY is above the strike<br><b>Put payoff</b> = (strike − HRSY) × shares, if HRSY is below the strike<br><b>Result</b> = payoff − premium paid${R.own ? " + the change in the shares" : ""}<br><span style="color:#CFCFCF">1 contract = 100 shares</span></div></div></div>
+      <div class="actions" style="align-items:center"><span class="small">${n < S.groups.length ? `Waiting on ${S.groups.length - n}. You can move on any time; the check closes when you do.` : "Everyone has checked."}</span><button class="btn dk big" id="toMarket">Show what happened →</button></div>`;
+  } else if (step === "market") {
     const res = S.groups.map(g => ({ g, x: deskResult(G, S.r, d[g.gid]) }));
     body = `<div class="reveal"><div><div class="label">${esc(rv.label)}</div><div class="big">${esc(rv.big)}</div></div><div class="sub" style="flex:1;min-width:240px">${esc(rv.sub)}<p style="margin:8px 0 0;font-size:19px;line-height:1.45">${esc(R.story)}</p></div></div>
-      <div class="board" style="margin-top:14px"><div class="card"><table class="standings"><tr><th>Group</th><th>Choice</th><th>Result</th><th class="r">This round</th></tr>
-        ${res.map(({ g, x }) => `<tr><td class="nm">${esc(g.name)}</td><td>${esc(x.pick)}${x.missing ? ' <span class="pill ig">no answer</span>' : ""}${x.wrong ? ' <span class="pill r">wrong side</span>' : ""}</td><td>${esc(x.head)}</td><td class="r val ${x.delta < 0 ? "neg" : x.delta > 0 && G.metric.higher ? "pos" : ""}">${deltaText(G, x.delta)}</td></tr>`).join("")}</table></div>
+      <div class="board" style="margin-top:14px"><div class="card"><table class="standings"><tr><th>Group</th><th>Choice</th><th>Result</th>${G.mathCheck ? "<th>Math</th>" : ""}<th class="r">This round</th></tr>
+        ${res.map(({ g, x }) => `<tr><td class="nm">${esc(g.name)}</td><td>${esc(x.pick)}${x.missing ? ' <span class="pill ig">no answer</span>' : ""}${x.wrong ? ' <span class="pill r">wrong side</span>' : ""}</td><td>${esc(x.head)}</td>${G.mathCheck ? `<td>${ck[g.gid] ? (ck[g.gid].ok ? '<span class="pill g">✔ right</span>' : '<span class="pill r">✗ missed</span>') : '<span class="pill ig">no try</span>'}</td>` : ""}<td class="r val ${x.delta < 0 ? "neg" : x.delta > 0 && G.metric.higher ? "pos" : ""}">${deltaText(G, x.delta)}</td></tr>`).join("")}</table></div>
         <div class="grid" style="align-content:start"><div class="lesson"><b>The lesson</b>${esc(R.lesson)}</div>${bestChoices(G, R)}</div></div>
       <div class="actions" style="align-items:center"><span class="small">iPads show each group's own math now.</span><button class="btn dk big" id="toStand">Standings →</button></div>`;
   } else {
@@ -228,6 +236,7 @@ function renderDesk(G) {
   $("#view").innerHTML = deskTop(G, R, tabs) + body + `<div class="small" id="netErr">${esc(netErr)}</div>`;
   $$("[data-t]").forEach(x => x.onclick = () => op("step", { step: x.dataset.t }));
   if ($("#toStand")) $("#toStand").onclick = () => op("step", { step: "stand" });
+  if ($("#toMarket")) $("#toMarket").onclick = () => op("step", { step: "market" });
   if ($("#reopen")) $("#reopen").onclick = () => { if (confirm("Reopen this round so groups can change their choices?")) op("reopen"); };
   if ($("#nextBtn")) $("#nextBtn").onclick = () => op("next");
 }
@@ -281,9 +290,10 @@ function renderFinal(G) {
   if (G.kind === "desk") {
     const per = x => G.rounds.map((_, r) => deskResult(G, r, dec(S, r, x.g.gid)).delta);
     const cell = v => G.id === "futures-desk" ? fmt.num(v) : (G.metric.higher ? (v > 0 ? "+" : v < 0 ? "−" : "") + "$" + Math.abs(Math.round(v)).toLocaleString("en-US") : (v === 0 ? "$0" : "$" + Math.round(-v / 1000).toLocaleString("en-US") + "K"));
-    table = `<div class="card"><table class="standings"><tr><th>Place</th><th>Group</th>${G.rounds.map((_, r) => `<th class="r" style="padding:7px 4px">R${r + 1}</th>`).join("")}<th class="r">${esc(G.metric.label)}</th></tr>
-      ${rows.map(x => `<tr class="${x.place === 1 ? "top" : ""}"><td class="pl">${x.place}</td><td class="nm">${esc(x.g.name)}</td>${per(x).map(v => `<td class="r ${v < 0 && G.metric.higher ? "neg" : ""}" style="font-size:15px;padding:6px 4px">${cell(v)}</td>`).join("")}<td class="r val">${show(G, x.value)}</td></tr>`).join("")}
-      <tr class="bench"><td></td><td>${esc(G.benchLabel)}</td>${G.rounds.map((_, r) => `<td class="r" style="font-size:15px;padding:6px 4px">${cell(deskResult(G, r, null).delta)}</td>`).join("")}<td class="r val">${show(G, bench(G, lastR))}</td></tr></table></div>`;
+    const mright = gid => (S.checks || []).reduce((a, c) => a + (c && c[gid] && c[gid].ok ? 1 : 0), 0), MC = !!G.mathCheck;
+    table = `<div class="card"><table class="standings"><tr><th>Place</th><th>Group</th>${G.rounds.map((_, r) => `<th class="r" style="padding:7px 4px">R${r + 1}</th>`).join("")}${MC ? '<th class="r">Math right</th>' : ""}<th class="r">${esc(G.metric.label)}</th></tr>
+      ${rows.map(x => `<tr class="${x.place === 1 ? "top" : ""}"><td class="pl">${x.place}</td><td class="nm">${esc(x.g.name)}</td>${per(x).map(v => `<td class="r ${v < 0 && G.metric.higher ? "neg" : ""}" style="font-size:15px;padding:6px 4px">${cell(v)}</td>`).join("")}${MC ? `<td class="r">${mright(x.g.gid)} / ${G.rounds.length}</td>` : ""}<td class="r val">${show(G, x.value)}</td></tr>`).join("")}
+      <tr class="bench"><td></td><td>${esc(G.benchLabel)}</td>${G.rounds.map((_, r) => `<td class="r" style="font-size:15px;padding:6px 4px">${cell(deskResult(G, r, null).delta)}</td>`).join("")}${MC ? "<td></td>" : ""}<td class="r val">${show(G, bench(G, lastR))}</td></tr></table></div>`;
     side = `<div class="card dark"><div class="label">What the desk teaches</div><ul style="font-size:16px;line-height:1.4;padding-left:20px;margin:0">${G.rounds.map(R => `<li style="margin-bottom:6px">${esc(R.lesson)}</li>`).join("")}</ul></div>`;
   } else {
     table = `<div class="card"><table class="standings"><tr><th>Place</th><th>Player</th><th class="r">Right</th><th class="r">Points</th></tr>${rows.map(x => `<tr class="${x.place === 1 ? "top" : ""}"><td class="pl">${x.place}</td><td class="nm">${esc(x.g.name)}</td><td class="r">${x.right} / ${G.rounds.filter(r => r.t === "q").length}</td><td class="r val">${fmt.num(x.value)}</td></tr>`).join("")}</table></div>`;
@@ -398,6 +408,7 @@ function renderExchange(G) {
   $$("[data-t]").forEach(x => x.onclick = () => op("step", { step: x.dataset.t }));
   if ($("#toMarket")) $("#toMarket").onclick = () => op("step", { step: "market" });
   if ($("#toStand")) $("#toStand").onclick = () => op("step", { step: "stand" });
+  if ($("#toMarket")) $("#toMarket").onclick = () => op("step", { step: "market" });
   if ($("#reopen")) $("#reopen").onclick = () => { if (confirm("Reopen this quarter so desks can change their orders?")) op("reopen"); };
   if ($("#nextBtn")) $("#nextBtn").onclick = () => op("next");
 }
