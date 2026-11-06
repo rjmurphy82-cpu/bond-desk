@@ -484,6 +484,125 @@ const options = {
   }
 };
 
+// ---------- 2b. The Options Floor, Part 2: six stocks ----------
+// Same six companies every round. Each round: an economy report (macro), a short analysis of each stock with its
+// at-the-money strike and premiums, and the closing prices. Rounds get harder: clear news, then a rate move, then
+// news that's already priced in, then good company news vs. bad macro news, then reading the numbers, then hidden clues.
+export const STOCKS = [
+  { tk: "VOLT", name: "Voltway Motors", what: "Electric car maker" },
+  { tk: "PRAI", name: "Prairie Bank", what: "Regional bank" },
+  { tk: "SKYH", name: "Skyhawk Airlines", what: "Airline" },
+  { tk: "NIMB", name: "Nimbus Cloud", what: "Cloud software" },
+  { tk: "LKSH", name: "Lakeshore Homes", what: "Homebuilder" },
+  { tk: "HRSY", name: "Hersey Holdings", what: "Household products" }
+];
+// tk: [price now, strike, call premium, put premium, close, analysis, what happened]
+const SK = (now, K, c, p, S, text, why) => ({ now, K, c, p, S, text, why });
+const OPT2_ROUNDS = [
+  { title: "Clear Signals", maxN: 1,
+    news: ["The economy is steady: unemployment 4%, inflation 2.3%.", "The Federal Reserve leaves interest rates unchanged."],
+    st: {
+      VOLT: SK(40, 40, 2, 2, 33, "Recalls 200,000 cars for a battery fire risk. The fix could take months.", "The recall scared buyers: VOLT fell to $33."),
+      PRAI: SK(50, 50, 1.5, 1.5, 50.5, "Quarterly profit came in right where analysts expected. No surprises.", "No surprise, no move. Neither option paid enough to cover its premium."),
+      SKYH: SK(25, 25, 1, 1, 30, "Wins approval for new routes to Europe. Summer bookings are up 30%.", "New routes and strong bookings sent SKYH up to $30."),
+      NIMB: SK(120, 120, 5, 5, 131, "Signs a 10-year contract with the U.S. government, the biggest deal in its history.", "The government deal lifted NIMB to $131."),
+      LKSH: SK(60, 60, 2, 2, 59, "A quiet week. No company news.", "Quiet stock, small move: both options lost money."),
+      HRSY: SK(50, 50, 2, 2, 43, "Loses its national retailer contract to a rival company.", "Losing its biggest customer dropped HRSY to $43.")
+    },
+    story: "With a calm economy, each stock moved on its own news. Clear bad news (VOLT, HRSY) rewarded puts. Clear good news (SKYH, NIMB) rewarded calls. Stocks with no news didn't move enough to pay for any premium.",
+    lesson: "When the news is clear, match the option to the direction. A stock with no news usually can't cover the premium." },
+  { title: "The Fed Cuts Rates", maxN: 1,
+    news: ["Inflation has fallen to 2%.", "The Federal Reserve CUTS interest rates by 0.5% and hints at more cuts.", "Mortgage rates drop to a three-year low."],
+    st: {
+      VOLT: SK(33, 35, 2, 3, 37, "Most of its buyers finance their cars with loans. Still finishing recall repairs.", "Cheaper car loans helped: VOLT rose to $37, but only to the call's breakeven of $37."),
+      PRAI: SK(50, 50, 1.5, 1.5, 46, "Makes money by charging interest on loans. Lower rates mean it earns less on each new loan.", "Lower rates squeezed the bank's lending profits: PRAI fell to $46."),
+      SKYH: SK(30, 30, 1.5, 1.5, 31, "Bookings are steady. No big news.", "A small move up, not enough to cover the premium."),
+      NIMB: SK(131, 130, 5, 4, 140, "Fast-growing tech company. Investors value it on profits they expect years from now.", "Lower rates make future profits worth more today: NIMB rose to $140."),
+      LKSH: SK(59, 60, 2, 2.5, 68, "Builds new homes. Almost every buyer needs a mortgage.", "Cheaper mortgages brought buyers back: LKSH jumped to $68."),
+      HRSY: SK(43, 45, 1, 3, 42, "Still looking for a new retail partner.", "HRSY slipped to $42, right at the put's breakeven.")
+    },
+    story: "This round was about the Fed. Lower interest rates help companies whose customers borrow (homes, cars) and growth companies valued on future profits. They hurt banks, which earn less on new loans.",
+    lesson: "Interest rates move whole industries at once. Ask: does this company (or its customers) borrow money, or lend it?" },
+  { title: "Priced In", maxN: 1,
+    news: ["Shoppers are spending a lot. Retailers expect a record holiday season.", "Airlines expect the busiest holiday travel season ever.", "Options are expensive on any stock that's all over the news."],
+    st: {
+      VOLT: SK(37, 37, 2, 2, 42, "Finished its recall repairs early. Reviews of its new model are strong.", "Strong reviews and the recall behind it: VOLT rose to $42."),
+      PRAI: SK(46, 45, 1, 2, 44, "Loan demand has been weak since the rate cut.", "PRAI drifted to $44. The put paid $1 but cost $2."),
+      SKYH: SK(31, 31, 4, 2, 34, "Everyone expects record holiday travel. Traders are piling into SKYH calls.", "Record travel happened and SKYH rose to $34. But the call cost $4, so its breakeven was $35: right direction, still a loss."),
+      NIMB: SK(140, 140, 9, 8, 146, "Reports earnings tomorrow. Analysts expect huge growth, and the stock is already up 20% this month.", "Earnings were great and NIMB rose to $146. But the call cost $9, so you needed $149 to profit."),
+      LKSH: SK(68, 68, 2.5, 2.5, 66, "Already up 15% since the rate cut. Builders say they can't hire enough workers.", "A worker shortage slowed building: LKSH dipped to $66, not enough to cover the put."),
+      HRSY: SK(42, 42, 1, 1, 48, "Quietly signed a deal with a national grocery chain. Few analysts noticed.", "The grocery deal got noticed: HRSY jumped to $48 and the cheap call paid $500 net.")
+    },
+    story: "The loud stories (SKYH, NIMB) were already in the price, and their options were expensive. The best trade was quiet good news with a cheap premium: HRSY.",
+    lesson: "If everyone already knows the good news, it's 'priced in.' Expensive premiums raise the breakeven." },
+  { title: "Mixed Signals", maxN: 2,
+    news: ["Oil prices jump 35% after major producers cut output.", "Economists warn that higher fuel costs could slow spending.", "You can buy 1 or 2 contracts this round."],
+    st: {
+      VOLT: SK(42, 42, 2.5, 2.5, 49, "High gas prices push more drivers to look at electric cars. Its factory is running at full speed.", "Gas at record highs made electric cars look great: VOLT rose to $49."),
+      PRAI: SK(44, 44, 1.5, 1.5, 41, "Lends to many trucking companies and airlines that may struggle with fuel costs.", "Worries about loans to fuel-heavy customers pushed PRAI to $41."),
+      SKYH: SK(34, 34, 2, 2, 27, "Record bookings, BUT jet fuel is its biggest cost and it didn't lock in fuel prices.", "Record bookings couldn't beat the fuel bill: SKYH fell to $27."),
+      NIMB: SK(146, 145, 6, 5, 143, "Oil prices barely affect a software company's costs. Its stock price is still very high.", "Oil didn't matter much: NIMB slipped to $143, not enough for the put."),
+      LKSH: SK(66, 66, 2.5, 2.5, 61, "New-home sales are slowing as buyers worry about the economy.", "Nervous buyers waited: LKSH fell to $61."),
+      HRSY: SK(48, 48, 1.5, 1.5, 49, "Sells everyday household products people buy in good times and bad.", "Steady sales, steady stock: HRSY barely moved.")
+    },
+    story: "One big macro event, opposite effects. Higher oil prices hurt companies that BURN fuel (SKYH) and helped companies that REPLACE it (VOLT). Good company news (SKYH's bookings) lost to bad macro news.",
+    lesson: "Ask how the big news hits each company's costs and customers. Macro news can outweigh company news." },
+  { title: "Inflation Returns", maxN: 3,
+    news: ["Inflation jumps back to 4%.", "The Federal Reserve RAISES interest rates by 0.75%, more than expected.", "The 10-year Treasury yield hits 5%.", "You can buy 1, 2 or 3 contracts this round."],
+    st: {
+      VOLT: SK(49, 50, 3, 3.5, 44, "Sales are growing 25% a year, but it owes $8 billion on variable-rate loans.", "Higher rates raised VOLT's loan payments: it fell to $44."),
+      PRAI: SK(41, 40, 2, 1, 47, "Earns more on loans when rates rise. Very few of its borrowers have missed payments.", "Higher rates fattened the bank's lending profits: PRAI rose to $47."),
+      SKYH: SK(27, 27, 2, 2, 26, "Fuel prices fell back, but vacation bookings are cooling as loans get pricier.", "A small slide to $26: not enough to cover a $2 premium."),
+      NIMB: SK(143, 140, 8, 5, 118, "P/E ratio of 80 (very high). Most of its profits are expected years from now.", "High-P/E stocks get hit hardest when rates jump: NIMB plunged to $118."),
+      LKSH: SK(61, 60, 2, 2.5, 52, "Mortgage rates just hit 7.5%. Its buyers need mortgages.", "Expensive mortgages froze home buyers: LKSH fell to $52."),
+      HRSY: SK(49, 50, 1, 2, 51, "Raised prices 5% and customers kept buying. Very little debt.", "HRSY held up and rose to $51, just covering the call.")
+    },
+    story: "Rising rates are the opposite of Round 2. They hurt stocks valued on far-off profits (NIMB's P/E of 80), companies with lots of variable-rate debt (VOLT) and homebuilders (LKSH). They helped the bank.",
+    lesson: "Read the numbers: a high P/E and lots of variable-rate debt are warning signs when rates rise." },
+  { title: "Final Bell", maxN: 3,
+    news: ["Hiring was strong last month, but inflation is cooling.", "Economists expect the Federal Reserve to hold rates steady.", "You can buy 1, 2 or 3 contracts this round."],
+    st: {
+      VOLT: SK(44, 45, 5, 4, 48, "Unveils a $25,000 electric car. Pre-orders open next month. Social media is buzzing, and options are pricey.", "The hype was real but already in the price: VOLT rose to $48, short of the $50 breakeven."),
+      PRAI: SK(47, 47, 1.5, 1.5, 40, "A rival bank just failed because of bad real estate loans. Prairie says its loans are \"mostly\" to homebuilders and office buildings.", "Investors worried Prairie had the same real estate problem: PRAI fell to $40."),
+      SKYH: SK(26, 25, 1.5, 1, 31, "Oil prices are back to normal. A competitor just went bankrupt, and its routes are up for grabs.", "SKYH grabbed the rival's routes and customers: up to $31."),
+      NIMB: SK(118, 120, 4, 6, 132, "The stock fell 20% on rate fears, but subscriptions grew 35% this quarter and it just paid off all its debt.", "The numbers were too good to ignore: NIMB bounced to $132."),
+      LKSH: SK(52, 52, 2, 2, 52.5, "Mortgage rates are steady. New-home sales are flat.", "Flat news, flat stock: both options lost their premium."),
+      HRSY: SK(51, 50, 2.5, 1, 44, "12 of 14 analysts rate it a \"buy.\" But its CEO and CFO sold 40% of their own shares last month.", "The insiders knew something: weak sales came out and HRSY fell to $44.")
+    },
+    story: "The best trades this round were hidden below the headline: insiders selling (HRSY), a risky loan book (PRAI), and strong numbers behind a beaten-down stock (NIMB).",
+    lesson: "Read past the headline. What insiders do, what a company owns, and its real numbers can matter more than buzz." }
+].map(R => ({ ...R, stocks: STOCKS.map(s => ({ ...s, ...R.st[s.tk] })) }));
+const options2 = {
+  title: "The Options Floor, Part 2", mathCheck: true,
+  pitch: "Six stocks, six rounds. Each round, read the economy report and the analysis of six companies, then pick ONE stock and buy a call, buy a put, or sit out. Rounds get harder as you go.",
+  rule: "Every desk starts with a $10,000 trading account. Each contract covers 100 shares. You only BUY options, so the most you can lose is the premium. After each round, work out what you made or lost. Highest account wins.",
+  metric: { label: "Account", start: 10000, higher: true, show: v => usd(v) },
+  benchLabel: "Always sat out",
+  dflt: { trade: "none" },
+  rounds: OPT2_ROUNDS,
+  fields(R) {
+    const f = [{ k: "trade", label: "Your trade", opts: [["call", "Buy a call", "You think your stock will go UP"], ["put", "Buy a put", "You think your stock will go DOWN"], ["none", "Sit out", "No cost, no risk"]] },
+      { k: "stock", label: "Which stock?", skip: { trade: "none" }, opts: R.stocks.map(s => [s.tk, s.tk, `${s.name}. Now ${usd(s.now, true)} · strike ${usd(s.K, true)} · call ${usd(s.c, true)} · put ${usd(s.p, true)}`]) }];
+    if (R.maxN > 1) f.push({ k: "n", label: "How many contracts?", skip: { trade: "none" }, opts: Array.from({ length: R.maxN }, (_, i) => [String(i + 1), `${i + 1} contract${i ? "s" : ""}`, `${(i + 1) * 100} shares`]) });
+    return f;
+  },
+  facts(R) { return [["Stocks", "6"], ["Contracts", R.maxN > 1 ? "1 to " + R.maxN : "1"], ["Contract size", "100 shares"]]; },
+  reveal(R) { const m = R.stocks.reduce((a, x) => Math.abs(x.S / x.now - 1) > Math.abs(a.S / a.now - 1) ? x : a); const pct = Math.round((m.S / m.now - 1) * 100);
+    return { label: "Biggest move this round", big: `${m.tk} ${pct > 0 ? "+" : "−"}${Math.abs(pct)}%`, sub: `${m.name} went from ${usd(m.now, true)} to ${usd(m.S, true)}. Every stock's close is below.` }; },
+  pick(R, d) { const s = R.stocks.find(x => x.tk === d.stock); return d.trade === "none" || !s ? null : { s, type: d.trade, K: s.K, p: d.trade === "call" ? s.c : s.p, n: R.maxN > 1 ? Math.max(1, Math.min(R.maxN, +d.n || 1)) : 1 }; },
+  result(R, d) {
+    const o = this.pick(R, d || {});
+    if (!o) return { delta: 0, pick: "Sat out", rows: [["Option", "Sat out", usd(0)]], head: "Broke even ", good: false, bad: false };
+    const { s, type, K, p, n } = o, sh = n * 100;
+    const payoff = type === "call" ? Math.max(s.S - K, 0) : Math.max(K - s.S, 0), total = sh * (payoff - p);
+    const label = `${s.tk} ${usd(K, true)} ${type}${n > 1 ? " ×" + n : ""}`;
+    return { delta: total, pick: label, head: (total > 0 ? "Made " : total < 0 ? "Lost " : "Broke even ") + (total ? usd(Math.abs(total)) : ""), good: total > 0, bad: total < 0,
+      rows: [[`${s.tk} at expiration`, `Was ${usd(s.now, true)}`, usd(s.S, true)],
+        ["Option payoff", type === "call" ? `max(${usd(s.S, true)} − ${usd(K, true)}, 0) × ${sh}` : `max(${usd(K, true)} − ${usd(s.S, true)}, 0) × ${sh}`, usd(payoff * sh)],
+        ["Premium paid", `${usd(p, true)} × ${sh}`, "−" + usd(p * sh)]] };
+  }
+};
+
 // ---------- 3. The Swap Desk ----------
 const LOAN = 10000000, SPREAD = 2.0, CAP = 825000, PENALTY = 100000;
 const swaps = {
@@ -581,7 +700,7 @@ const cds = {
   }
 };
 
-const DESK = { futures: exchange, options, swaps, cds };
+const DESK = { futures: exchange, options, swaps, cds }, DESK2 = { options: options2 };
 
 /* =====================================================================
    The games (eight, plus warm-ups)
@@ -591,9 +710,10 @@ export const GAMES = {};
 for (const t of Object.keys(TOPIC)) {
   GAMES[t + "-story"] = { id: t + "-story", kind: "story", topic: t, topicName: TOPIC[t], title: STORY[t].title, rounds: STORY[t].rounds };
   GAMES[t + "-desk"] = { id: t + "-desk", kind: "desk", topic: t, topicName: TOPIC[t], ...DESK[t] };
+  if (DESK2[t]) GAMES[t + "-desk2"] = { id: t + "-desk2", kind: "desk", topic: t, topicName: TOPIC[t], ...DESK2[t] };
   if (WARMUP[t]) GAMES[t + "-warmup"] = { id: t + "-warmup", kind: "story", warmup: true, topic: t, topicName: TOPIC[t], title: WARMUP[t].title, rounds: WARMUP[t].rounds };
 }
-export const ORDER = ["futures-warmup", "futures-story", "futures-desk", "options-story", "options-desk", "swaps-story", "swaps-desk", "cds-story", "cds-desk"];
+export const ORDER = ["futures-warmup", "futures-story", "futures-desk", "options-story", "options-desk", "options-desk2", "swaps-story", "swaps-desk", "cds-story", "cds-desk"];
 export const nRounds = id => GAMES[id].rounds.length;
 export const nQuestions = id => GAMES[id].kind === "story" ? GAMES[id].rounds.filter(r => r.t === "q").length : GAMES[id].rounds.length;
 

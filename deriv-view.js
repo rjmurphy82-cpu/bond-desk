@@ -53,7 +53,14 @@ export function secsLeft(S, skew) { const L = qSecs(round(S)); if (!S.openedAt) 
 export function briefHTML(G, R, big) {
   return `<div class="card brief ${big ? "big" : ""}">${R.who ? `<div class="label">${esc(R.who)}</div>` : ""}<p class="bline">${esc(R.brief || G.pitch)}</p>
     <div class="facts">${G.facts(R).map(([k, v]) => `<div class="fact"><div class="v">${esc(v)}</div><div class="k">${esc(k)}</div></div>`).join("")}</div>
-    <div class="label" style="margin-top:12px">The news</div><ul class="newsl">${R.news.map(n => `<li>${esc(n)}</li>`).join("")}</ul></div>`;
+    <div class="label" style="margin-top:12px">${R.stocks ? "The economy" : "The news"}</div><ul class="newsl">${R.news.map(n => `<li>${esc(n)}</li>`).join("")}</ul>
+    ${R.stocks ? `<div class="label" style="margin-top:12px">The six stocks</div><div class="stks">${R.stocks.map(x => `<div class="stk"><div class="sh"><b>${esc(x.tk)}</b><span>${esc(x.name)} · ${esc(x.what)}</span></div>
+      <p>${esc(x.text)}</p><div class="sq"><span>Now <b>${fmt.usd(x.now, true)}</b></span><span>Strike <b>${fmt.usd(x.K, true)}</b></span><span>Call <b>${fmt.usd(x.c, true)}</b></span><span>Put <b>${fmt.usd(x.p, true)}</b></span></div></div>`).join("")}</div>` : ""}</div>`;
+}
+// Closing prices for the six-stock game (with what happened, once the board explains it)
+export function closeTableHTML(R, why, mineTk) {
+  if (!R.stocks) return "";
+  return `<table class="brk closet"><tr><th>Stock</th><th class="r">Was</th><th class="r">Close</th><th class="r">Change</th>${why ? "<th>What happened</th>" : ""}</tr>${R.stocks.map(x => { const ch = x.S - x.now; return `<tr class="${x.tk === mineTk ? "mine" : ""}"><td><b>${esc(x.tk)}</b></td><td class="r">${fmt.usd(x.now, true)}</td><td class="r"><b>${fmt.usd(x.S, true)}</b></td><td class="r ${ch > 0 ? "pos" : ch < 0 ? "neg" : ""}">${ch > 0 ? "+" : ch < 0 ? "−" : ""}${fmt.usd(Math.abs(ch), true)}</td>${why ? `<td style="font-size:15px">${esc(x.why)}</td>` : ""}</tr>`; }).join("")}</table>`;
 }
 export function resultTable(x) {
   return `<table class="brk">${x.rows.map(([a, b, c]) => `<tr><td>${esc(a)}${b ? `<div class="small">${esc(b)}</div>` : ""}</td><td class="r">${esc(c)}</td></tr>`).join("")}</table>`;

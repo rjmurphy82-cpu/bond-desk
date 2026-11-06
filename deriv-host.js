@@ -1,7 +1,7 @@
 // Unit 5 Derivatives Live: host (projector) screen for all eight games
 import { call, offlineCaller, $, $$, store } from "./deriv-client.js";
 import { qrSVG } from "./qr.js";
-import { GAMES, ORDER, Q_SECS, qSecs, fmt, esc, SHAPES, game, round, dec, answerable, deskResult, standings, bench, show, deltaText, roundLabel, secsLeft, briefHTML, resultTable, storyCardHTML, needed, settle, exBudget, exAsk, exBid, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML, mmQuote, pitFrac, pitNow, pitLeft, clockText, bookSide, lastPrice, tapeHTML, activeComms } from "./deriv-view.js";
+import { GAMES, ORDER, Q_SECS, qSecs, fmt, esc, SHAPES, game, round, dec, answerable, deskResult, standings, bench, show, deltaText, roundLabel, secsLeft, briefHTML, closeTableHTML, resultTable, storyCardHTML, needed, settle, exBudget, exAsk, exBid, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML, mmQuote, pitFrac, pitNow, pitLeft, clockText, bookSide, lastPrice, tapeHTML, activeComms } from "./deriv-view.js";
 const PIT_MM_START = 0.03, PIT_MM_END = 0.09;
 
 let api = call, offline = false, S = null, sess = null, pollT = null, netErr = "", skew = 0;
@@ -29,7 +29,7 @@ function renderMenu(msg = "") {
         <div><div style="font-family:Oswald,Arial;font-size:44px;line-height:1">${offline ? "Offline game" : "Game " + esc(sess.code)}</div><div style="font-size:19px;margin-top:4px">${esc(summary())}</div></div>
         <button class="btn big" id="mResume">Resume</button></div></div>` : ""}
     <div class="label">Pick a game</div>
-    <div class="picker">${TOPICS.map(([t, nm]) => `<div class="topic"><h3>${nm}</h3>${["warmup", "story", "desk"].filter(k => GAMES[t + "-" + k]).map(k => { const G = GAMES[t + "-" + k]; return `<button class="gpick ${ui.pick === G.id ? "on" : ""}" data-g="${G.id}"><span class="kind">${k === "warmup" ? "Warm-up · Review" : k === "story" ? "1 · Story game" : "2 · Trading desk"}</span><b>${esc(G.title)}</b><span>${k === "warmup" ? `${G.rounds.filter(r => r.t === "q").length} questions. A speed review to open class.` : k === "story" ? `${G.rounds.filter(r => r.t === "q").length} questions. Learn it from a story students know.` : esc(G.pitch)}</span></button>`; }).join("")}</div>`).join("")}</div>
+    <div class="picker">${TOPICS.map(([t, nm]) => `<div class="topic"><h3>${nm}</h3>${["warmup", "story", "desk", "desk2"].filter(k => GAMES[t + "-" + k]).map(k => { const G = GAMES[t + "-" + k]; return `<button class="gpick ${ui.pick === G.id ? "on" : ""}" data-g="${G.id}"><span class="kind">${k === "warmup" ? "Warm-up · Review" : k === "story" ? "1 · Story game" : k === "desk2" ? "3 · Trading desk, Part 2" : "2 · Trading desk"}</span><b>${esc(G.title)}</b><span>${k === "warmup" ? `${G.rounds.filter(r => r.t === "q").length} questions. A speed review to open class.` : k === "story" ? `${G.rounds.filter(r => r.t === "q").length} questions. Learn it from a story students know.` : esc(G.pitch)}</span></button>`; }).join("")}</div>`).join("")}</div>
     <div class="hero" style="margin-top:16px">
       <div class="card dark"><div class="label">${esc(P.topicName)} · ${P.warmup ? "Warm-up" : P.kind === "story" ? "Story game" : "Trading desk"}</div>
         <h2 style="font-size:40px;line-height:1.05;margin:4px 0 8px">${esc(P.title)}</h2>
@@ -212,19 +212,19 @@ function renderDesk(G) {
   const tabs = `<div class="tabs2" style="display:flex;gap:6px">${[...(G.mathCheck ? [["check", "Math check"]] : []), ["market", "What happened"], ["stand", "Standings"]].map(([v, l]) => `<button class="btn ${step === v ? "dk" : "ghost"} sm" data-t="${v}">${l}</button>`).join("")}</div>`;
   let body;
   if (step === "check") {
-    const n = Object.keys(ck).length;
-    body = `<div class="reveal"><div><div class="label">${esc(rv.label)}</div><div class="big">${esc(rv.big)}</div></div><div class="sub" style="flex:1;min-width:240px">${esc(rv.sub)}<p style="margin:8px 0 0;font-size:24px;line-height:1.35;font-weight:600">Desks: work out how much you made or lost this round, then check it on your iPad. One try.</p></div></div>
+    const n = Object.keys(ck).length, U = R.stocks ? "stock" : "HRSY";
+    body = `<div class="reveal"><div><div class="label">${esc(rv.label)}</div><div class="big">${esc(rv.big)}</div></div><div class="sub" style="flex:1;min-width:240px">${esc(rv.sub)}<p style="margin:8px 0 0;font-size:24px;line-height:1.35;font-weight:600">Desks: work out how much you made or lost this round, then check it on your iPad. One try.</p></div></div>${R.stocks ? `<div class="card" style="margin-top:14px">${closeTableHTML(R, false)}</div>` : ""}
       <div class="board" style="margin-top:14px"><div class="card"><div class="label">Math checked: ${n} of ${S.groups.length}</div>
         <div class="tiles">${S.groups.map(g => `<div class="tile ${ck[g.gid] ? "done" : ""}"><span class="nm">${esc(g.name)}</span><span class="st">${ck[g.gid] ? "✔ Checked" : "Working..."}</span></div>`).join("")}</div>
         <div class="small" style="margin-top:8px">Right or wrong shows on each iPad. The class results come up on the next screen.</div></div>
-        <div class="card dark"><div class="label">The formulas</div><div style="font-size:18px;line-height:1.55"><b>Call payoff</b> = (HRSY − strike) × shares, if HRSY is above the strike<br><b>Put payoff</b> = (strike − HRSY) × shares, if HRSY is below the strike<br><b>Result</b> = payoff − premium paid${R.own ? " + the change in the shares" : ""}<br><span style="color:#CFCFCF">1 contract = 100 shares</span></div></div></div>
+        <div class="card dark"><div class="label">The formulas</div><div style="font-size:18px;line-height:1.55"><b>Call payoff</b> = (${U} − strike) × shares, if ${U} is above the strike<br><b>Put payoff</b> = (strike − ${U}) × shares, if ${U} is below the strike<br><b>Result</b> = payoff − premium paid${R.own ? " + the change in the shares" : ""}<br><span style="color:#CFCFCF">1 contract = 100 shares</span></div></div></div>
       <div class="actions" style="align-items:center"><span class="small">${n < S.groups.length ? `Waiting on ${S.groups.length - n}. You can move on any time; the check closes when you do.` : "Everyone has checked."}</span><button class="btn dk big" id="toMarket">Show what happened →</button></div>`;
   } else if (step === "market") {
     const res = S.groups.map(g => ({ g, x: deskResult(G, S.r, d[g.gid]) }));
     body = `<div class="reveal"><div><div class="label">${esc(rv.label)}</div><div class="big">${esc(rv.big)}</div></div><div class="sub" style="flex:1;min-width:240px">${esc(rv.sub)}<p style="margin:8px 0 0;font-size:19px;line-height:1.45">${esc(R.story)}</p></div></div>
       <div class="board" style="margin-top:14px"><div class="card"><table class="standings"><tr><th>Group</th><th>Choice</th><th>Result</th>${G.mathCheck ? "<th>Math</th>" : ""}<th class="r">This round</th></tr>
         ${res.map(({ g, x }) => `<tr><td class="nm">${esc(g.name)}</td><td>${esc(x.pick)}${x.missing ? ' <span class="pill ig">no answer</span>' : ""}${x.wrong ? ' <span class="pill r">wrong side</span>' : ""}</td><td>${esc(x.head)}</td>${G.mathCheck ? `<td>${ck[g.gid] ? (ck[g.gid].ok ? '<span class="pill g">✔ right</span>' : '<span class="pill r">✗ missed</span>') : '<span class="pill ig">no try</span>'}</td>` : ""}<td class="r val ${x.delta < 0 ? "neg" : x.delta > 0 && G.metric.higher ? "pos" : ""}">${deltaText(G, x.delta)}</td></tr>`).join("")}</table></div>
-        <div class="grid" style="align-content:start"><div class="lesson"><b>The lesson</b>${esc(R.lesson)}</div>${bestChoices(G, R)}</div></div>
+        <div class="grid" style="align-content:start"><div class="lesson"><b>The lesson</b>${esc(R.lesson)}</div>${bestChoices(G, R)}</div></div>${R.stocks ? `<div class="card" style="margin-top:14px"><div class="label">What happened to each stock</div>${closeTableHTML(R, true)}</div>` : ""}
       <div class="actions" style="align-items:center"><span class="small">iPads show each group's own math now.</span><button class="btn dk big" id="toStand">Standings →</button></div>`;
   } else {
     const rows = standings(S, S.r), b = bench(G, S.r);
@@ -247,7 +247,8 @@ function bestChoices(G, R) {
   walk(0, {});
   const out = combos.map(d => G.result(R, d)).sort((a, b) => b.delta - a.delta);
   const seen = new Set(), uniq = out.filter(x => !seen.has(x.pick) && seen.add(x.pick));
-  return `<div class="card"><div class="label">Every choice, best to worst</div><table class="brk">${uniq.map(x => `<tr><td>${esc(x.pick)}</td><td class="r">${deltaText(G, x.delta)}</td></tr>`).join("")}</table></div>`;
+  const many = uniq.length > 8, list = many ? [...uniq.slice(0, 5), null, ...uniq.slice(-2)] : uniq;
+  return `<div class="card"><div class="label">${many ? "Best and worst trades" : "Every choice, best to worst"}</div><table class="brk">${list.map(x => x ? x : { pick: "...", delta: null }).map(x => `<tr><td>${esc(x.pick)}</td><td class="r">${x.delta === null ? "" : deltaText(G, x.delta)}</td></tr>`).join("")}</table></div>`;
 }
 async function doReveal(G) {
   const n = S.answered.length;

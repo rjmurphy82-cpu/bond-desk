@@ -1,6 +1,6 @@
 // Unit 5 Derivatives Live: student (iPad) screen for all eight games
 import { call, $, $$, store } from "./deriv-client.js";
-import { GAMES, Q_SECS, fmt, esc, SHAPES, ord, game, round, dec, deskResult, standings, show, deltaText, roundLabel, secsLeft, briefHTML, resultTable, storyCardHTML, needed, settle, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML, mmQuote, pitFrac, pitNow, pitLeft, clockText, bookSide, lastPrice, tapeHTML, pitUsed, activeComms, exIntelHTML, exMeterHTML, pitMine } from "./deriv-view.js";
+import { GAMES, Q_SECS, fmt, esc, SHAPES, ord, game, round, dec, deskResult, standings, show, deltaText, roundLabel, secsLeft, briefHTML, closeTableHTML, resultTable, storyCardHTML, needed, settle, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML, mmQuote, pitFrac, pitNow, pitLeft, clockText, bookSide, lastPrice, tapeHTML, pitUsed, activeComms, exIntelHTML, exMeterHTML, pitMine } from "./deriv-view.js";
 
 const SK = "dv_play";
 let me = store.get(SK);          // {code, gid, key, name, pin}
@@ -150,6 +150,7 @@ function renderDesk(G) {
     <div class="card" style="margin-top:12px"><div class="label">Your desk · ${esc(x.pick)}${x.missing ? " (no answer)" : ""}</div>
       <div class="headline ${x.good ? "g" : x.bad ? "b" : ""}">${esc(x.head)}</div>${resultTable(x)}<div class="small" style="margin-top:6px;font-size:16px">This round: <b>${deltaText(G, x.delta)}</b></div>
       ${S.step === "stand" && m ? `<div class="headline" style="margin-top:10px">${ord(m.place)} of ${rows.length} · ${esc(G.metric.label)} ${show(G, m.value)}</div>` : `<div class="small" style="margin-top:8px">Standings come up on the board next.</div>`}</div>
+    ${R.stocks && S.step !== "check" ? `<div class="card" style="margin-top:12px"><div class="label">How the six stocks closed</div>${closeTableHTML(R, true, (G.pick(R, d || G.dflt) || {}).s?.tk)}</div>` : ""}
     <div class="lesson" style="margin-top:12px"><b>The lesson</b>${esc(R.lesson)}</div>${status()}`;
 }
 
@@ -163,6 +164,8 @@ function mathVerdictHTML(chk, ans) {
     <div style="font-size:19px;margin-top:4px">You said: <b>${esc(said)}</b>${chk.ok ? "" : `. The right answer: <b>${esc(right)}</b>. Check the math below.`}</div></div>`;
 }
 function myTradeLines(G, R, d) {
+  if (R.stocks) { const o = G.pick(R, d || {}); if (!o) return [`Your trade: <b>Sat out</b>${d ? "" : " (you didn't lock in)"}`];
+    return [`Your trade: <b>Buy ${o.n > 1 ? o.n + " " : "a "}${o.s.tk} ${fmt.usd(o.K, true)} ${o.type}${o.n > 1 ? "s" : ""}</b> (${esc(o.s.name)})`, `Strike: <b>${fmt.usd(o.K, true)}</b> · Premium: <b>${fmt.usd(o.p, true)} a share</b> · Contracts: <b>${o.n}</b> (${o.n * 100} shares)`, `${o.s.tk} was ${fmt.usd(o.s.now, true)} and closed at <b>${fmt.usd(o.s.S, true)}</b>`]; }
   const c = (R.choices || []).find(x => x.v === (d && d.trade)) || (R.choices || []).find(x => x.type === "none");
   const L = [];
   if (R.own) L.push(`Your shares: <b>${R.own.shares} HRSY shares bought at ${fmt.usd(R.own.cost, true)}</b>`);
@@ -174,11 +177,12 @@ function renderMathCheck(G, R, d, rv, force) {
   const key = S.r + ":" + me.gid;
   if (!force && mc.key === key && $("#mcForm")) { $("#mcCount").textContent = `${S.checked.length} of ${S.groups.length} desks have checked their math.`; return; }
   if (mc.key !== key) mc = { key, sign: null, amt: "", msg: "" };
+  const U = R.stocks ? "stock" : "HRSY";
   $("#view").innerHTML = deskHead(G, R) + `<div class="reveal"><div><div class="label">${esc(rv.label)}</div><div class="big" style="font-size:64px">${esc(rv.big)}</div></div><div class="sub" style="flex:1;min-width:200px">${esc(rv.sub)}</div></div>
     <div class="card" id="mcForm" style="margin-top:12px"><div class="label">Check your math</div>
       <p style="font-size:20px;margin:4px 0 10px;font-weight:600">How much did your desk make or lose this round? Work it out before the board shows the answer. You get one try.</p>
-      <ul class="newsl" style="font-size:17px">${myTradeLines(G, R, d).map(l => `<li>${l}</li>`).join("")}<li>HRSY at expiration: <b>${esc(rv.big)}</b></li></ul>
-      <div class="rulebox" style="font-size:15px;line-height:1.5"><b>Call payoff</b> = (HRSY − strike) × shares, if HRSY is above the strike. Otherwise $0.<br><b>Put payoff</b> = (strike − HRSY) × shares, if HRSY is below the strike. Otherwise $0.<br><b>Your result</b> = payoff − premium paid${R.own ? " + the gain or loss on your shares" : ""}.</div>
+      <ul class="newsl" style="font-size:17px">${myTradeLines(G, R, d).map(l => `<li>${l}</li>`).join("")}${R.stocks ? "" : `<li>HRSY at expiration: <b>${esc(rv.big)}</b></li>`}</ul>
+      <div class="rulebox" style="font-size:15px;line-height:1.5"><b>Call payoff</b> = (${U} − strike) × shares, if ${U} is above the strike. Otherwise $0.<br><b>Put payoff</b> = (strike − ${U}) × shares, if ${U} is below the strike. Otherwise $0.<br><b>Your result</b> = payoff − premium paid${R.own ? " + the gain or loss on your shares" : ""}.</div>
       <div class="chs" style="margin-top:12px;grid-template-columns:repeat(3,1fr)">${[["1", "We made money"], ["-1", "We lost money"], ["0", "We broke even"]].map(([v, l]) => `<button class="ch ${mc.sign === v ? "on" : ""}" data-s="${v}"><b>${l}</b></button>`).join("")}</div>
       <label class="field" style="margin-top:12px;${mc.sign === "0" ? "display:none" : ""}"><span>How much? (dollars)</span><input id="mcAmt" inputmode="decimal" autocomplete="off" placeholder="e.g. 350" value="${esc(mc.amt)}"></label>
       ${mc.msg ? `<div class="err">${esc(mc.msg)}</div>` : ""}

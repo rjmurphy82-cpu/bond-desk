@@ -228,3 +228,12 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--orange);outline
 .meter.g{border-color:var(--green)}.meter.g .mbar i{background:var(--green)}.meter.g .mtop b{color:var(--green)}
 .meter.y{border-color:#C9A100}.meter.y .mbar i{background:#E0B000}.meter.y .mtop b{color:#9A6B00}
 .meter.r{border-color:var(--red)}.meter.r .mbar i{background:var(--red)}.meter.r .mtop b{color:var(--red)}
+/* The Options Floor, Part 2: six stock cards and the closing table */
+.stks{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:8px}
+.stk{border:2px solid var(--rule);border-radius:10px;padding:8px 10px;background:#fff}
+.stk .sh{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.stk .sh b{font-family:Oswald,Arial,sans-serif;font-size:22px;color:var(--brown)}.stk .sh span{font-size:13px;color:#5C5C5C}
+.stk p{margin:4px 0 6px;font-size:16px;line-height:1.35}
+.stk .sq{display:flex;gap:10px;flex-wrap:wrap;font-size:14px;color:#5C5C5C}.stk .sq b{color:#111}
+.brief.big .stk p{font-size:18px}
+.closet th{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:14px;text-align:left;padding:4px 6px;background:#111;color:#fff}.closet th.r{text-align:right}
+.closet td{padding:5px 6px}.closet td.pos{color:var(--green)}.closet td.neg{color:var(--red)}.closet tr.mine td{background:#FFF3B0}
