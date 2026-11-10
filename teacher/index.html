@@ -9,7 +9,21 @@
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/site.css">
 <style>
-.wrap{max-width:980px;margin:0 auto;padding:28px clamp(16px,4vw,40px) 60px}
+.wrap{max-width:1320px;margin:0 auto;padding:28px clamp(16px,4vw,40px) 60px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:28px;align-items:start}
+.how{position:sticky;top:18px;max-height:calc(100vh - 36px);overflow-y:auto;background:var(--paper);border:1px solid var(--line);border-top:4px solid var(--black);border-radius:8px;padding:16px 18px;font-size:15px;line-height:1.45}
+.how h2{font-family:var(--display);font-weight:600;font-size:24px;margin:0 0 2px}
+.how h3{font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.04em;text-transform:uppercase;color:var(--redtext);margin:16px 0 6px}
+.how ol{margin:0;padding-left:20px}.how ol li{margin:3px 0}
+.how .sub{color:var(--muted);margin:0}
+.how table{width:100%;border-collapse:collapse;font-size:14px}
+.how td{border-top:1px solid var(--line);padding:5px 4px;vertical-align:top}
+.how td:first-child{font-weight:700;width:42%}
+.how code{font-family:inherit;font-weight:700;color:var(--redtext)}
+.how .tip{background:var(--redsoft);border-radius:6px;padding:8px 10px;margin-top:14px;font-size:14px}
+.how .pbtn{float:right;background:none;border:1px solid var(--line);border-radius:4px;font-size:13px;font-weight:600;padding:2px 8px}
+@media (max-width:980px){.layout{grid-template-columns:1fr}.how{position:static;max-height:none;order:-1}}
+@media print{body{background:#fff}.top,.eyebrow,h1,.lede,.games,.pbtn{display:none!important}.layout{display:block}.how{position:static;max-height:none;overflow:visible;border:0;padding:0;font-size:13px}}
 .top{display:flex;align-items:center;gap:14px;font-weight:600;color:var(--muted)}
 .top img{height:40px;border-radius:3px}.top a{color:inherit}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
@@ -28,6 +42,8 @@
   <p class="eyebrow" style="margin-top:24px">Teacher only</p>
   <h1>Class games</h1>
   <p class="lede">Open a game here on the projector computer. This page is not linked anywhere on the student site.</p>
+  <div class="layout">
+  <div class="games">
   <h2 style="font-family:var(--display);font-size:30px;margin:26px 0 10px">Unit 5: Derivatives</h2>
   <div class="grid">
     <a class="card" href="/deriv-host">
@@ -105,6 +121,48 @@
       <p>Every practice report students send from My Report: Bond Desk Solo, Rating Room, Fair Yield Sprint, Bond Terms, and their short answers. Filter by period and download a CSV.</p>
       <div class="stu"><span>Needs your teacher code</span><span class="go">Open →</span></div>
     </a>
+  </div>
+  </div>
+  <aside class="how" aria-label="How to run the games">
+    <button class="pbtn" onclick="window.print()">Print</button>
+    <h2>How to run</h2>
+    <p class="sub">One page. Works for every game here.</p>
+
+    <h3>iPad games</h3>
+    <ol>
+      <li>Click the game card on the projector computer.</li>
+      <li>Students go to the address on the card or scan the QR.</li>
+      <li>They type the game code and their name.</li>
+      <li>When everyone is on the list, start the game.</li>
+      <li>Press the big button for each step. Lock, reveal, next.</li>
+    </ol>
+
+    <h3>Projector only</h3>
+    <ol>
+      <li>Click the card. No iPads, no codes.</li>
+      <li>Split the class into teams.</li>
+      <li>Click through. You tap who got it right.</li>
+    </ol>
+
+    <h3>Who plays how</h3>
+    <table>
+      <tr><td>Derivatives Live</td><td>Pick a game from the menu. Story game: 1 per iPad. Desk: 1 iPad per group. <code>/deriv</code></td></tr>
+      <tr><td>Futures, Curves, Bonds Live</td><td>1 per iPad. Create game, Start game, Next. Use after the main game.</td></tr>
+      <tr><td>Bond Ladder</td><td>Tables of 3, 1 per iPad. Pick rounds, Seat the tables, start. <code>/bond-ladder</code></td></tr>
+      <tr><td>Bond Desk, Credit Desk, Recession Radar</td><td>1 iPad per group.</td></tr>
+      <tr><td>Lock It In, Bond Feud, Rating Room</td><td>Projector only.</td></tr>
+      <tr><td>Student reports</td><td>Type your teacher code, pick a period, Show reports.</td></tr>
+    </table>
+
+    <h3>Before class</h3>
+    <ol>
+      <li>iPads charged and on school Wi-Fi.</li>
+      <li>Sound on for Bond Feud.</li>
+      <li>Open the game before the bell.</li>
+    </ol>
+
+    <div class="tip"><b>Stuck?</b> Tap <b>Menu</b> on the host screen for standings and extra controls. iPad restarted? The student types the same code and name, taps the rejoin link, and enters their PIN. Most iPads just reconnect on reload.</div>
+  </aside>
   </div>
 </div>
 </body>
