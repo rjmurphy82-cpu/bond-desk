@@ -21,19 +21,23 @@ export function deskResult(G, r, d) { const R = G.rounds[r]; const pick = d && !
 // Last round whose results everyone may see
 export function shownUpto(S) { return S.phase === "final" ? game(S).rounds.length - 1 : S.phase === "reveal" ? S.r : S.r - 1; }
 
+// Options Floor: a wrong math check costs the desk G.mathFine (no try = no fine)
+export const mathFined = (G, S, r, gid) => !!(G.mathFine && S.checks && S.checks[r] && S.checks[r][gid] && !S.checks[r][gid].ok);
+export const fineTotal = (G, S, gid) => G.mathFine ? (S.checks || []).reduce((a, c, r) => a + (mathFined(G, S, r, gid) ? G.mathFine : 0), 0) : 0;
 // Standings through round `upto`. Desk: start value + every round's result. Story: total points.
 export function standings(S, upto) {
   const G = game(S);
   const rows = S.groups.map(g => {
-    let total = 0, right = 0, last = 0, lastPick = null;
+    let total = 0, right = 0, last = 0, lastPick = null, fines = 0;
     for (let r = 0; r <= upto; r++) {
       if (!answerable(G, r)) continue;
       const d = dec(S, r, g.gid);
       if (G.kind === "story") { const p = d ? d.pts || 0 : 0; total += p; if (p > 0) right++; if (r === upto) last = p; }
       else if (G.kind === "exchange") { const x = settle(S, r).byGid[g.gid]; const p = x ? x.points : 0; total += p; if (r === upto) { last = p; lastPick = x; } }
       else { const x = deskResult(G, r, d); total += x.delta; if (r === upto) { last = x.delta; lastPick = x; } }
+      if (mathFined(G, S, r, g.gid)) { total -= G.mathFine; fines += G.mathFine; }
     }
-    return { g, value: (G.kind === "story" ? 0 : G.metric.start) + total, right, last, lastPick };
+    return { g, value: (G.kind === "story" ? 0 : G.metric.start) + total, right, last, lastPick, fines };
   });
   rows.sort((a, b) => b.value - a.value || b.right - a.right || a.g.name.localeCompare(b.g.name));
   rows.forEach(r => r.place = rows.filter(o => o.value > r.value).length + 1);

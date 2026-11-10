@@ -424,9 +424,9 @@ export function exSettle(R, decs, groups) {
 // ---------- 2. The Options Floor ----------
 const OPT = (v, label, type, K, p, n = 1) => ({ v, label, type, K, p, n });
 const options = {
-  title: "The Options Floor", mathCheck: true,   // after each reveal, desks work out their own result before the board shows it
+  title: "The Options Floor", mathCheck: true, mathFine: 250,  // a wrong math check costs the desk $250   // after each reveal, desks work out their own result before the board shows it
   pitch: "Six rounds of HRSY (Hersey Holdings Inc.) news. Each round, your desk buys a call, buys a put, or sits out. In two rounds you own HRSY shares and decide whether to protect them.",
-  rule: "Every desk starts with a $10,000 trading account. Each contract covers 100 shares. You only BUY options, so the most you can lose on one is its premium. Highest account wins.",
+  rule: "Every desk starts with a $10,000 trading account. Each contract covers 100 shares. You only BUY options, so the most you can lose on one is its premium. After each round, work out what you made or lost: a wrong answer costs $250. Highest account wins.",
   metric: { label: "Account", start: 10000, higher: true, show: v => usd(v) },
   benchLabel: "Always sat out",
   dflt: { trade: "none" },
@@ -573,9 +573,9 @@ const OPT2_ROUNDS = [
     lesson: "Read past the headline. What insiders do, what a company owns, and its real numbers can matter more than buzz." }
 ].map(R => ({ ...R, stocks: STOCKS.map(s => ({ ...s, ...R.st[s.tk] })) }));
 const options2 = {
-  title: "The Options Floor, Part 2", mathCheck: true,
+  title: "The Options Floor, Part 2", mathCheck: true, mathFine: 250,
   pitch: "Six stocks, six rounds. Each round, read the economy report and the analysis of six companies, then pick ONE stock and buy a call, buy a put, or sit out. Rounds get harder as you go.",
-  rule: "Every desk starts with a $10,000 trading account. Each contract covers 100 shares. You only BUY options, so the most you can lose is the premium. After each round, work out what you made or lost. Highest account wins.",
+  rule: "Every desk starts with a $10,000 trading account. Each contract covers 100 shares. You only BUY options, so the most you can lose is the premium. After each round, work out what you made or lost: a wrong answer costs $250. Highest account wins.",
   metric: { label: "Account", start: 10000, higher: true, show: v => usd(v) },
   benchLabel: "Always sat out",
   dflt: { trade: "none" },

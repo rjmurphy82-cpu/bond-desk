@@ -1,7 +1,7 @@
 // Unit 5 Derivatives Live: host (projector) screen for all eight games
 import { call, offlineCaller, $, $$, store } from "./deriv-client.js";
 import { qrSVG } from "./qr.js";
-import { GAMES, ORDER, Q_SECS, qSecs, fmt, esc, SHAPES, game, round, dec, answerable, deskResult, standings, bench, show, deltaText, roundLabel, secsLeft, briefHTML, closeTableHTML, resultTable, storyCardHTML, needed, settle, exBudget, exAsk, exBid, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML, mmQuote, pitFrac, pitNow, pitLeft, clockText, bookSide, lastPrice, tapeHTML, activeComms } from "./deriv-view.js";
+import { GAMES, ORDER, Q_SECS, qSecs, fmt, esc, SHAPES, game, round, dec, answerable, deskResult, standings, bench, show, deltaText, roundLabel, secsLeft, briefHTML, closeTableHTML, resultTable, storyCardHTML, needed, settle, exBudget, exAsk, exBid, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML, mmQuote, pitFrac, pitNow, pitLeft, clockText, bookSide, lastPrice, tapeHTML, activeComms, mathFined } from "./deriv-view.js";
 const PIT_MM_START = 0.03, PIT_MM_END = 0.09;
 
 let api = call, offline = false, S = null, sess = null, pollT = null, netErr = "", skew = 0;
@@ -213,7 +213,7 @@ function renderDesk(G) {
   let body;
   if (step === "check") {
     const n = Object.keys(ck).length, U = R.stocks ? "stock" : "HRSY";
-    body = `<div class="reveal"><div><div class="label">${esc(rv.label)}</div><div class="big">${esc(rv.big)}</div></div><div class="sub" style="flex:1;min-width:240px">${esc(rv.sub)}<p style="margin:8px 0 0;font-size:24px;line-height:1.35;font-weight:600">Desks: work out how much you made or lost this round, then check it on your iPad. One try.</p></div></div>${R.stocks ? `<div class="card" style="margin-top:14px">${closeTableHTML(R, false)}</div>` : ""}
+    body = `<div class="reveal"><div><div class="label">${esc(rv.label)}</div><div class="big">${esc(rv.big)}</div></div><div class="sub" style="flex:1;min-width:240px">${esc(rv.sub)}<p style="margin:8px 0 0;font-size:24px;line-height:1.35;font-weight:600">Desks: work out how much you made or lost this round, then check it on your iPad. One try${G.mathFine ? `. A wrong answer costs ${fmt.usd(G.mathFine)}` : ""}.</p></div></div>${R.stocks ? `<div class="card" style="margin-top:14px">${closeTableHTML(R, false)}</div>` : ""}
       <div class="board" style="margin-top:14px"><div class="card"><div class="label">Math checked: ${n} of ${S.groups.length}</div>
         <div class="tiles">${S.groups.map(g => `<div class="tile ${ck[g.gid] ? "done" : ""}"><span class="nm">${esc(g.name)}</span><span class="st">${ck[g.gid] ? "✔ Checked" : "Working..."}</span></div>`).join("")}</div>
         <div class="small" style="margin-top:8px">Right or wrong shows on each iPad. The class results come up on the next screen.</div></div>
@@ -223,13 +223,13 @@ function renderDesk(G) {
     const res = S.groups.map(g => ({ g, x: deskResult(G, S.r, d[g.gid]) }));
     body = `<div class="reveal"><div><div class="label">${esc(rv.label)}</div><div class="big">${esc(rv.big)}</div></div><div class="sub" style="flex:1;min-width:240px">${esc(rv.sub)}<p style="margin:8px 0 0;font-size:19px;line-height:1.45">${esc(R.story)}</p></div></div>
       <div class="board" style="margin-top:14px"><div class="card"><table class="standings"><tr><th>Group</th><th>Choice</th><th>Result</th>${G.mathCheck ? "<th>Math</th>" : ""}<th class="r">This round</th></tr>
-        ${res.map(({ g, x }) => `<tr><td class="nm">${esc(g.name)}</td><td>${esc(x.pick)}${x.missing ? ' <span class="pill ig">no answer</span>' : ""}${x.wrong ? ' <span class="pill r">wrong side</span>' : ""}</td><td>${esc(x.head)}</td>${G.mathCheck ? `<td>${ck[g.gid] ? (ck[g.gid].ok ? '<span class="pill g">✔ right</span>' : '<span class="pill r">✗ missed</span>') : '<span class="pill ig">no try</span>'}</td>` : ""}<td class="r val ${x.delta < 0 ? "neg" : x.delta > 0 && G.metric.higher ? "pos" : ""}">${deltaText(G, x.delta)}</td></tr>`).join("")}</table></div>
+        ${res.map(({ g, x }) => `<tr><td class="nm">${esc(g.name)}</td><td>${esc(x.pick)}${x.missing ? ' <span class="pill ig">no answer</span>' : ""}${x.wrong ? ' <span class="pill r">wrong side</span>' : ""}</td><td>${esc(x.head)}</td>${G.mathCheck ? `<td>${ck[g.gid] ? (ck[g.gid].ok ? '<span class="pill g">✔ right</span>' : `<span class="pill r">✗ missed${G.mathFine ? " · −" + fmt.usd(G.mathFine) + " fine" : ""}</span>`) : '<span class="pill ig">no try</span>'}</td>` : ""}<td class="r val ${x.delta < 0 ? "neg" : x.delta > 0 && G.metric.higher ? "pos" : ""}">${deltaText(G, x.delta)}</td></tr>`).join("")}</table></div>
         <div class="grid" style="align-content:start"><div class="lesson"><b>The lesson</b>${esc(R.lesson)}</div>${bestChoices(G, R)}</div></div>${R.stocks ? `<div class="card" style="margin-top:14px"><div class="label">What happened to each stock</div>${closeTableHTML(R, true)}</div>` : ""}
       <div class="actions" style="align-items:center"><span class="small">iPads show each group's own math now.</span><button class="btn dk big" id="toStand">Standings →</button></div>`;
   } else {
     const rows = standings(S, S.r), b = bench(G, S.r);
     body = `<div class="card"><table class="standings"><tr><th>Place</th><th>Group</th><th>This round</th><th class="r">${esc(G.metric.label)}</th></tr>
-      ${rows.map(x => `<tr class="${x.place === 1 ? "top" : ""}"><td class="pl">${x.place}</td><td class="nm">${esc(x.g.name)}</td><td>${esc(x.lastPick ? x.lastPick.pick : "")}</td><td class="r val">${show(G, x.value)}</td></tr>`).join("")}
+      ${rows.map(x => `<tr class="${x.place === 1 ? "top" : ""}"><td class="pl">${x.place}</td><td class="nm">${esc(x.g.name)}</td><td>${esc(x.lastPick ? x.lastPick.pick : "")}${mathFined(G, S, S.r, x.g.gid) ? ` <span class="pill r">−${fmt.usd(G.mathFine)} math fine</span>` : ""}</td><td class="r val">${show(G, x.value)}</td></tr>`).join("")}
       <tr class="bench"><td></td><td>${esc(G.benchLabel)}</td><td></td><td class="r val">${show(G, b)}</td></tr></table></div>
       <div class="actions"><button class="btn ghost" id="reopen">Reopen this round</button><button class="btn big" id="nextBtn">${last ? "Final results →" : `Open Round ${S.r + 2} →`}</button></div>`;
   }
@@ -293,7 +293,7 @@ function renderFinal(G) {
     const cell = v => G.id === "futures-desk" ? fmt.num(v) : (G.metric.higher ? (v > 0 ? "+" : v < 0 ? "−" : "") + "$" + Math.abs(Math.round(v)).toLocaleString("en-US") : (v === 0 ? "$0" : "$" + Math.round(-v / 1000).toLocaleString("en-US") + "K"));
     const mright = gid => (S.checks || []).reduce((a, c) => a + (c && c[gid] && c[gid].ok ? 1 : 0), 0), MC = !!G.mathCheck;
     table = `<div class="card"><table class="standings"><tr><th>Place</th><th>Group</th>${G.rounds.map((_, r) => `<th class="r" style="padding:7px 4px">R${r + 1}</th>`).join("")}${MC ? '<th class="r">Math right</th>' : ""}<th class="r">${esc(G.metric.label)}</th></tr>
-      ${rows.map(x => `<tr class="${x.place === 1 ? "top" : ""}"><td class="pl">${x.place}</td><td class="nm">${esc(x.g.name)}</td>${per(x).map(v => `<td class="r ${v < 0 && G.metric.higher ? "neg" : ""}" style="font-size:15px;padding:6px 4px">${cell(v)}</td>`).join("")}${MC ? `<td class="r">${mright(x.g.gid)} / ${G.rounds.length}</td>` : ""}<td class="r val">${show(G, x.value)}</td></tr>`).join("")}
+      ${rows.map(x => `<tr class="${x.place === 1 ? "top" : ""}"><td class="pl">${x.place}</td><td class="nm">${esc(x.g.name)}</td>${per(x).map(v => `<td class="r ${v < 0 && G.metric.higher ? "neg" : ""}" style="font-size:15px;padding:6px 4px">${cell(v)}</td>`).join("")}${MC ? `<td class="r">${mright(x.g.gid)} / ${G.rounds.length}${x.fines ? `<div class="small neg">−${fmt.usd(x.fines)} fines</div>` : ""}</td>` : ""}<td class="r val">${show(G, x.value)}</td></tr>`).join("")}
       <tr class="bench"><td></td><td>${esc(G.benchLabel)}</td>${G.rounds.map((_, r) => `<td class="r" style="font-size:15px;padding:6px 4px">${cell(deskResult(G, r, null).delta)}</td>`).join("")}${MC ? "<td></td>" : ""}<td class="r val">${show(G, bench(G, lastR))}</td></tr></table></div>`;
     side = `<div class="card dark"><div class="label">What the desk teaches</div><ul style="font-size:16px;line-height:1.4;padding-left:20px;margin:0">${G.rounds.map(R => `<li style="margin-bottom:6px">${esc(R.lesson)}</li>`).join("")}</ul></div>`;
   } else {
