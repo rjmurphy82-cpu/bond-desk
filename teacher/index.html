@@ -22,8 +22,13 @@
 .how code{font-family:inherit;font-weight:700;color:var(--redtext)}
 .how .tip{background:var(--redsoft);border-radius:6px;padding:8px 10px;margin-top:14px;font-size:14px}
 .how .pbtn{float:right;background:none;border:1px solid var(--line);border-radius:4px;font-size:13px;font-weight:600;padding:2px 8px}
+.how .pick{display:block;margin:10px 0 4px}.how .pick span{display:block;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.how select{width:100%;font:600 16px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.how .ttl{font-family:var(--display);font-weight:600;font-size:22px;margin:14px 0 2px}
+.how .meta{margin:8px 0 0;font-size:14px}.how .meta div{border-top:1px solid var(--line);padding:5px 0}.how .meta b{display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.how .open{display:inline-block;margin-top:12px;font-family:var(--display);font-weight:600;color:#fff;background:var(--red);border-radius:5px;padding:4px 12px;text-decoration:none}
 @media (max-width:980px){.layout{grid-template-columns:1fr}.how{position:static;max-height:none;order:-1}}
-@media print{body{background:#fff}.top,.eyebrow,h1,.lede,.games,.pbtn{display:none!important}.layout{display:block}.how{position:static;max-height:none;overflow:visible;border:0;padding:0;font-size:13px}}
+@media print{body{background:#fff}.top,.eyebrow,h1,.lede,.games,.pbtn,.pick,.open{display:none!important}.how .ttl{font-size:26px}.layout{display:block}.how{position:static;max-height:none;overflow:visible;border:0;padding:0;font-size:13px}}
 .top{display:flex;align-items:center;gap:14px;font-weight:600;color:var(--muted)}
 .top img{height:40px;border-radius:3px}.top a{color:inherit}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
@@ -123,47 +128,184 @@
     </a>
   </div>
   </div>
-  <aside class="how" aria-label="How to run the games">
+  <aside class="how" aria-label="How to run a game">
     <button class="pbtn" onclick="window.print()">Print</button>
     <h2>How to run</h2>
-    <p class="sub">One page. Works for every game here.</p>
-
-    <h3>iPad games</h3>
-    <ol>
-      <li>Click the game card on the projector computer.</li>
-      <li>Students go to the address on the card or scan the QR.</li>
-      <li>They type the game code and their name.</li>
-      <li>When everyone is on the list, start the game.</li>
-      <li>Press the big button for each step. Lock, reveal, next.</li>
-    </ol>
-
-    <h3>Projector only</h3>
-    <ol>
-      <li>Click the card. No iPads, no codes.</li>
-      <li>Split the class into teams.</li>
-      <li>Click through. You tap who got it right.</li>
-    </ol>
-
-    <h3>Who plays how</h3>
-    <table>
-      <tr><td>Derivatives Live</td><td>Pick a game from the menu. Story game: 1 per iPad. Desk: 1 iPad per group. <code>/deriv</code></td></tr>
-      <tr><td>Futures, Curves, Bonds Live</td><td>1 per iPad. Create game, Start game, Next. Use after the main game.</td></tr>
-      <tr><td>Bond Ladder</td><td>Tables of 3, 1 per iPad. Pick rounds, Seat the tables, start. <code>/bond-ladder</code></td></tr>
-      <tr><td>Bond Desk, Credit Desk, Recession Radar</td><td>1 iPad per group.</td></tr>
-      <tr><td>Lock It In, Bond Feud, Rating Room</td><td>Projector only.</td></tr>
-      <tr><td>Student reports</td><td>Type your teacher code, pick a period, Show reports.</td></tr>
-    </table>
-
-    <h3>Before class</h3>
-    <ol>
-      <li>iPads charged and on school Wi-Fi.</li>
-      <li>Sound on for Bond Feud.</li>
-      <li>Open the game before the bell.</li>
-    </ol>
-
-    <div class="tip"><b>Stuck?</b> Tap <b>Menu</b> on the host screen for standings and extra controls. iPad restarted? The student types the same code and name, taps the rejoin link, and enters their PIN. Most iPads just reconnect on reload.</div>
+    <label class="pick"><span>Pick a game</span>
+      <select id="howSel"></select>
+    </label>
+    <div id="howBody"></div>
   </aside>
   </div>
 </div>
+<script>
+const HOW = [
+ { id:"deriv", name:"Derivatives Live", unit:"Unit 5", href:"/deriv-host",
+   who:"Story games and Futures Face-Off: 1 student per iPad. Trading desks: 1 iPad per group (pairs for The Futures Exchange).",
+   go:"/deriv",
+   steps:[
+    "Open Derivatives Live. Under <b>Pick a game</b>, click the game you want.",
+    "Click <b>Start this game</b>. A game code and QR show up.",
+    "Students go to <code>/deriv</code> and type the code and their name (group name for desks).",
+    "When everyone is listed, click the big start button: <b>Start the story</b>, <b>Open Round 1</b> or <b>Open Quarter 1</b>.",
+    "Story games: click <b>Next</b> through each card and question.",
+    "Desk games: when it says <b>Everyone's in: reveal</b>, click it. Then <b>Show what happened</b>, <b>Standings</b>, and open the next round."
+   ],
+   need:["Run them in order: Futures Face-Off, The Prom Bus, The Futures Exchange. Options: The Sneaker Drop, The Options Floor, Part 2. Swaps: The Tip Jar Trade, The Swap Desk. CDS: The Cousin Loan, The Default Desk."],
+   tip:"<b>Futures Exchange:</b> pick <b>Live trading pit</b> (or <b>Sealed bids</b> if Wi-Fi is slow), click <b>Open trading</b>, drop headlines with <b>Next headline</b>, then close the market and <b>Reveal delivery prices</b>."},
+ { id:"futures", name:"Futures Live", unit:"Unit 5", href:"/teacher/futures-live",
+   who:"1 student per iPad (Kahoot style).", go:"/futures-live",
+   steps:[
+    "Open Futures Live and click <b>Host a class game</b>.",
+    "Pick your settings (the defaults are fine) and click <b>Create game</b>.",
+    "Students go to <code>/futures-live</code> and type the code and their name.",
+    "When everyone is listed, click <b>Start game</b>.",
+    "Each question: <b>Show question</b>, then <b>Show answer now</b> (or wait for everyone), then <b>Next</b>.",
+    "At the end, show the <b>Top 5</b>, then <b>Class results</b> for the Reteach first list."
+   ],
+   need:["Play it after The Prom Bus and The Futures Exchange."],
+   tip:"A student who drops taps <b>Rejoin</b> on their iPad."},
+ { id:"lock", name:"Lock It In", unit:"Unit 5", href:"/lock-it-in",
+   who:"Teams. Projector only, no iPads or Wi-Fi.", go:"Nothing. Students watch the projector.",
+   steps:[
+    "Open Lock It In. Under <b>Set up teams</b>, pick how many teams and type their names.",
+    "Pick <b>Seconds per question</b> and turn sound on or off.",
+    "Click <b>Next</b> (or press Space) to show each question. The timer runs.",
+    "When time ends, every team holds up or draws the shape of its answer.",
+    "Tap each team that got it right (1,000). Tap twice for the fastest right team (+250 more).",
+    "Keep pressing Space. The leaderboard shows between rounds and the podium at the end."
+   ],
+   need:["A whiteboard or paper and marker for each team."],
+   tip:"23 questions in five rounds, covering all four derivatives."},
+ { id:"bonddesk", name:"The Bond Desk", unit:"Unit 4", href:"/host",
+   who:"1 iPad per desk (one student or a small group).", go:"/join",
+   steps:[
+    "Open The Bond Desk and click <b>Start a new game</b>.",
+    "Students go to <code>/join</code> and type the code and their first name(s).",
+    "Click <b>Open Year 1</b>. Read the market news together. Click <b>Start</b> on the clock if you want a timer.",
+    "Desks pick their bonds on the iPads. When all are in, click <b>Everyone's in: reveal</b>.",
+    "Click <b>What happened</b>, then <b>Standings</b>.",
+    "Click <b>Open Year 2</b> and repeat for all ten years, then <b>Final results</b>."
+   ],
+   need:["The clock starts at 5 minutes a year. Use −1 and +1 to change it."],
+   tip:"No Wi-Fi? Click <b>Play without iPads</b>, add desks by hand, and tap a desk's tile to enter its choices."},
+ { id:"ladder", name:"Bond Ladder", unit:"Unit 4", href:"/bond-ladder/teacher",
+   who:"Tables of 3, 1 student per iPad.", go:"/bond-ladder",
+   steps:[
+    "Open Bond Ladder and click <b>Host a game</b>.",
+    "Pick your rounds, the timer, and <b>Ladder</b> or <b>Regroup by place</b>. Click <b>Create game</b>.",
+    "Students go to <code>/bond-ladder</code> and type the code and their first name.",
+    "Click <b>Seat the tables</b>. Students find their table, then click <b>Everyone's seated: start Round 1</b>.",
+    "Each round is Quick Fire questions, then one main task. <b>Table results</b> shows who moves up, stays or moves down.",
+    "After the last round, show the <b>Top 5</b>, then <b>Class results</b>."
+   ],
+   need:["Tables numbered. <b>Print table signs</b> makes them for you.","About 45 to 55 minutes for 6 rounds."],
+   tip:"Use <b>Lock it now</b> if a table is stalling."},
+ { id:"curves", name:"Curves Live", unit:"Unit 4", href:"/teacher/curves-live",
+   who:"1 student per iPad (Kahoot style).", go:"/curves-live",
+   steps:[
+    "Open Curves Live and click <b>Host a class game</b>.",
+    "Pick your settings (the defaults are fine) and click <b>Create game</b>.",
+    "Students go to <code>/curves-live</code> and type the code and their name.",
+    "When everyone is listed, click <b>Start game</b>.",
+    "Each question: <b>Show question</b>, then <b>Show answer now</b> (or wait for everyone), then <b>Next</b>.",
+    "At the end, show the <b>Top 5</b>, then <b>Class results</b> for the Reteach first list."
+   ],
+   need:["Play it after Recession Radar."],
+   tip:"A student who drops taps <b>Rejoin</b> on their iPad."},
+ { id:"bondslive", name:"Bonds Live", unit:"Unit 4", href:"/teacher/bonds-live",
+   who:"1 student per iPad (Kahoot style).", go:"/bonds-live",
+   steps:[
+    "Open Bonds Live and click <b>Host a class game</b>.",
+    "Pick questions per round, wrong-answer penalty and time (the defaults are fine). Click <b>Create game</b>.",
+    "Students go to <code>/bonds-live</code> and type the code and their name.",
+    "When everyone is listed, click <b>Start game</b>.",
+    "Each question: <b>Show question</b>, then <b>Show answer now</b> (or wait for everyone), then <b>Next</b>.",
+    "At the end, show the <b>Top 5</b>, then <b>Class results</b> for the Reteach first list."
+   ],
+   need:["Good as a Unit 4 review or a quick check after The Bond Desk and The Rating Room."],
+   tip:"A student who drops taps <b>Rejoin</b> on their iPad."},
+ { id:"credit", name:"Credit Desk Live", unit:"Unit 4", href:"/credit-host",
+   who:"1 iPad per group.", go:"/credit",
+   steps:[
+    "Open Credit Desk Live and click <b>Start a new game</b>.",
+    "Groups go to <code>/credit</code> and type the code and their group name.",
+    "Click <b>Open Year 1</b>. Groups rate the borrower on their iPads.",
+    "Click <b>Everyone's rated: open the market</b>. Groups decide how much to buy.",
+    "Click <b>Everyone's in: reveal</b> for the true rating, then <b>What happened to the bond</b>.",
+    "Click <b>Standings</b>, then open the next year. After the last year, <b>Final results</b>."
+   ],
+   need:["Rating Room scorecard worksheets, if groups want them. A scorecard reminder shows on the screen."],
+   tip:"No Wi-Fi? Click <b>Play without iPads</b> and enter each group's answers yourself."},
+ { id:"radar", name:"Recession Radar Live", unit:"Unit 4", href:"/radar-host",
+   who:"1 iPad per group.", go:"/radar",
+   steps:[
+    "Open Recession Radar Live and click <b>Start a new game</b>.",
+    "Groups go to <code>/radar</code> and type the code and their group name.",
+    "Click <b>Open Mystery Curve A</b>. Groups name the shape, call the timing and bet chips.",
+    "Click <b>Everyone's in: reveal</b>. On Spot the Analyst rounds, groups write one sentence, then vote for the real analyst.",
+    "Click <b>Reveal the date</b>, then <b>Standings</b>, then open the next curve.",
+    "After the last curve, click <b>Today's curve</b> for the class forecast and the what-if simulator."
+   ],
+   need:["The rule on the board: spread = 10Y yield minus 3M yield."],
+   tip:"Two of the ten curves are traps. Let groups argue before you reveal."},
+ { id:"feud", name:"Bond Feud", unit:"Unit 4", href:"/bond-feud",
+   who:"2 to 8 teams. Projector only, no iPads.", go:"Nothing. Students watch the projector.",
+   steps:[
+    "Open Bond Feud, name your teams, and click <b>Start the Feud</b>.",
+    "Click <b>Pick who starts</b>. The spinner picks a team.",
+    "That team guesses out loud. Type the guess to reveal it. Wrong = <b>Strike</b>.",
+    "Three strikes: the spinner picks a team for one steal guess. Clear the board or steal to win the bank.",
+    "Click <b>Next board</b>. Boards 4 and 5 are double, board 6 is triple.",
+    "Lightning Round: 18 questions, 20 seconds each. Teams hold up a color, you click <b>Reveal</b>, then click each team that got it (+10)."
+   ],
+   need:["Sound on.","Whiteboards or colored cards for the Lightning Round."],
+   tip:"Keys: P = pick who starts, 1 to 6 = flip a tile, X = strike, Space = next."},
+ { id:"rating", name:"The Rating Room", unit:"Unit 4", href:"/rating-room",
+   who:"Teams. Projector only.", go:"Nothing. Groups use the scorecard worksheet.",
+   steps:[
+    "Hand each team the scorecard worksheet.",
+    "Open The Rating Room, go to <b>Team Rounds</b>, and click <b>Start</b> on the clock.",
+    "Teams score the six factors on the worksheet and pick a rating.",
+    "When time's up, enter each team's rating with <b>Lock in your answer</b>. Answers stay hidden.",
+    "Click <b>Reveal the official rating</b>. Use <b>Next factor</b> to show the why one at a time.",
+    "<b>Show leaderboard</b>, then <b>Next round</b>. Finish with the <b>Blitz</b> tab: tap who got each one right, then <b>Save</b>."
+   ],
+   need:["Scorecard worksheet for each team.","Whiteboards for the Blitz."],
+   tip:"BBB and above = investment grade. BB and below = high-yield (junk)."},
+ { id:"reports", name:"Student reports", unit:"Reports", href:"/teacher/reports",
+   who:"You only. Students send reports from My Report on the student site.", go:"My Report on the student site",
+   steps:[
+    "Students finish a practice page and click to send their report from <b>My Report</b>.",
+    "Open Student reports.",
+    "Type your teacher code (the TEACHER_CODE set in Vercel).",
+    "Click <b>Show reports</b>.",
+    "Filter by period to see one class.",
+    "Click <b>Download CSV</b> to put scores in your gradebook."
+   ],
+   need:["Your teacher code."],
+   tip:"Covers Bond Desk Solo, Rating Room, Fair Yield Sprint, Bond Terms and short answers."}
+];
+(function(){
+  const sel=document.getElementById("howSel"), body=document.getElementById("howBody");
+  let groups={};
+  HOW.forEach(g=>{(groups[g.unit]=groups[g.unit]||[]).push(g)});
+  sel.innerHTML=Object.keys(groups).map(u=>'<optgroup label="'+u+'">'+groups[u].map(g=>'<option value="'+g.id+'">'+g.name+'</option>').join("")+'</optgroup>').join("");
+  function show(id){
+    const g=HOW.find(x=>x.id===id)||HOW[0]; sel.value=g.id;
+    const go=g.go.startsWith("/")?'<code>'+g.go+'</code> or scan the QR':g.go;
+    body.innerHTML='<div class="ttl">'+g.name+'</div>'+
+      '<div class="meta"><div><b>Who plays</b>'+g.who+'</div><div><b>Students go to</b>'+go+'</div></div>'+
+      '<h3>Steps</h3><ol>'+g.steps.map(x=>'<li>'+x+'</li>').join("")+'</ol>'+
+      '<h3>Before class</h3><ol>'+g.need.map(x=>'<li>'+x+'</li>').join("")+'</ol>'+
+      '<div class="tip">'+g.tip+'</div>'+
+      '<a class="open" href="'+g.href+'">Open '+g.name+' →</a>';
+    try{localStorage.setItem("howGame",g.id)}catch(e){}
+  }
+  sel.onchange=()=>show(sel.value);
+  let saved=null; try{saved=localStorage.getItem("howGame")}catch(e){}
+  show(saved||HOW[0].id);
+})();
+</script>
 </body>
 </html>
