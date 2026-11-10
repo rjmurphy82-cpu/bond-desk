@@ -10,16 +10,17 @@
 <link rel="stylesheet" href="/site.css">
 <style>
 .wrap{max-width:1320px;margin:0 auto;padding:28px clamp(16px,4vw,40px) 60px}
-.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:28px;align-items:start}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:28px;align-items:start}
 .how{position:sticky;top:18px;max-height:calc(100vh - 36px);overflow-y:auto;background:var(--paper);border:1px solid var(--line);border-top:4px solid var(--black);border-radius:8px;padding:16px 18px;font-size:15px;line-height:1.45}
 .how h2{font-family:var(--display);font-weight:600;font-size:24px;margin:0 0 2px}
 .how h3{font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.04em;text-transform:uppercase;color:var(--redtext);margin:16px 0 6px}
-.how ol{margin:0;padding-left:20px}.how ol li{margin:3px 0}
+.how ol,.how ul{margin:0;padding-left:20px}.how li{margin:3px 0}
 .how .sub{color:var(--muted);margin:0}
 .how table{width:100%;border-collapse:collapse;font-size:14px}
 .how td{border-top:1px solid var(--line);padding:5px 4px;vertical-align:top}
 .how td:first-child{font-weight:700;width:42%}
 .how code{font-family:inherit;font-weight:700;color:var(--redtext)}
+.how .sub{margin:2px 0 0}
 .how .tip{background:var(--redsoft);border-radius:6px;padding:8px 10px;margin-top:14px;font-size:14px}
 .how .pbtn{float:right;background:none;border:1px solid var(--line);border-radius:4px;font-size:13px;font-weight:600;padding:2px 8px}
 .how .pick{display:block;margin:10px 0 4px}.how .pick span{display:block;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
@@ -28,7 +29,7 @@
 .how .meta{margin:8px 0 0;font-size:14px}.how .meta div{border-top:1px solid var(--line);padding:5px 0}.how .meta b{display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .how .open{display:inline-block;margin-top:12px;font-family:var(--display);font-weight:600;color:#fff;background:var(--red);border-radius:5px;padding:4px 12px;text-decoration:none}
 @media (max-width:980px){.layout{grid-template-columns:1fr}.how{position:static;max-height:none;order:-1}}
-@media print{body{background:#fff}.top,.eyebrow,h1,.lede,.games,.pbtn,.pick,.open{display:none!important}.how .ttl{font-size:26px}.layout{display:block}.how{position:static;max-height:none;overflow:visible;border:0;padding:0;font-size:13px}}
+@media print{@page{margin:.45in}body{background:#fff}.how li{margin:1px 0}.how h3{margin:9px 0 3px}.top,.eyebrow,h1,.lede,.games,.pbtn,.pick,.open{display:none!important}.how .ttl{font-size:26px}.layout{display:block}.how{position:static;max-height:none;overflow:visible;border:0;padding:0;font-size:11.5px;line-height:1.35}.how h3{font-size:14px}.how .meta{font-size:11.5px}.how .meta div{padding:3px 0}.how .tip{font-size:11.5px;margin-top:8px;padding:5px 8px}}
 .top{display:flex;align-items:center;gap:14px;font-weight:600;color:var(--muted)}
 .top img{height:40px;border-radius:3px}.top a{color:inherit}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
@@ -139,46 +140,186 @@
   </div>
 </div>
 <script>
+const DERIV_STEPS = (first, story, desk, extra) => [
+  "Open Derivatives Live. Under <b>Pick a game</b>, click <b>" + first + "</b>, then <b>Start this game</b>.",
+  "Students go to <code>/deriv</code> and type the code and their name (group name for desk games).",
+  "Story game: click <b>Start the story</b>, then <b>Next</b> through each card and question.",
+  "Then pick <b>" + desk + "</b> from the menu and start it the same way.",
+  extra || "Desk game: click <b>Open Round 1</b>. When it says <b>Everyone's in: reveal</b>, click it.",
+  "Click <b>Show what happened</b>, then <b>Standings</b>, then open the next round. After the last round, <b>Final results</b>."
+];
+const KAHOOT_TELL = [
+  "Right answers earn 600 to 1,000 points. Faster right answers earn more.",
+  "Wrong answers cost points (the default is −1,000), so don't just tap something.",
+  "Read the whole question before you answer. Some need math."
+];
+const KAHOOT_STRAT = [
+  "A careful right answer beats a fast wrong one. Speed only adds up to 400 points, but a wrong answer can cost 1,000.",
+  "On math questions, write the numbers down and work it out instead of guessing.",
+  "Watch the answer screen after each question. The same ideas come back in later rounds."
+];
+const KAHOOT_STEPS = (name, url) => [
+  "Open " + name + " and click <b>Host a class game</b>.",
+  "Pick questions per round, the wrong-answer penalty and the time (the defaults are fine). Click <b>Create game</b>.",
+  "Students go to <code>" + url + "</code> and type the code and their name.",
+  "When everyone is listed, click <b>Start game</b>.",
+  "Each question: <b>Show question</b>, then <b>Show answer now</b> (or wait for everyone), then <b>Next</b>.",
+  "At the end, show the <b>Top 5</b>, then <b>Class results</b> for the Reteach first list."
+];
 const HOW = [
- { id:"deriv", name:"Derivatives Live", unit:"Unit 5", href:"/deriv-host",
-   who:"Story games and Futures Face-Off: 1 student per iPad. Trading desks: 1 iPad per group (pairs for The Futures Exchange).",
-   go:"/deriv",
-   steps:[
-    "Open Derivatives Live. Under <b>Pick a game</b>, click the game you want.",
-    "Click <b>Start this game</b>. A game code and QR show up.",
-    "Students go to <code>/deriv</code> and type the code and their name (group name for desks).",
-    "When everyone is listed, click the big start button: <b>Start the story</b>, <b>Open Round 1</b> or <b>Open Quarter 1</b>.",
-    "Story games: click <b>Next</b> through each card and question.",
-    "Desk games: when it says <b>Everyone's in: reveal</b>, click it. Then <b>Show what happened</b>, <b>Standings</b>, and open the next round."
+ { id:"dfut", name:"Futures (Derivatives Live)", unit:"Unit 5", href:"/deriv-host",
+   games:"Futures Face-Off, The Prom Bus, The Futures Exchange",
+   who:"Face-Off and The Prom Bus: 1 student per iPad. The Futures Exchange: 1 iPad per pair.", go:"/deriv",
+   learn:[
+    "A futures contract locks in a price today for a trade on a future date. Both sides must follow through.",
+    "A buyer hedges against prices going up. A seller hedges against prices going down.",
+    "Hedging is about hitting your budget, not winning a bet. A hedge can lose money on the contract and still do its job.",
+    "Every contract has a buyer and a seller. One side's gain is the other side's loss."
    ],
-   need:["Run them in order: Futures Face-Off, The Prom Bus, The Futures Exchange. Options: The Sneaker Drop, The Options Floor, Part 2. Swaps: The Tip Jar Trade, The Swap Desk. CDS: The Cousin Loan, The Default Desk."],
-   tip:"<b>Futures Exchange:</b> pick <b>Live trading pit</b> (or <b>Sealed bids</b> if Wi-Fi is slow), click <b>Open trading</b>, drop headlines with <b>Next headline</b>, then close the market and <b>Reveal delivery prices</b>."},
+   tell:[
+    "You are not trying to guess prices. You are trying to land on budget.",
+    "Golden Prairie Foods <b>buys</b> wheat, corn, sugar, soybean oil and diesel, so rising prices hurt you. Heartland Supply Co. <b>sells</b> them, so falling prices hurt you.",
+    "Each quarter you can score 1,000 points by landing on budget. Every dollar of price surprise you leave unhedged costs points, up or down.",
+    "Trading better than the posted price earns points. Trading worse costs points.",
+    "Your bank limits how many contracts you can trade. Everyone trades under a codename."
+   ],
+   strat:[
+    "First figure out how many contracts it takes to cover what you need. Then trade that many.",
+    "Hedging more than you need creates new risk in the other direction.",
+    "Use your private clues and the headlines to choose your price, not to gamble. Covering your need comes first.",
+    "An order nobody takes hedges nothing. If time is running out, take the posted price.",
+    "Watch the risk meter on your iPad. Try to get it close to zero before the market closes."
+   ],
+   steps:[
+    "Open Derivatives Live. Start <b>Futures Face-Off</b> to open class (1 per iPad), then <b>The Prom Bus</b>.",
+    "Students go to <code>/deriv</code> and type the code and their name.",
+    "Pick <b>The Futures Exchange</b>, choose how many quarters, and pick <b>Live trading pit</b> (or <b>Sealed bids</b> if Wi-Fi is slow).",
+    "Pairs join with a group name. Click <b>Open Quarter 1</b>, read the market report together, then <b>Open trading</b>.",
+    "During trading, click <b>Next headline</b> to drop news. Then close the market.",
+    "Click <b>Reveal delivery prices</b>, show desk results, then <b>Open Quarter 2</b>. Finish with <b>Final results</b>."
+   ],
+   need:["Partners picked for The Futures Exchange.","Strong Wi-Fi for the live trading pit."],
+   tip:"Commodities open up over the first three quarters, so quarter 1 is the easy one. Let pairs get comfortable before the headlines start."},
+ { id:"dopt", name:"Options (Derivatives Live)", unit:"Unit 5", href:"/deriv-host",
+   games:"The Sneaker Drop, The Options Floor, The Options Floor Part 2",
+   who:"The Sneaker Drop: 1 student per iPad. Options Floor games: 1 iPad per group.", go:"/deriv",
+   learn:[
+    "A call is the right to BUY at the strike price. A put is the right to SELL at the strike price.",
+    "The premium is what you pay for that right. When you buy an option, the most you can lose is the premium.",
+    "In the money is not the same as profitable. A call needs the price above strike + premium. A put needs it below strike − premium.",
+    "A protective put is insurance on shares you own. It puts a floor under your loss.",
+    "Part 2: big economy news, like a Fed rate cut, moves whole industries at once."
+   ],
+   tell:[
+    "Every desk starts with a $10,000 account. Each contract covers 100 shares.",
+    "Each round: buy a call if you think the stock goes UP, buy a put if you think it goes DOWN, or sit out.",
+    "You only buy options, so the most you can lose on a trade is the premium.",
+    "After each reveal, work out your own result before the board shows it. You'll see if you got the math right.",
+    "Part 2: pick ONE of six stocks each round and read the economy report too. Rounds get harder."
+   ],
+   strat:[
+    "Only trade when the news points a clear direction. A stock with no news usually can't cover the premium.",
+    "Find the breakeven before you buy: strike + premium for a call, strike − premium for a put.",
+    "Sitting out is a real choice. The \"Always sat out\" desk is the score to beat.",
+    "More contracts means more reward AND more risk. Buy extra only when you're confident.",
+    "Part 2: ask how the news hits each company's costs and customers. If everyone already knows the good news, it's priced in."
+   ],
+   steps: DERIV_STEPS("The Sneaker Drop", true, "The Options Floor", null),
+   need:["Calculators or scratch paper for the math check.","Run The Options Floor, Part 2 on a later day."],
+   tip:"Two rounds of The Options Floor give desks HRSY shares to protect. Point out that a put works like insurance there."},
+ { id:"dswap", name:"Swaps (Derivatives Live)", unit:"Unit 5", href:"/deriv-host",
+   games:"The Tip Jar Trade, The Swap Desk",
+   who:"The Tip Jar Trade: 1 student per iPad. The Swap Desk: 1 iPad per group.", go:"/deriv",
+   learn:[
+    "A swap trades payments. One payment changes (variable). The other stays the same (fixed).",
+    "Rates rise: the fixed-rate payer wins. Rates fall: the variable-rate payer wins.",
+    "When rates don't move, fixed costs a little extra. That's the price of certainty.",
+    "Swaps don't predict rates. They let a company choose how much rate risk it takes."
+   ],
+   tell:[
+    "You are the CFO of Bison Logistics. You have a $10 million loan at the Federal Funds Rate + 2%, for six years.",
+    "Each year: stay variable, swap half to fixed, or swap all to fixed.",
+    "The board's rule: interest over $825,000 in any year costs a $100,000 penalty.",
+    "Lowest total cost after six years wins."
+   ],
+   strat:[
+    "Know the danger line: fully variable breaks $825,000 when the Federal Funds Rate goes above 6.25%.",
+    "Read the Fed news. If hikes are coming, lock in fixed. If cuts are coming, staying variable saves money.",
+    "Not sure? Swap half. A half hedge can keep you under the limit even if you guess the direction wrong.",
+    "Dodging one $100,000 penalty is worth more than saving a little interest."
+   ],
+   steps: DERIV_STEPS("The Tip Jar Trade", true, "The Swap Desk", null),
+   need:["Calculators for checking interest each year."],
+   tip:"Tie it back to The Tip Jar Trade: Maya is the company that wants a steady payment, and Jordan is the one taking the risk."},
+ { id:"dcds", name:"CDS (Derivatives Live)", unit:"Unit 5", href:"/deriv-host",
+   games:"The Cousin Loan, The Default Desk",
+   who:"The Cousin Loan: 1 student per iPad. The Default Desk: 1 iPad per group.", go:"/deriv",
+   learn:[
+    "A credit default swap is insurance against a borrower not paying you back.",
+    "You pay a premium on a schedule. If the borrower defaults, you get paid the full amount.",
+    "Safer borrowers (higher ratings) have cheaper protection. Risky ones cost more.",
+    "Clues like missed payments, low cash and falling sales matter more than an old rating."
+   ],
+   tell:[
+    "Your fund holds $10 million of one company's bonds each round.",
+    "Choose no protection, protect half ($5 million) or protect all ($10 million).",
+    "The premium depends on the company's rating: about $50,000 a year for AAA, up to $800,000 for CCC.",
+    "If the company defaults, unprotected bonds are worth only 40 cents on the dollar. That's a $6 million loss on $10 million.",
+    "Lowest total losses wins."
+   ],
+   strat:[
+    "Compare the premium to what a default would cost you. A $6 million loss is a lot bigger than most premiums.",
+    "Read the newest clues, not just the rating. A missed payment is the loudest clue there is.",
+    "Don't buy protection on every company. Premiums on safe borrowers add up and usually go unused.",
+    "Half protection splits the difference when you can't decide."
+   ],
+   steps: DERIV_STEPS("The Cousin Loan", true, "The Default Desk", null),
+   need:["Nothing extra."],
+   tip:"The \"Never protected\" desk on the standings shows what skipping insurance would have cost. Point to it at the end."},
  { id:"futures", name:"Futures Live", unit:"Unit 5", href:"/teacher/futures-live",
    who:"1 student per iPad (Kahoot style).", go:"/futures-live",
-   steps:[
-    "Open Futures Live and click <b>Host a class game</b>.",
-    "Pick your settings (the defaults are fine) and click <b>Create game</b>.",
-    "Students go to <code>/futures-live</code> and type the code and their name.",
-    "When everyone is listed, click <b>Start game</b>.",
-    "Each question: <b>Show question</b>, then <b>Show answer now</b> (or wait for everyone), then <b>Next</b>.",
-    "At the end, show the <b>Top 5</b>, then <b>Class results</b> for the Reteach first list."
-   ],
+   learn:["The futures deal: a price locked today for a future date.","Picking the right side: buy if rising prices hurt you, sell if falling prices hurt you.","Working out the gain or loss at delivery.","Whether the hedge worked, and how the exchange works."],
+   tell: KAHOOT_TELL, strat: KAHOOT_STRAT,
+   steps: KAHOOT_STEPS("Futures Live", "/futures-live"),
    need:["Play it after The Prom Bus and The Futures Exchange."],
    tip:"A student who drops taps <b>Rejoin</b> on their iPad."},
  { id:"lock", name:"Lock It In", unit:"Unit 5", href:"/lock-it-in",
    who:"Teams. Projector only, no iPads or Wi-Fi.", go:"Nothing. Students watch the projector.",
+   learn:["Review of all four derivatives: futures, options, swaps and credit default swaps.","Uses the story games (prom buses, sneaker drops, tip money, the cousin loan) to bring each one back."],
+   tell:["Your team agrees on ONE answer.","When the timer ends, hold up or draw the shape of your answer.","Right answers earn 1,000. The fastest right team earns 250 more."],
+   strat:["Have one person hold the board and one person read the question out loud.","Settle on your answer before the timer ends, then show it the moment time is up.","When stuck, name the derivative first: is this a lock-in (futures), a right (options), a trade of payments (swaps), or insurance (CDS)?"],
    steps:[
     "Open Lock It In. Under <b>Set up teams</b>, pick how many teams and type their names.",
     "Pick <b>Seconds per question</b> and turn sound on or off.",
-    "Click <b>Next</b> (or press Space) to show each question. The timer runs.",
-    "When time ends, every team holds up or draws the shape of its answer.",
+    "Press <b>Space</b> or <b>→</b> to show each question. The timer runs.",
+    "When time ends, every team holds up or draws its shape.",
     "Tap each team that got it right (1,000). Tap twice for the fastest right team (+250 more).",
     "Keep pressing Space. The leaderboard shows between rounds and the podium at the end."
    ],
    need:["A whiteboard or paper and marker for each team."],
-   tip:"23 questions in five rounds, covering all four derivatives."},
+   tip:"23 questions in five rounds."},
  { id:"bonddesk", name:"The Bond Desk", unit:"Unit 4", href:"/host",
    who:"1 iPad per desk (one student or a small group).", go:"/join",
+   learn:[
+    "Fair yield = Treasury rate + the spread for the bond's rating. Compare it to the yield the bond offers.",
+    "When rates rise, bond prices fall, and long bonds fall the most.",
+    "Downgrades and defaults wipe out returns. Warning signs come first.",
+    "Cash is a position. Sometimes not buying is the best trade."
+   ],
+   tell:[
+    "Your desk starts with $1,000,000 and runs a bond fund for ten years.",
+    "Every year three bonds hit the market. Put $0, $100K or $200K in each one.",
+    "Money you don't put in bonds sits in cash and earns the Treasury rate.",
+    "Fair yield = Treasury rate + spread. Above fair is a good deal. Below fair is overpriced.",
+    "You can put at most $200K a year in junk (BB or below). Going over costs a $25,000 fine."
+   ],
+   strat:[
+    "Step 1 for every bond: is its yield above or below fair?",
+    "Step 2: read the rate news. Rates going up? Stay short or hold cash. Rates going down? Long, safe bonds win big.",
+    "A high yield is not a good deal if it's still below fair.",
+    "Believe the warning signs, like lost customers or late bills. Companies repeat their habits.",
+    "In a recession, safe and long wins. A company running out of cash is a pass at any price."
+   ],
    steps:[
     "Open The Bond Desk and click <b>Start a new game</b>.",
     "Students go to <code>/join</code> and type the code and their first name(s).",
@@ -191,42 +332,66 @@ const HOW = [
    tip:"No Wi-Fi? Click <b>Play without iPads</b>, add desks by hand, and tap a desk's tile to enter its choices."},
  { id:"ladder", name:"Bond Ladder", unit:"Unit 4", href:"/bond-ladder/teacher",
    who:"Tables of 3, 1 student per iPad.", go:"/bond-ladder",
+   learn:["Everything in Unit 4 at once: rating an issuer, judging a bond trade, and reading the yield curve.","Quick Fire questions review fair yield, ratios, ratings, and rates and prices."],
+   tell:[
+    "Each round: a few Quick Fire questions, then one main task. You're competing against the other two people at your table.",
+    "Quick Fire: 100 points for a right answer, up to 150 if you're fast.",
+    "The main task is worth up to 600, so it decides most rounds.",
+    "Rate the Issuer: 50 points for each factor you score right, plus 300 for the exact rating (150 if one step off).",
+    "Read the Curve: 100 for the shape, 150 per chip for a right call, and a wrong call loses 100 for each chip past the first.",
+    "Winner moves up a table, 2nd stays, last moves down."
+   ],
+   strat:[
+    "Spend your time on the main task. It's worth four times a Quick Fire question.",
+    "Rate the Issuer: do the math on each factor. Each one is points on its own, even if the final rating misses.",
+    "Make the Trade: compare each yield to fair and read the rate news, just like The Bond Desk.",
+    "Read the Curve: bet 1 chip when unsure. A wrong call with 3 chips costs 200."
+   ],
    steps:[
     "Open Bond Ladder and click <b>Host a game</b>.",
     "Pick your rounds, the timer, and <b>Ladder</b> or <b>Regroup by place</b>. Click <b>Create game</b>.",
     "Students go to <code>/bond-ladder</code> and type the code and their first name.",
     "Click <b>Seat the tables</b>. Students find their table, then click <b>Everyone's seated: start Round 1</b>.",
-    "Each round is Quick Fire questions, then one main task. <b>Table results</b> shows who moves up, stays or moves down.",
+    "Each round is Quick Fire questions, then the main task. <b>Table results</b> shows who moves up, stays or moves down.",
     "After the last round, show the <b>Top 5</b>, then <b>Class results</b>."
    ],
    need:["Tables numbered. <b>Print table signs</b> makes them for you.","About 45 to 55 minutes for 6 rounds."],
    tip:"Use <b>Lock it now</b> if a table is stalling."},
  { id:"curves", name:"Curves Live", unit:"Unit 4", href:"/teacher/curves-live",
    who:"1 student per iPad (Kahoot style).", go:"/curves-live",
-   steps:[
-    "Open Curves Live and click <b>Host a class game</b>.",
-    "Pick your settings (the defaults are fine) and click <b>Create game</b>.",
-    "Students go to <code>/curves-live</code> and type the code and their name.",
-    "When everyone is listed, click <b>Start game</b>.",
-    "Each question: <b>Show question</b>, then <b>Show answer now</b> (or wait for everyone), then <b>Next</b>.",
-    "At the end, show the <b>Top 5</b>, then <b>Class results</b> for the Reteach first list."
-   ],
+   learn:["Reading a yield curve and naming its shape: normal, flat or inverted.","Why the curve bends, and what an inverted curve signals.","Reading the direction, today's curve, and what-if scenarios."],
+   tell: KAHOOT_TELL, strat: KAHOOT_STRAT.concat(["Spread = 10-year yield − 3-month yield. The sign tells you the shape."]),
+   steps: KAHOOT_STEPS("Curves Live", "/curves-live"),
    need:["Play it after Recession Radar."],
    tip:"A student who drops taps <b>Rejoin</b> on their iPad."},
  { id:"bondslive", name:"Bonds Live", unit:"Unit 4", href:"/teacher/bonds-live",
    who:"1 student per iPad (Kahoot style).", go:"/bonds-live",
-   steps:[
-    "Open Bonds Live and click <b>Host a class game</b>.",
-    "Pick questions per round, wrong-answer penalty and time (the defaults are fine). Click <b>Create game</b>.",
-    "Students go to <code>/bonds-live</code> and type the code and their name.",
-    "When everyone is listed, click <b>Start game</b>.",
-    "Each question: <b>Show question</b>, then <b>Show answer now</b> (or wait for everyone), then <b>Next</b>.",
-    "At the end, show the <b>Top 5</b>, then <b>Class results</b> for the Reteach first list."
-   ],
-   need:["Good as a Unit 4 review or a quick check after The Bond Desk and The Rating Room."],
+   learn:["Fair yield, and whether a bond is a good deal or overpriced.","Rating ratios and the rating scale.","How rates move bond prices, plus bond basics."],
+   tell: KAHOOT_TELL, strat: KAHOOT_STRAT.concat(["Fair yield = Treasury rate + spread. Most deal questions come down to that one line."]),
+   steps: KAHOOT_STEPS("Bonds Live", "/bonds-live"),
+   need:["Good as a Unit 4 review or a check after The Bond Desk and The Rating Room."],
    tip:"A student who drops taps <b>Rejoin</b> on their iPad."},
  { id:"credit", name:"Credit Desk Live", unit:"Unit 4", href:"/credit-host",
    who:"1 iPad per group.", go:"/credit",
+   learn:[
+    "A posted rating can be out of date. Your own scorecard tells you which way it's about to move.",
+    "Use the TRUE rating to find the fair yield, then judge the price.",
+    "A high yield isn't a good deal if it's below fair for the true rating.",
+    "Even a perfect rating can't beat a rate hike on a long bond."
+   ],
+   tell:[
+    "Six years, one borrower each year.",
+    "First, score the borrower with the scorecard and lock in YOUR rating.",
+    "Then the market opens. Use your rating to find the fair yield and decide how much to buy: $0 to $300K.",
+    "If the bond is posted as junk, buy $200K at most or pay a $25,000 fine, even if you think it's about to be upgraded.",
+    "Highest fund value wins. The board also tracks who got the rating exactly right."
+   ],
+   strat:[
+    "Your scorecard says LOWER than posted? The bond pays too little and a downgrade is coming. Pass.",
+    "Your scorecard says HIGHER than posted? It's a hidden bargain. Buy.",
+    "Check the rate headline and the bond's length before you buy. Rising rates crush 20-year bonds.",
+    "Do the math on every factor. Not every note in the case matters."
+   ],
    steps:[
     "Open Credit Desk Live and click <b>Start a new game</b>.",
     "Groups go to <code>/credit</code> and type the code and their group name.",
@@ -239,44 +404,97 @@ const HOW = [
    tip:"No Wi-Fi? Click <b>Play without iPads</b> and enter each group's answers yourself."},
  { id:"radar", name:"Recession Radar Live", unit:"Unit 4", href:"/radar-host",
    who:"1 iPad per group.", go:"/radar",
+   learn:[
+    "A normal curve slopes up: lenders want more to tie up money longer.",
+    "An inverted curve means investors expect rates to fall, and rates usually fall because the economy is weakening.",
+    "Read the direction, not just the shape. A curve can flip fast when the Fed keeps hiking.",
+    "The curve is one clue, not a law. It has been right for the wrong reason, and flat wrong."
+   ],
+   tell:[
+    "Spread = 10-year yield − 3-month yield. Positive is normal, near zero is flat, negative is inverted.",
+    "Each curve: name the shape (+1), call whether a recession is coming and when, and bet 1 to 3 chips.",
+    "A right call wins your chips. A wrong call loses them. The exact timing earns +1 more.",
+    "Spot the Analyst: pick the real analyst's sentence (+1). Every group that picks YOUR sentence gives you +1.",
+    "Later curves also show the curve from 12 months earlier. Two of the ten curves are traps."
+   ],
+   strat:[
+    "Work out the spread first. The sign matters more than the size.",
+    "Bet 3 chips only when the signal is clear. Flat is a yellow light, so bet small.",
+    "Watch for traps: a healthy curve with the Fed still hiking can flip, and an inverted curve that \"un-inverts\" because the Fed is rushing to cut often means a recession is close.",
+    "Spot the Analyst: write like a real analyst, with a number and a calm, specific reason, to fool other groups."
+   ],
    steps:[
     "Open Recession Radar Live and click <b>Start a new game</b>.",
     "Groups go to <code>/radar</code> and type the code and their group name.",
     "Click <b>Open Mystery Curve A</b>. Groups name the shape, call the timing and bet chips.",
-    "Click <b>Everyone's in: reveal</b>. On Spot the Analyst rounds, groups write one sentence, then vote for the real analyst.",
+    "Click <b>Everyone's in: reveal</b>. On Spot the Analyst rounds, groups write one sentence, then vote.",
     "Click <b>Reveal the date</b>, then <b>Standings</b>, then open the next curve.",
     "After the last curve, click <b>Today's curve</b> for the class forecast and the what-if simulator."
    ],
-   need:["The rule on the board: spread = 10Y yield minus 3M yield."],
-   tip:"Two of the ten curves are traps. Let groups argue before you reveal."},
+   need:["The spread rule on the board."],
+   tip:"Spot the Analyst rounds add about 3 minutes each. Uncheck them before you open the first curve if you're short on time."},
  { id:"feud", name:"Bond Feud", unit:"Unit 4", href:"/bond-feud",
    who:"2 to 8 teams. Projector only, no iPads.", go:"Nothing. Students watch the projector.",
+   learn:["Unit 4 review: The Bond Desk, The Rating Room and the yield curve.","Key bond vocabulary and ideas, said out loud in students' own words."],
+   tell:[
+    "A random spinner picks who starts each board. No team starts twice until every team has gone.",
+    "That team keeps guessing until the board is cleared (they win the bank) or they get three strikes.",
+    "Three strikes: the spinner picks another team for ONE steal guess. Right = they take the bank.",
+    "Boards 4 and 5 are worth double. Board 6 is triple.",
+    "Lightning Round: 18 questions, 20 seconds each. Every team answers by holding up a color or a whiteboard."
+   ],
+   strat:[
+    "Think like the survey: say the most common answer first, not the cleverest one.",
+    "When another team is guessing, plan your steal. You only get one try, so huddle and agree.",
+    "Save energy for boards 4 to 6. They're worth double and triple."
+   ],
    steps:[
     "Open Bond Feud, name your teams, and click <b>Start the Feud</b>.",
     "Click <b>Pick who starts</b>. The spinner picks a team.",
     "That team guesses out loud. Type the guess to reveal it. Wrong = <b>Strike</b>.",
-    "Three strikes: the spinner picks a team for one steal guess. Clear the board or steal to win the bank.",
-    "Click <b>Next board</b>. Boards 4 and 5 are double, board 6 is triple.",
-    "Lightning Round: 18 questions, 20 seconds each. Teams hold up a color, you click <b>Reveal</b>, then click each team that got it (+10)."
+    "Three strikes: the spinner picks a team for one steal guess.",
+    "Click <b>Next board</b> after each board.",
+    "Lightning Round: click <b>Reveal</b>, then click each team that got it (+10)."
    ],
    need:["Sound on.","Whiteboards or colored cards for the Lightning Round."],
    tip:"Keys: P = pick who starts, 1 to 6 = flip a tile, X = strike, Space = next."},
  { id:"rating", name:"The Rating Room", unit:"Unit 4", href:"/rating-room",
    who:"Teams. Projector only.", go:"Nothing. Groups use the scorecard worksheet.",
+   learn:[
+    "How raters judge a borrower: debt load, interest coverage, cash cushion, earnings stability, payment history, and backing and outlook.",
+    "Turning those numbers into a rating from AAA down to CCC.",
+    "BBB and above is investment grade. BB and below is high-yield (junk)."
+   ],
+   tell:[
+    "Score each of the six factors from 0 to 4 on your worksheet, then add them up (out of 24).",
+    "Read the rating off the scale: 22+ AAA, 19+ AA, 16+ A, 13+ BBB, 10+ BB, 6+ B, below 6 CCC.",
+    "Exact rating = +10. One step off = 0. Two or more off = −5. No answer counts as two off.",
+    "The Final Round doubles everything.",
+    "All dollar figures are in millions. Not every note in the case matters."
+   ],
+   strat:[
+    "Do the math for every ratio before you score it. Don't eyeball it.",
+    "Skip the noise. Ask whether each note changes the borrower's ability to pay.",
+    "Always lock in an answer. A blank costs the same as being way off.",
+    "Blitz: most right answers wins, and question 12 counts twice."
+   ],
    steps:[
     "Hand each team the scorecard worksheet.",
     "Open The Rating Room, go to <b>Team Rounds</b>, and click <b>Start</b> on the clock.",
-    "Teams score the six factors on the worksheet and pick a rating.",
+    "Teams score the six factors and pick a rating.",
     "When time's up, enter each team's rating with <b>Lock in your answer</b>. Answers stay hidden.",
     "Click <b>Reveal the official rating</b>. Use <b>Next factor</b> to show the why one at a time.",
     "<b>Show leaderboard</b>, then <b>Next round</b>. Finish with the <b>Blitz</b> tab: tap who got each one right, then <b>Save</b>."
    ],
    need:["Scorecard worksheet for each team.","Whiteboards for the Blitz."],
-   tip:"BBB and above = investment grade. BB and below = high-yield (junk)."},
+   tip:"Use <b>Next factor</b> slowly on the first round. It's the best moment to teach the scorecard."},
  { id:"reports", name:"Student reports", unit:"Reports", href:"/teacher/reports",
    who:"You only. Students send reports from My Report on the student site.", go:"My Report on the student site",
+   learn:["Shows how each student did on the practice pages: Bond Desk Solo, Rating Room, Fair Yield Sprint, Bond Terms and short answers."],
+   tell:["Finish the practice page, then send your report from My Report.","Use the same name every time so your reports line up."],
+   strat:["Students who beat cash on Bond Desk Solo understand fair yield and rates. Start reteaching with the ones who didn't."],
    steps:[
-    "Students finish a practice page and click to send their report from <b>My Report</b>.",
+    "Students finish a practice page and send their report from <b>My Report</b>.",
     "Open Student reports.",
     "Type your teacher code (the TEACHER_CODE set in Vercel).",
     "Click <b>Show reports</b>.",
@@ -284,7 +502,7 @@ const HOW = [
     "Click <b>Download CSV</b> to put scores in your gradebook."
    ],
    need:["Your teacher code."],
-   tip:"Covers Bond Desk Solo, Rating Room, Fair Yield Sprint, Bond Terms and short answers."}
+   tip:"Use <b>Newest report per student</b> to see one row per student."}
 ];
 (function(){
   const sel=document.getElementById("howSel"), body=document.getElementById("howBody");
@@ -294,12 +512,17 @@ const HOW = [
   function show(id){
     const g=HOW.find(x=>x.id===id)||HOW[0]; sel.value=g.id;
     const go=g.go.startsWith("/")?'<code>'+g.go+'</code> or scan the QR':g.go;
+    const li=a=>'<ul>'+a.map(x=>'<li>'+x+'</li>').join("")+'</ul>';
     body.innerHTML='<div class="ttl">'+g.name+'</div>'+
+      (g.games?'<p class="sub">'+g.games+'</p>':'')+
       '<div class="meta"><div><b>Who plays</b>'+g.who+'</div><div><b>Students go to</b>'+go+'</div></div>'+
+      '<h3>What they learn</h3>'+li(g.learn)+
+      '<h3>Tell them before you start</h3>'+li(g.tell)+
+      '<h3>Strategy to share</h3>'+li(g.strat)+
       '<h3>Steps</h3><ol>'+g.steps.map(x=>'<li>'+x+'</li>').join("")+'</ol>'+
-      '<h3>Before class</h3><ol>'+g.need.map(x=>'<li>'+x+'</li>').join("")+'</ol>'+
+      '<h3>Before class</h3>'+li(g.need)+
       '<div class="tip">'+g.tip+'</div>'+
-      '<a class="open" href="'+g.href+'">Open '+g.name+' →</a>';
+      '<a class="open" href="'+g.href+'">Open '+(g.href==="/deriv-host"?"Derivatives Live":g.name)+' →</a>';
     try{localStorage.setItem("howGame",g.id)}catch(e){}
   }
   sel.onchange=()=>show(sel.value);
