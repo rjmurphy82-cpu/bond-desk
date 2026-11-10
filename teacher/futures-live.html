@@ -2575,7 +2575,7 @@ var qrcode = function() {
 <script>
 "use strict";
 /* ============================================================ QUESTION BANK
-   Unit 5: Futures (Prom Bus and Futures Exchange wrap-up). First option is always the correct one; options are shuffled when a game is built.
+   Unit 5: Futures (Prom Bus wrap-up). First option is always the correct one; options are shuffled when a game is built.
    Course rules: futures settle once at delivery. Bought futures: (Delivery price − Futures price) × Quantity. Sold futures: (Futures price − Delivery price) × Quantity.
    Wording: say buy futures / sell futures. Every number a question needs is in the question. */
 const SKILLS={
@@ -2590,7 +2590,7 @@ const SKILLS={
  exchange:{name:"On the Exchange",short:"How the exchange works",secs:20,desc:"Bids, offers, the market maker, and who is on the other side.",
    tip:"Every trade has one buyer and one seller, so one side's futures gain is the other side's loss. A bid is what a buyer will pay; an offer is what a seller will take. The market maker always trades, but at a worse price: you buy at its offer and sell at its bid. Trade only as many contracts as you need to hedge; extra contracts are a bet, not a hedge."}
 };
-const ORDER=["deal","side","math","hedge","exchange"];
+const ORDER=["deal","side","math","hedge"]; // "exchange" round pulled with The Futures Exchange
 const BANK=[
  // ---- the deal
  {id:"d1",sk:"deal",p:"What is a futures contract?",o:["An agreement today to buy or sell something later at a price locked in now","The right, but not the duty, to buy something later","A loan you pay back with interest","A share of ownership in a company"],x:"Agreement now, delivery later, price locked today."},
@@ -2715,7 +2715,7 @@ const MOCK=/[?&]mock=1/.test(location.search);
 const ROLE=window.BRL_ROLE||"student";
 const GAME="futureslive"; // keeps each live game's codes separate
 const hdr=()=>`<h1 class="title">Futures <span>Live.</span></h1>
-  <p class="lede">${ROLE==="teacher"?"Teacher screen. Put this on the projector, create a game, and students join on their devices with the code. Five rounds on futures (the deal, picking a side, gain or loss at delivery, whether the hedge worked, and how the exchange works); right answers earn 600 points plus up to 400 for speed, and wrong answers cost a lot (set below), so students should never guess.":"Five quick rounds on futures, run by your teacher. Have a calculator ready. Right answers earn 600 points plus up to 400 more for speed. Wrong answers cost a lot of points, so never guess. If you are not sure, let the clock run out and you get 0. At the end you get a report on what to practice, and you can practice it right here."}</p>`;
+  <p class="lede">${ROLE==="teacher"?"Teacher screen. Put this on the projector, create a game, and students join on their devices with the code. Four rounds on futures (the deal, picking a side, gain or loss at delivery, and whether the hedge worked); right answers earn 600 points plus up to 400 for speed, and wrong answers cost a lot (set below), so students should never guess.":"Four quick rounds on futures, run by your teacher. Have a calculator ready. Right answers earn 600 points plus up to 400 more for speed. Wrong answers cost a lot of points, so never guess. If you are not sure, let the clock run out and you get 0. At the end you get a report on what to practice, and you can practice it right here."}</p>`;
 function home(){
   stopTick();KEYPICK=KEYNEXT=null;setFit(false);$("#who").hidden=true;
   ROLE==="teacher"?hostSetup():joinForm();
@@ -2877,7 +2877,7 @@ async function hostSetup(){
   const N=await net().catch(()=>null);if(!N)return needSetup();
   let per=3,mult=1,pen=1000;
   app.innerHTML=`${hdr()}<div class="panel" style="margin-top:0"><h2>Host a class game</h2>
-    <p>Questions per round (5 rounds):</p><div class="seg" id="sp"><button data-v="2">2 (10 total)</button><button data-v="3" aria-pressed="true">3 (15 total)</button><button data-v="4">4 (20 total)</button></div>
+    <p>Questions per round (4 rounds):</p><div class="seg" id="sp"><button data-v="2">2 (8 total)</button><button data-v="3" aria-pressed="true">3 (12 total)</button><button data-v="4">4 (16 total)</button></div>
     <p>Wrong answer:</p><div class="seg" id="pn"><button data-v="0">No penalty</button><button data-v="500">−500</button><button data-v="1000" aria-pressed="true">−1,000</button><button data-v="1500">−1,500</button></div>
     <p>Time:</p><div class="seg" id="st"><button data-v="1" aria-pressed="true">Standard</button><button data-v="1.5">Extra time (+50%)</button><button data-v="2">Double time</button></div>
     <p class="note">Standard: 15 seconds for picking a side, 20 for the deal and the exchange, 30 for whether the hedge worked, and 40 for gain or loss at delivery.</p>

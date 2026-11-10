@@ -713,7 +713,10 @@ for (const t of Object.keys(TOPIC)) {
   if (DESK2[t]) GAMES[t + "-desk2"] = { id: t + "-desk2", kind: "desk", topic: t, topicName: TOPIC[t], ...DESK2[t] };
   if (WARMUP[t]) GAMES[t + "-warmup"] = { id: t + "-warmup", kind: "story", warmup: true, topic: t, topicName: TOPIC[t], title: WARMUP[t].title, rounds: WARMUP[t].rounds };
 }
-export const ORDER = ["futures-warmup", "futures-story", "futures-desk", "options-story", "options-desk", "options-desk2", "swaps-story", "swaps-desk", "cds-story", "cds-desk"];
+// The Futures Exchange (futures-desk) is pulled from class. To bring it back, delete it from HIDDEN and put it back in ORDER.
+export const HIDDEN = ["futures-desk"];
+HIDDEN.forEach(id => delete GAMES[id]);
+export const ORDER = ["futures-warmup", "futures-story", "options-story", "options-desk", "options-desk2", "swaps-story", "swaps-desk", "cds-story", "cds-desk"];
 export const nRounds = id => GAMES[id].rounds.length;
 export const nQuestions = id => GAMES[id].kind === "story" ? GAMES[id].rounds.filter(r => r.t === "q").length : GAMES[id].rounds.length;
 

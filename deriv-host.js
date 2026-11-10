@@ -300,7 +300,7 @@ function renderFinal(G) {
     table = `<div class="card"><table class="standings"><tr><th>Place</th><th>Player</th><th class="r">Right</th><th class="r">Points</th></tr>${rows.map(x => `<tr class="${x.place === 1 ? "top" : ""}"><td class="pl">${x.place}</td><td class="nm">${esc(x.g.name)}</td><td class="r">${x.right} / ${G.rounds.filter(r => r.t === "q").length}</td><td class="r val">${fmt.num(x.value)}</td></tr>`).join("")}</table></div>`;
     const qs = G.rounds.map((R, r) => ({ R, r })).filter(o => o.R.t === "q").map(o => { const d = S.decisions[o.r] || {}, n = S.groups.length || 1; return { ...o, pct: Math.round(100 * Object.values(d).filter(x => x.a === o.R.c).length / n) }; }).sort((a, b) => a.pct - b.pct).slice(0, 3);
     side = `<div class="card dark"><div class="label">Reteach first: the 3 hardest questions</div>${qs.map(o => `<p style="margin:0 0 10px;font-size:16px;line-height:1.4"><b style="font-family:Oswald,Arial">${o.pct}% right.</b> ${esc(o.R.q)}<br><span style="color:#CFCFCF">${esc(o.R.a[o.R.c])}</span></p>`).join("")}
-      <div class="small" style="margin-top:10px">Next: <b style="color:#fff">${esc(GAMES[G.topic + "-desk"].title)}</b>, the ${esc(G.topicName.toLowerCase())} trading desk.</div></div>`;
+      ${GAMES[G.topic + "-desk"] ? `<div class="small" style="margin-top:10px">Next: <b style="color:#fff">${esc(GAMES[G.topic + "-desk"].title)}</b>, the ${esc(G.topicName.toLowerCase())} trading desk.</div>` : ""}</div>`;
   }
   $("#view").innerHTML = `<div class="topbar"><div class="yr"><div class="sub">${esc(G.topicName)} · ${G.warmup ? "Warm-up" : G.kind === "story" ? "Story game" : "Trading desk"}</div><h2>Final results</h2></div><div>${navBack()}</div></div>
     <div class="podium">${pod(1)}${pod(0)}${pod(2)}</div>
