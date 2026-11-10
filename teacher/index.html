@@ -22,14 +22,16 @@
 .how code{font-family:inherit;font-weight:700;color:var(--redtext)}
 .how .sub{margin:2px 0 0}
 .how .tip{background:var(--redsoft);border-radius:6px;padding:8px 10px;margin-top:14px;font-size:14px}
-.how .pbtn{float:right;background:none;border:1px solid var(--line);border-radius:4px;font-size:13px;font-weight:600;padding:2px 8px}
+.how .pbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin:12px 0 4px;background:var(--red);color:#fff;border:0;border-radius:6px;font-family:var(--display);font-weight:700;font-size:16px;letter-spacing:.02em;text-transform:uppercase;white-space:nowrap;padding:12px 10px;box-shadow:0 3px 0 rgba(0,0,0,.25)}
+.how .pbtn:hover{filter:brightness(1.08)}.how .pbtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.how .prt{display:none}
 .how .pick{display:block;margin:10px 0 4px}.how .pick span{display:block;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
 .how select{width:100%;font:600 16px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
 .how .ttl{font-family:var(--display);font-weight:600;font-size:22px;margin:14px 0 2px}
 .how .meta{margin:8px 0 0;font-size:14px}.how .meta div{border-top:1px solid var(--line);padding:5px 0}.how .meta b{display:block;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .how .open{display:inline-block;margin-top:12px;font-family:var(--display);font-weight:600;color:#fff;background:var(--red);border-radius:5px;padding:4px 12px;text-decoration:none}
 @media (max-width:980px){.layout{grid-template-columns:1fr}.how{position:static;max-height:none;order:-1}}
-@media print{@page{margin:.45in}body{background:#fff}.how li{margin:1px 0}.how h3{margin:9px 0 3px}.top,.eyebrow,h1,.lede,.games,.pbtn,.pick,.open{display:none!important}.how .ttl{font-size:26px}.layout{display:block}.how{position:static;max-height:none;overflow:visible;border:0;padding:0;font-size:11.5px;line-height:1.35}.how h3{font-size:14px}.how .meta{font-size:11.5px}.how .meta div{padding:3px 0}.how .tip{font-size:11.5px;margin-top:8px;padding:5px 8px}}
+@media print{@page{margin:.45in}.how>h2,.how .tchr{display:none!important}.how .scr{display:none}.how .prt{display:inline}body{background:#fff}.how li{margin:1px 0}.how h3{margin:9px 0 3px}.top,.eyebrow,h1,.lede,.games,.pbtn,.pick,.open{display:none!important}.how .ttl{font-size:32px}.layout{display:block}.how{position:static;max-height:none;overflow:visible;border:0;padding:0;font-size:15px;line-height:1.45}.how h3{font-size:18px;margin-top:16px}.how .meta{font-size:15px}.how li{margin:5px 0}.how .meta div{padding:3px 0}.how .tip{font-size:11.5px;margin-top:8px;padding:5px 8px}}
 .top{display:flex;align-items:center;gap:14px;font-weight:600;color:var(--muted)}
 .top img{height:40px;border-radius:3px}.top a{color:inherit}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
@@ -130,11 +132,11 @@
   </div>
   </div>
   <aside class="how" aria-label="How to run a game">
-    <button class="pbtn" onclick="window.print()">Print</button>
     <h2>How to run</h2>
     <label class="pick"><span>Pick a game</span>
       <select id="howSel"></select>
     </label>
+    <button class="pbtn" type="button" onclick="window.print()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M7 14h10v7H7z"/></svg>Print one pager for students</button>
     <div id="howBody"></div>
   </aside>
   </div>
@@ -485,12 +487,12 @@ const HOW = [
     body.innerHTML='<div class="ttl">'+g.name+'</div>'+
       (g.games?'<p class="sub">'+g.games+'</p>':'')+
       '<div class="meta"><div><b>Who plays</b>'+g.who+'</div><div><b>Students go to</b>'+go+'</div></div>'+
-      '<h3>What they learn</h3>'+li(g.learn)+
-      '<h3>Tell them before you start</h3>'+li(g.tell)+
-      '<h3>Strategy to share</h3>'+li(g.strat)+
-      '<h3>Steps</h3><ol>'+g.steps.map(x=>'<li>'+x+'</li>').join("")+'</ol>'+
+      '<h3><span class="scr">What they learn</span><span class="prt">What you will learn</span></h3>'+li(g.learn)+
+      '<h3><span class="scr">Tell them before you start</span><span class="prt">Before you start</span></h3>'+li(g.tell)+
+      '<h3><span class="scr">Strategy to share</span><span class="prt">Strategy</span></h3>'+li(g.strat)+
+      '<div class="tchr"><h3>Steps</h3><ol>'+g.steps.map(x=>'<li>'+x+'</li>').join("")+'</ol>'+
       (g.need.length?'<h3>Before class</h3>'+li(g.need):'')+
-      '<div class="tip">'+g.tip+'</div>'+
+      '<div class="tip">'+g.tip+'</div></div>'+
       '<a class="open" href="'+g.href+'">Open '+(g.href==="/deriv-host"?"Derivatives Live":g.name)+' →</a>';
     try{localStorage.setItem("howGame",g.id)}catch(e){}
   }
