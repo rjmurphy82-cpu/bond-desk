@@ -603,6 +603,92 @@ const options2 = {
   }
 };
 
+// ---------- 2c. The Options Floor, Part 2 (New Stocks): same lessons, different companies and outcomes ----------
+export const STOCKS_B = [
+  { tk: "BRKT", name: "Bracket Sports", what: "Sneakers and sports gear" },
+  { tk: "MDWY", name: "Midway Freight", what: "Trucking company" },
+  { tk: "SUNF", name: "Sunfield Energy", what: "Solar panels" },
+  { tk: "CRDL", name: "Cardinal Credit", what: "Credit card lender" },
+  { tk: "PXLS", name: "Pixel Forge Studios", what: "Video game maker" },
+  { tk: "HRSY", name: "Hersey Holdings", what: "Household products" }
+];
+const OPT2B_ROUNDS = [
+  { title: "Clear Signals", maxN: 1,
+    news: ["The economy is steady: unemployment 4%, inflation 2.3%.", "The Federal Reserve leaves interest rates unchanged."],
+    st: {
+      BRKT: SK(30, 30, 1.5, 1.5, 36, "Signs a five-year deal to make the uniforms for a pro basketball league.", "The league deal lifted BRKT to $36."),
+      MDWY: SK(45, 45, 2, 2, 38, "Its biggest customer, a national retailer, just bought its own fleet of trucks.", "Losing its biggest customer dropped MDWY to $38."),
+      SUNF: SK(22, 22, 1, 1, 22.5, "A quiet week. No company news.", "Quiet stock, small move: both options lost money."),
+      CRDL: SK(60, 60, 2, 2, 61, "Quarterly profit came in right where analysts expected. No surprises.", "No surprise, no move. Neither option paid enough to cover its premium."),
+      PXLS: SK(90, 90, 4, 4, 79, "Delays its biggest game of the year until next spring.", "Fans were let down: PXLS fell to $79."),
+      HRSY: SK(50, 50, 2, 2, 55.5, "Wins a contract to supply every room of a national hotel chain.", "The hotel deal sent HRSY up to $55.50.")
+    },
+    story: "With a calm economy, each stock moved on its own news. Clear bad news (MDWY, PXLS) rewarded puts. Clear good news (BRKT, HRSY) rewarded calls. Stocks with no news didn't move enough to pay for any premium.",
+    lesson: "When the news is clear, match the option to the direction. A stock with no news usually can't cover the premium." },
+  { title: "The Fed Cuts Rates", maxN: 1,
+    news: ["Inflation has fallen to 2%.", "The Federal Reserve CUTS interest rates by 0.5% and hints at more cuts.", "Loan rates for homes and cars drop to a three-year low."],
+    st: {
+      BRKT: SK(36, 35, 2, 1.5, 36.5, "Sales are steady. No big news.", "A small move up, not enough to cover the premium."),
+      MDWY: SK(38, 40, 1, 2.5, 40, "Still looking for new customers to replace the retailer it lost.", "MDWY climbed back to $40, right at the strike. Both options expired worth nothing."),
+      SUNF: SK(22.5, 22.5, 1.5, 1.5, 28.5, "Most homeowners pay for solar panels with a loan. The company also borrows to build new factories.", "Cheaper loans brought solar buyers back: SUNF jumped to $28.50."),
+      CRDL: SK(61, 60, 2.5, 1.5, 55, "Makes money by charging interest on card balances. Lower rates mean it earns less.", "Lower rates squeezed its interest profits: CRDL fell to $55."),
+      PXLS: SK(79, 80, 3, 4, 87, "Fast-growing company. Investors value it on profits they expect years from now.", "Lower rates make future profits worth more today: PXLS rose to $87."),
+      HRSY: SK(55.5, 55, 1.5, 1, 54.5, "Sells everyday products. No big news.", "HRSY slipped to $54.50. The put paid 50 cents but cost $1.")
+    },
+    story: "This round was about the Fed. Lower interest rates help companies whose customers borrow (solar panels) and growth companies valued on future profits. They hurt lenders, which earn less interest.",
+    lesson: "Interest rates move whole industries at once. Ask: does this company (or its customers) borrow money, or lend it?" },
+  { title: "Priced In", maxN: 1,
+    news: ["Shoppers are spending a lot. Retailers expect a record holiday season.", "Online orders are on track for an all-time high.", "Options are expensive on any stock that's all over the news."],
+    st: {
+      BRKT: SK(36.5, 36, 4, 1.5, 39, "Everyone expects its new sneaker to be the top holiday gift. Traders are piling into BRKT calls.", "The sneaker was a hit and BRKT rose to $39. But the call cost $4, so its breakeven was $40: right direction, still a loss."),
+      MDWY: SK(40, 40, 1, 1, 46, "Quietly signed a deal to deliver holiday orders for a big online store. Few analysts noticed.", "The delivery deal got noticed: MDWY jumped to $46 and the cheap call paid $500 net."),
+      SUNF: SK(28.5, 28, 2, 2, 27.5, "Already up 30% since the rate cut. Panel prices are falling.", "SUNF dipped to $27.50, not enough to cover the put."),
+      CRDL: SK(55, 55, 1.5, 1.5, 56, "Holiday shopping on credit cards is expected to set a record.", "Busy shoppers helped a little: CRDL rose $1, less than the premium."),
+      PXLS: SK(87, 85, 9, 6, 92, "Its new game launches tomorrow. Early reviews are great, and the stock is already up 15% this month.", "The launch was a hit and PXLS rose to $92. But the call cost $9, so you needed $94 to profit."),
+      HRSY: SK(54.5, 55, 1.5, 2, 53.5, "Selling holiday gift sets, same as every year.", "HRSY drifted to $53.50. The put paid $1.50 but cost $2.")
+    },
+    story: "The loud stories (BRKT, PXLS) were already in the price, and their options were expensive. The best trade was quiet good news with a cheap premium: MDWY.",
+    lesson: "If everyone already knows the good news, it's 'priced in.' Expensive premiums raise the breakeven." },
+  { title: "Mixed Signals", maxN: 2,
+    news: ["Oil prices jump 35% after major producers cut output.", "Gas and diesel prices hit record highs.", "Economists warn that higher fuel costs could slow spending.", "You can buy 1 or 2 contracts this round."],
+    st: {
+      BRKT: SK(39, 40, 1.5, 2, 37, "Shoppers are spending more at the pump and cutting back on extras like new sneakers.", "Shoppers held off on sneakers: BRKT fell to $37."),
+      MDWY: SK(46, 45, 2.5, 1.5, 39, "Record shipping orders, BUT diesel is its biggest cost and it didn't lock in fuel prices.", "Record orders couldn't beat the fuel bill: MDWY fell to $39."),
+      SUNF: SK(27.5, 27.5, 2, 2, 34, "High energy bills push homes and businesses to look at solar. Its factories are running at full speed.", "Record energy prices made solar look great: SUNF rose to $34."),
+      CRDL: SK(56, 55, 2, 1.5, 53, "Customers are putting more gas on their cards. Some may struggle to pay the bills.", "Worries about late payments pushed CRDL to $53."),
+      PXLS: SK(92, 90, 5, 3, 91, "Oil prices barely affect a game studio's costs. Its stock price is still very high.", "Oil didn't matter much: PXLS barely moved, and both options lost."),
+      HRSY: SK(53.5, 54, 1.5, 1.5, 54.5, "Sells everyday household products people buy in good times and bad.", "Steady sales, steady stock: HRSY barely moved.")
+    },
+    story: "One big macro event, opposite effects. Higher oil prices hurt companies that BURN fuel (MDWY) and helped companies that REPLACE it (SUNF). Good company news (MDWY's record orders) lost to bad macro news.",
+    lesson: "Ask how the big news hits each company's costs and customers. Macro news can outweigh company news." },
+  { title: "Inflation Returns", maxN: 3,
+    news: ["Inflation jumps back to 4%.", "The Federal Reserve RAISES interest rates by 0.75%, more than expected.", "The 10-year Treasury yield hits 5%.", "You can buy 1, 2 or 3 contracts this round."],
+    st: {
+      BRKT: SK(37, 37, 2, 2, 34, "Sells sneakers people can put off buying. Shoppers are cutting back.", "Shoppers kept cutting back: BRKT fell to $34."),
+      MDWY: SK(39, 40, 1.5, 2.5, 37, "Fuel prices fell back, but it owes a lot on variable-rate truck loans.", "Higher loan payments pushed MDWY down to $37, just past the put's breakeven."),
+      SUNF: SK(34, 35, 2.5, 3, 26, "Owes $5 billion on variable-rate loans, and its customers need loans to buy panels.", "Higher rates hit SUNF twice, on its own loans and its customers' loans: it fell to $26."),
+      CRDL: SK(53, 52, 2, 1.5, 60, "Earns more interest on card balances when rates rise. Very few customers have missed payments.", "Higher rates fattened its interest profits: CRDL rose to $60."),
+      PXLS: SK(91, 90, 7, 5, 72, "P/E ratio of 90 (very high). Most of its profits are expected years from now.", "High-P/E stocks get hit hardest when rates jump: PXLS plunged to $72."),
+      HRSY: SK(54.5, 55, 1, 2, 56.5, "Raised prices 4% and customers kept buying. Very little debt.", "HRSY held up and rose to $56.50, just covering the call.")
+    },
+    story: "Rising rates are the opposite of Round 2. They hurt stocks valued on far-off profits (PXLS's P/E of 90) and companies with lots of variable-rate debt (SUNF, MDWY). They helped the lender.",
+    lesson: "Read the numbers: a high P/E and lots of variable-rate debt are warning signs when rates rise." },
+  { title: "Final Bell", maxN: 3,
+    news: ["Hiring was strong last month, but inflation is cooling.", "Economists expect the Federal Reserve to hold rates steady.", "You can buy 1, 2 or 3 contracts this round."],
+    st: {
+      BRKT: SK(34, 35, 1.5, 2.5, 41, "The stock fell 15% after a weak quarter. But online sales grew 40%, it has no debt, and its CEO just bought $2 million of shares.", "The insider was right: BRKT bounced to $41."),
+      MDWY: SK(37, 37, 3, 2, 39.5, "Announces self-driving trucks. Social media is buzzing, and options are pricey.", "The hype was real but already in the price: MDWY rose to $39.50, short of the $40 breakeven."),
+      SUNF: SK(26, 25, 2, 1.5, 25.5, "Panel orders are flat. No big news.", "Flat news, flat stock: both options lost their premium."),
+      CRDL: SK(60, 60, 1.5, 1.5, 51, "10 of 12 analysts rate it a \"buy.\" But late payments on its cards doubled last quarter.", "Customers who can't pay are a lender's worst problem: CRDL fell to $51."),
+      PXLS: SK(72, 70, 3, 4, 63, "Headline: its top game set a record for players. But it's free to play, and in-game spending fell 25%.", "Players don't pay the bills, spending does: PXLS fell to $63."),
+      HRSY: SK(56.5, 57, 1.5, 1.5, 57, "Hosting an investor day next week. No new products expected.", "Right at the strike: both options expired worth nothing.")
+    },
+    story: "The best trades this round were hidden below the headline: the CEO buying shares (BRKT), rising late payments (CRDL), and falling spending behind a record player count (PXLS).",
+    lesson: "Read past the headline. What insiders do, how customers pay, and a company's real numbers can matter more than buzz." }
+].map(R => ({ ...R, stocks: STOCKS_B.map(s => ({ ...s, ...R.st[s.tk] })) }));
+const options2b = { ...options2, title: "The Options Floor, Part 2 (New Stocks)", rounds: OPT2B_ROUNDS,
+  pitch: "Six NEW stocks, six rounds. Each round, read the economy report and the analysis of six companies, then pick ONE stock and buy a call, buy a put, or sit out. Rounds get harder as you go." };
+
 // ---------- 3. The Swap Desk ----------
 const LOAN = 10000000, SPREAD = 2.0, CAP = 825000, PENALTY = 100000;
 const swaps = {
@@ -700,7 +786,7 @@ const cds = {
   }
 };
 
-const DESK = { futures: exchange, options, swaps, cds }, DESK2 = { options: options2 };
+const DESK = { futures: exchange, options, swaps, cds }, DESK2 = { options: options2 }, DESK3 = { options: options2b };
 
 /* =====================================================================
    The games (eight, plus warm-ups)
@@ -711,12 +797,13 @@ for (const t of Object.keys(TOPIC)) {
   GAMES[t + "-story"] = { id: t + "-story", kind: "story", topic: t, topicName: TOPIC[t], title: STORY[t].title, rounds: STORY[t].rounds };
   GAMES[t + "-desk"] = { id: t + "-desk", kind: "desk", topic: t, topicName: TOPIC[t], ...DESK[t] };
   if (DESK2[t]) GAMES[t + "-desk2"] = { id: t + "-desk2", kind: "desk", topic: t, topicName: TOPIC[t], ...DESK2[t] };
+  if (DESK3[t]) GAMES[t + "-desk3"] = { id: t + "-desk3", kind: "desk", topic: t, topicName: TOPIC[t], ...DESK3[t] };
   if (WARMUP[t]) GAMES[t + "-warmup"] = { id: t + "-warmup", kind: "story", warmup: true, topic: t, topicName: TOPIC[t], title: WARMUP[t].title, rounds: WARMUP[t].rounds };
 }
 // The Futures Exchange (futures-desk) is pulled from class. To bring it back, delete it from HIDDEN and put it back in ORDER.
 export const HIDDEN = ["futures-desk"];
 HIDDEN.forEach(id => delete GAMES[id]);
-export const ORDER = ["futures-warmup", "futures-story", "options-story", "options-desk", "options-desk2", "swaps-story", "swaps-desk", "cds-story", "cds-desk"];
+export const ORDER = ["futures-warmup", "futures-story", "options-story", "options-desk", "options-desk2", "options-desk3", "swaps-story", "swaps-desk", "cds-story", "cds-desk"];
 export const nRounds = id => GAMES[id].rounds.length;
 export const nQuestions = id => GAMES[id].kind === "story" ? GAMES[id].rounds.filter(r => r.t === "q").length : GAMES[id].rounds.length;
 
