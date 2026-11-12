@@ -132,6 +132,30 @@ const WARMUP = {
     { t: "q", q: "What's the big difference between a hedger and a speculator?", a: ["A hedger uses futures to cut risk. A speculator takes on risk to try to profit", "A speculator never loses money", "A hedger never loses on the contract", "Only speculators have to follow through"], c: 0, why: "The farmer and the airline were hedgers: they had real crops or real fuel needs. The speculator had nothing to protect." },
     { t: "q", q: "A cereal maker buys wheat futures from a farm at $6.50 a bushel. At delivery, wheat is $7.60. Which is true about the contract?", a: ["Both sides gain", "The cereal maker gains $1.10 a bushel, and the farm loses $1.10", "The farm gains $1.10 a bushel", "Both sides lose"], c: 1, secs: 30, why: "Every futures contract has a buyer and a seller. Whatever one side gains on the contract, the other side loses." },
     { t: "q", q: "On the delivery date, both sides of a futures contract...", a: ["Can walk away if the price moved against them", "Get their money back", "Must follow through on the deal", "Pay a fee to cancel"], c: 2, why: "Futures are an OBLIGATION for both sides. Next up, options: a deal where one side gets to choose." }
+  ] },
+  options: { title: "Options Face-Off", rounds: [
+    { t: "card", title: "Options Face-Off", text: "Speed review before today's Options Floor. Calls, puts, premiums, and the same math you'll do in the math check. Math questions give you more time. Faster right answers earn more points." },
+    { t: "q", q: "A CALL option gives you the right to...", a: ["BUY at the strike price before it expires", "SELL at the strike price before it expires", "Buy at whatever the price is next month", "Get your premium back"], c: 0, why: "Call = the right to BUY at the strike. Like the $20 sneaker reservation: the right to buy at $200." },
+    { t: "q", q: "A PUT option gives you the right to...", a: ["Buy at the strike price", "SELL at the strike price before it expires", "Sell at any price you want", "Skip paying the premium"], c: 1, why: "Put = the right to SELL at the strike. Like the phone trade-in deal." },
+    { t: "q", q: "You think a stock is going DOWN. Which trade fits?", a: ["Buy a call", "Sit out", "Buy a put", "Buy the stock"], c: 2, why: "A put pays off when the stock falls below the strike." },
+    { t: "q", q: "The price you pay up front to own an option is the...", a: ["Strike price", "Premium", "Close", "Dividend"], c: 1, why: "The premium is what you pay for the right. The strike is the set price you can buy or sell at." },
+    { t: "q", q: "When you BUY an option, what's the most you can lose?", a: ["Nothing", "There's no limit", "The strike price × 100", "The premium you paid"], c: 3, why: "If the trade goes wrong, you let the option expire. You lose the premium and nothing more." },
+    { t: "card", title: "Math Check Warm-Up", text: "Call payoff = Close − Strike (or $0). Put payoff = Strike − Close (or $0). Made or lost = (Payoff − Premium) × 100 shares × number of contracts." },
+    { t: "q", q: "VOLT is at $50. You buy 1 call, strike $50, premium $2. VOLT closes at $56. Made or lost?", a: ["Made $600", "Made $400", "Made $200", "Lost $200"], c: 1, secs: 40, why: "Payoff $56 − $50 = $6. ($6 − $2) × 100 = $400 made." },
+    { t: "q", q: "Same call: strike $50, premium $2. This time VOLT closes at $51. Made or lost?", a: ["Made $100", "Broke even", "Lost $100", "Lost $200"], c: 2, secs: 40, why: "Payoff $51 − $50 = $1. ($1 − $2) × 100 = $100 lost. The stock went up, but not enough to cover the premium." },
+    { t: "board" },
+    { t: "q", q: "You buy 2 put contracts on PRAI, strike $40, premium $1.50. PRAI closes at $35. Made or lost?", a: ["Made $1,000", "Made $350", "Made $700", "Lost $300"], c: 2, secs: 45, why: "Payoff $40 − $35 = $5. ($5 − $1.50) × 100 × 2 = $700 made." },
+    { t: "q", q: "You buy 3 call contracts, strike $60, premium $3. The stock closes at $58. Made or lost?", a: ["Lost $600", "Lost $900", "Lost $300", "Made $600"], c: 1, secs: 45, why: "$58 is below the $60 strike, so the payoff is $0. ($0 − $3) × 100 × 3 = $900 lost: the whole premium." },
+    { t: "q", q: "You buy 1 put on SKYH, strike $30, premium $2. SKYH closes at $31. Made or lost?", a: ["Lost $200", "Lost $100", "Made $100", "Broke even"], c: 0, secs: 40, why: "$31 is above the $30 strike, so the put pays $0. You lose the $2 × 100 = $200 premium." },
+    { t: "q", q: "You buy 2 call contracts, strike $45, premium $2.50. The stock closes at $50. Made or lost?", a: ["Made $1,000", "Made $250", "Made $500", "Made $750"], c: 2, secs: 45, why: "Payoff $50 − $45 = $5. ($5 − $2.50) × 100 × 2 = $500 made." },
+    { t: "board" },
+    { t: "q", q: "A call has a $50 strike and a $2 premium. Above what price does it start making money?", a: ["$48", "$50", "$52", "$54"], c: 2, secs: 30, why: "Breakeven for a call = strike + premium. $50 + $2 = $52." },
+    { t: "q", q: "A put has a $40 strike and a $3 premium. Where must the stock close for you to make money?", a: ["Above $43", "Below $37", "Below $40", "Above $40"], c: 1, secs: 30, why: "Breakeven for a put = strike − premium. $40 − $3 = $37. The stock has to fall below that." },
+    { t: "q", q: "You own 100 HRSY shares and buy a put so you can sell them at $45 no matter what. That's...", a: ["Speculating", "Hedging", "A swap", "Sitting out"], c: 1, why: "You're protecting shares you already own. That's a hedge, like insurance." },
+    { t: "q", q: "Everyone already knows the good news, and the call premium is huge. Why can the call still lose money if the stock goes up?", a: ["The stock has to rise past strike + premium", "Calls lose money when stocks go up", "The strike changes after the news", "Premiums are paid back at the end"], c: 0, secs: 30, why: "The news is \"priced in.\" A big premium raises the breakeven, so right direction can still mean a loss." },
+    { t: "q", q: "The Fed CUTS interest rates. Which stock is most likely to go UP?", a: ["A bank that earns interest on loans", "A homebuilder whose buyers need mortgages", "A credit card lender", "None of them"], c: 1, why: "Lower rates make mortgages cheaper, so more people buy homes. Lenders earn less on new loans." },
+    { t: "q", q: "Oil prices jump 35%. Which company is hurt the most?", a: ["A solar panel maker", "A software company", "A trucking company that didn't lock in fuel prices", "A video game maker"], c: 2, why: "Diesel is a trucking company's biggest cost. Solar can actually gain when energy gets expensive." },
+    { t: "board" }
   ] }
 };
 
@@ -803,7 +827,7 @@ for (const t of Object.keys(TOPIC)) {
 // The Futures Exchange (futures-desk) is pulled from class. To bring it back, delete it from HIDDEN and put it back in ORDER.
 export const HIDDEN = ["futures-desk"];
 HIDDEN.forEach(id => delete GAMES[id]);
-export const ORDER = ["futures-warmup", "futures-story", "options-story", "options-desk", "options-desk2", "options-desk3", "swaps-story", "swaps-desk", "cds-story", "cds-desk"];
+export const ORDER = ["futures-warmup", "futures-story", "options-warmup", "options-story", "options-desk", "options-desk2", "options-desk3", "swaps-story", "swaps-desk", "cds-story", "cds-desk"];
 export const nRounds = id => GAMES[id].rounds.length;
 export const nQuestions = id => GAMES[id].kind === "story" ? GAMES[id].rounds.filter(r => r.t === "q").length : GAMES[id].rounds.length;
 
