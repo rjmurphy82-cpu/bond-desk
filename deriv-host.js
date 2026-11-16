@@ -230,7 +230,7 @@ function renderDesk(G) {
     const rows = standings(S, S.r), b = bench(G, S.r);
     body = `<div class="card"><table class="standings"><tr><th>Place</th><th>Group</th><th>This round</th><th class="r">${esc(G.metric.label)}</th></tr>
       ${rows.map(x => `<tr class="${x.place === 1 ? "top" : ""}"><td class="pl">${x.place}</td><td class="nm">${esc(x.g.name)}</td><td>${esc(x.lastPick ? x.lastPick.pick : "")}${mathFined(G, S, S.r, x.g.gid) ? ` <span class="pill r">−${fmt.usd(G.mathFine)} math fine</span>` : ""}</td><td class="r val">${show(G, x.value)}</td></tr>`).join("")}
-      <tr class="bench"><td></td><td>${esc(G.benchLabel)}</td><td></td><td class="r val">${show(G, b)}</td></tr></table></div>
+      <tr class="bench"><td></td><td>${esc(G.benchLabel)}</td><td></td><td class="r val">${show(G, b)}</td></tr></table></div>${!G.metric.higher ? `<div class="small" style="margin-top:6px;font-size:18px">Lowest ${esc(G.metric.label.toLowerCase())} is in 1st place.</div>` : ""}
       <div class="actions"><button class="btn ghost" id="reopen">Reopen this round</button><button class="btn big" id="nextBtn">${last ? "Final results →" : `Open Round ${S.r + 2} →`}</button></div>`;
   }
   $("#view").innerHTML = deskTop(G, R, tabs) + body + `<div class="small" id="netErr">${esc(netErr)}</div>`;

@@ -146,7 +146,7 @@ function renderDesk(G) {
   const chk = G.mathCheck ? ((S.checks[S.r] || {})[me.gid] || null) : null;
   if (G.mathCheck && S.step === "check" && !chk) return renderMathCheck(G, R, d, rv);
   const chkHTML = chk ? mathVerdictHTML(chk, x.delta, G.mathFine) : "";
-  $("#view").innerHTML = deskHead(G, R) + chkHTML + `<div class="reveal"><div><div class="label">${esc(rv.label)}</div><div class="big" style="font-size:64px">${esc(rv.big)}</div></div><div class="sub" style="flex:1;min-width:200px">${esc(rv.sub)}</div></div>
+  $("#view").innerHTML = deskHead(G, R) + chkHTML + `<div class="reveal"><div><div class="label">${esc(rv.label)}</div><div class="big" style="font-size:64px">${esc(rv.big)}</div></div><div class="sub" style="flex:1;min-width:200px">${esc(rv.sub)}${R.story && S.step !== "check" ? `<p style="margin:8px 0 0;font-size:18px;line-height:1.45">${esc(R.story)}</p>` : ""}</div></div>
     <div class="card" style="margin-top:12px"><div class="label">Your desk · ${esc(x.pick)}${x.missing ? " (no answer)" : ""}</div>
       <div class="headline ${x.good ? "g" : x.bad ? "b" : ""}">${esc(x.head)}</div>${resultTable(x)}<div class="small" style="margin-top:6px;font-size:16px">This round: <b>${deltaText(G, x.delta)}</b>${chk && !chk.ok && G.mathFine ? ` · Math fine: <b class="neg">−${fmt.usd(G.mathFine)}</b>` : ""}</div>
       ${S.step === "stand" && m ? `<div class="headline" style="margin-top:10px">${ord(m.place)} of ${rows.length} · ${esc(G.metric.label)} ${show(G, m.value)}</div>` : `<div class="small" style="margin-top:8px">Standings come up on the board next.</div>`}</div>
