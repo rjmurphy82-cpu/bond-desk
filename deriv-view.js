@@ -66,6 +66,22 @@ export function closeTableHTML(R, why, mineTk) {
   if (!R.stocks) return "";
   return `<table class="brk closet"><tr><th>Stock</th><th class="r">Was</th><th class="r">Close</th><th class="r">Change</th>${why ? "<th>What happened</th>" : ""}</tr>${R.stocks.map(x => { const ch = x.S - x.now; return `<tr class="${x.tk === mineTk ? "mine" : ""}"><td><b>${esc(x.tk)}</b></td><td class="r">${fmt.usd(x.now, true)}</td><td class="r"><b>${fmt.usd(x.S, true)}</b></td><td class="r ${ch > 0 ? "pos" : ch < 0 ? "neg" : ""}">${ch > 0 ? "+" : ch < 0 ? "−" : ""}${fmt.usd(Math.abs(ch), true)}</td>${why ? `<td style="font-size:15px">${esc(x.why)}</td>` : ""}</tr>`; }).join("")}</table>`;
 }
+// Every possible choice and how it turned out, best first, each row labeled in words
+export function bestChoicesHTML(G, R, minePick) {
+  const fields = G.fields(R), combos = [];
+  const walk = (i, d) => { if (i >= fields.length) return combos.push({ ...d }); const f = fields[i]; if (f.skip && Object.entries(f.skip).every(([k, v]) => d[k] === v)) return walk(i + 1, d); f.opts.forEach(o => walk(i + 1, { ...d, [f.k]: o[0] })); };
+  walk(0, {});
+  const out = combos.map(d => G.result(R, d)).sort((a, b) => b.delta - a.delta);
+  const seen = new Set(), uniq = out.filter(x => !seen.has(x.pick) && seen.add(x.pick));
+  const vals = [...new Set(uniq.map(x => x.delta))], top = vals[0], bot = vals[vals.length - 1];
+  const tag = x => { const k = vals.indexOf(x.delta); if (vals.length === 1) return '<span class="pill ig">Same result</span>';
+    if (x.delta === top) return '<span class="pill g">Best</span>'; if (x.delta === bot) return '<span class="pill r">Worst</span>';
+    return `<span class="pill ig">${vals.length === 3 ? "Middle" : ord(k + 1) + " best"}</span>`; };
+  const many = uniq.length > 8, list = many ? [...uniq.slice(0, 5), null, ...uniq.slice(-2)] : uniq;
+  const cost = !G.metric.higher && G.kind !== "exchange";
+  const hint = cost ? `This is money paid out, so the <b>lowest</b> ${esc(G.metric.label.toLowerCase())} is best.` : `The <b>highest</b> number is best.`;
+  return `<div class="card"><div class="label">${many ? "Best and worst trades" : "Every choice, best to worst"}</div><div class="small bwhint">${hint}</div><table class="brk bw">${list.map(x => x ? `<tr class="${minePick && x.pick === minePick ? "mine" : ""}"><td class="bwt">${tag(x)}</td><td>${esc(x.pick)}${minePick && x.pick === minePick ? ' <span class="pill ig" style="font-size:13px">Your desk</span>' : ""}</td><td class="r">${cost ? "Cost " : ""}${deltaText(G, x.delta)}</td></tr>` : `<tr><td></td><td>...</td><td></td></tr>`).join("")}</table></div>`;
+}
 export function resultTable(x) {
   return `<table class="brk">${x.rows.map(([a, b, c]) => `<tr><td>${esc(a)}${b ? `<div class="small">${esc(b)}</div>` : ""}</td><td class="r">${esc(c)}</td></tr>`).join("")}</table>`;
 }

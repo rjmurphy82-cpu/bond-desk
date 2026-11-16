@@ -1,6 +1,6 @@
 // Unit 5 Derivatives Live: student (iPad) screen for all eight games
 import { call, $, $$, store } from "./deriv-client.js";
-import { GAMES, Q_SECS, fmt, esc, SHAPES, ord, game, round, dec, deskResult, standings, show, deltaText, roundLabel, secsLeft, briefHTML, closeTableHTML, resultTable, storyCardHTML, needed, settle, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML, mmQuote, pitFrac, pitNow, pitLeft, clockText, bookSide, lastPrice, tapeHTML, pitUsed, activeComms, exIntelHTML, exMeterHTML, pitMine } from "./deriv-view.js";
+import { GAMES, Q_SECS, fmt, esc, SHAPES, ord, game, round, dec, deskResult, standings, show, deltaText, roundLabel, secsLeft, briefHTML, closeTableHTML, resultTable, storyCardHTML, needed, settle, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML, mmQuote, pitFrac, pitNow, pitLeft, clockText, bookSide, lastPrice, tapeHTML, pitUsed, activeComms, exIntelHTML, exMeterHTML, pitMine, bestChoicesHTML } from "./deriv-view.js";
 
 const SK = "dv_play";
 let me = store.get(SK);          // {code, gid, key, name, pin}
@@ -151,7 +151,7 @@ function renderDesk(G) {
       <div class="headline ${x.good ? "g" : x.bad ? "b" : ""}">${esc(x.head)}</div>${resultTable(x)}<div class="small" style="margin-top:6px;font-size:16px">This round: <b>${deltaText(G, x.delta)}</b>${chk && !chk.ok && G.mathFine ? ` · Math fine: <b class="neg">−${fmt.usd(G.mathFine)}</b>` : ""}</div>
       ${S.step === "stand" && m ? `<div class="headline" style="margin-top:10px">${ord(m.place)} of ${rows.length} · ${esc(G.metric.label)} ${show(G, m.value)}</div>` : `<div class="small" style="margin-top:8px">Standings come up on the board next.</div>`}</div>
     ${R.stocks && S.step !== "check" ? `<div class="card" style="margin-top:12px"><div class="label">How the six stocks closed</div>${closeTableHTML(R, true, (G.pick(R, d || G.dflt) || {}).s?.tk)}</div>` : ""}
-    <div class="lesson" style="margin-top:12px"><b>The lesson</b>${esc(R.lesson)}</div>${status()}`;
+    <div class="lesson" style="margin-top:12px"><b>The lesson</b>${esc(R.lesson)}</div>${S.step !== "check" ? `<div style="margin-top:12px">${bestChoicesHTML(G, R, x.pick)}</div>` : ""}${status()}`;
 }
 
 /* ---------- math check (The Options Floor): work out your own result before the board shows it ---------- */

@@ -1,7 +1,7 @@
 // Unit 5 Derivatives Live: host (projector) screen for all eight games
 import { call, offlineCaller, $, $$, store } from "./deriv-client.js";
 import { qrSVG } from "./qr.js";
-import { GAMES, ORDER, Q_SECS, qSecs, fmt, esc, SHAPES, game, round, dec, answerable, deskResult, standings, bench, show, deltaText, roundLabel, secsLeft, briefHTML, closeTableHTML, resultTable, storyCardHTML, needed, settle, exBudget, exAsk, exBid, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML, mmQuote, pitFrac, pitNow, pitLeft, clockText, bookSide, lastPrice, tapeHTML, activeComms, mathFined } from "./deriv-view.js";
+import { GAMES, ORDER, Q_SECS, qSecs, fmt, esc, SHAPES, game, round, dec, answerable, deskResult, standings, bench, show, deltaText, roundLabel, secsLeft, briefHTML, closeTableHTML, resultTable, storyCardHTML, needed, settle, exBudget, exAsk, exBid, roleOf, exSheetHTML, exReportHTML, exTicketHTML, exTap, exUsed, exOrderText, exResultHTML, mmQuote, pitFrac, pitNow, pitLeft, clockText, bookSide, lastPrice, tapeHTML, activeComms, mathFined, bestChoicesHTML } from "./deriv-view.js";
 const PIT_MM_START = 0.03, PIT_MM_END = 0.09;
 
 let api = call, offline = false, S = null, sess = null, pollT = null, netErr = "", skew = 0;
@@ -240,16 +240,7 @@ function renderDesk(G) {
   if ($("#reopen")) $("#reopen").onclick = () => { if (confirm("Reopen this round so groups can change their choices?")) op("reopen"); };
   if ($("#nextBtn")) $("#nextBtn").onclick = () => op("next");
 }
-// Every possible choice and how it turned out, best first
-function bestChoices(G, R) {
-  const fields = G.fields(R), combos = [];
-  const walk = (i, d) => { if (i >= fields.length) return combos.push({ ...d }); const f = fields[i]; if (f.skip && Object.entries(f.skip).every(([k, v]) => d[k] === v)) return walk(i + 1, d); f.opts.forEach(o => walk(i + 1, { ...d, [f.k]: o[0] })); };
-  walk(0, {});
-  const out = combos.map(d => G.result(R, d)).sort((a, b) => b.delta - a.delta);
-  const seen = new Set(), uniq = out.filter(x => !seen.has(x.pick) && seen.add(x.pick));
-  const many = uniq.length > 8, list = many ? [...uniq.slice(0, 5), null, ...uniq.slice(-2)] : uniq;
-  return `<div class="card"><div class="label">${many ? "Best and worst trades" : "Every choice, best to worst"}</div><table class="brk">${list.map(x => x ? x : { pick: "...", delta: null }).map(x => `<tr><td>${esc(x.pick)}</td><td class="r">${x.delta === null ? "" : deltaText(G, x.delta)}</td></tr>`).join("")}</table></div>`;
-}
+const bestChoices = (G, R) => bestChoicesHTML(G, R);
 async function doReveal(G) {
   const n = S.answered.length;
   if (n < S.groups.length && !confirm(`${n} of ${S.groups.length} groups are locked. Groups without an answer get "${deskResult(G, S.r, null).pick}" this round. Reveal anyway?`)) return;

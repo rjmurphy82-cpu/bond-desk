@@ -237,3 +237,5 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--orange);outline
 .brief.big .stk p{font-size:18px}
 .closet th{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:14px;text-align:left;padding:4px 6px;background:#111;color:#fff}.closet th.r{text-align:right}
 .closet td{padding:5px 6px}.closet td.pos{color:var(--green)}.closet td.neg{color:var(--red)}.closet tr.mine td{background:#FFF3B0}
+
+.bwhint{font-size:16px;margin:2px 0 6px}.brk.bw td{font-size:19px;vertical-align:middle}.brk.bw td.bwt{width:1%;white-space:nowrap}.brk.bw tr.mine td{background:#FFF3B0}
