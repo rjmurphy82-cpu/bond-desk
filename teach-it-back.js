@@ -1080,8 +1080,95 @@ function finale(){
 }
 async function hostErase(){if(!confirm("Erase this game and all its scores?"))return;try{H.off&&H.off();await H.N.remove("games/"+H.code)}catch(e){}try{localStorage.removeItem(HKEY)}catch(e){}H=null;stopFireworks();hostSetup()}
 
+/* ================= SOLO (play on your own) =================
+   /teach-it-back-review with no class code: one student works through every skill alone.
+   Each skill: one main problem (100 pts) and two quick problems (20 pts each). A 4-question Kahoot after each derivative (up to 50 each).
+   Hints and second tries work like the class game. New numbers every play. */
+const SOLO_PLAN=[{r:"f1"},{r:"f2"},{k:1},{r:"o1"},{r:"o2"},{k:2},{r:"s1"},{r:"s2"},{k:3},{r:"full"}];
+const SOLO_QUICK=2,SOLO_KQ=4,SOLO_KMAX=50;
+let SOLO=null;
+function soloHome(){
+  $("#ttl").innerHTML=`Teach It Back: <span>Review</span>`;$("#homeBtn").style.display="none";
+  const best=store.get("tibSoloBest",0);
+  app.innerHTML=`<div class="panel" style="max-width:720px;margin:20px auto"><h1 style="font-size:40px;margin-bottom:6px">Play on your own</h1>
+   <p style="font-size:1.1em">Every skill from Teach It Back, with new numbers every time you play: futures (pick the side, gain or loss), options (calls and puts, protecting shares), swaps (pick the swap, run the swap), then Three Clients. Each skill has a main problem and two quick ones. A short Kahoot comes after each derivative.</p>
+   <p class="muted">Have a calculator ready. A wrong answer gets one more try for half points. Hints help, but they cut the points. About 25 minutes. Tap <b>Formulas</b> at the top any time.${best?` Your best: <b>${fmt(best)}</b> points.`:""}</p>
+   <div class="acts"><button class="btn" id="sgo" style="font-size:1.3em;padding:14px 36px">Start</button></div>
+   <p class="muted" style="margin-top:18px;font-size:.9em">In class with a game code? <a href="#" id="sjoin">Join the class game</a></p></div>`;
+  $("#sgo").onclick=()=>{SOLO={seed:Math.floor(Math.random()*1e9),step:0,pts:0,by:{}};soloStep()};
+  $("#sjoin").onclick=e=>{e.preventDefault();joinForm()};
+}
+function soloHead(label){
+  const S=SOLO;
+  return `<div class="prog">${SOLO_PLAN.map((x,k)=>`<i class="${k<S.step?"ok":k===S.step?"on":""}" title="${x.k?"Kahoot "+x.k:ROUNDS[x.r].short}"></i>`).join("")}<span class="tag">${label}</span><span class="muted" style="margin-left:auto;font-size:.9em">Total: <b>${fmt(S.pts)}</b> pts</span></div>`;
+}
+function soloAdd(key,got,max){const b=SOLO.by[key]||(SOLO.by[key]={got:0,max:0});b.got+=got;b.max+=max;SOLO.pts+=got}
+function soloStep(){
+  const S=SOLO;if(S.step>=SOLO_PLAN.length)return soloEnd();
+  const x=SOLO_PLAN[S.step],r=rng(S.seed+S.step*7919);
+  window.scrollTo(0,0);
+  if(x.k)return soloKahoot(x.k,r);
+  const R=ROUNDS[x.r];$("#ttl").innerHTML=`On your own · <span>${R.short}</span>`;
+  const probs=[{p:GEN[x.r](r,false,r()<.5?0:1),worth:MAIN_PTS,lab:"Main problem"}];
+  for(let k=0;k<SOLO_QUICK;k++)probs.push({p:QUICK[x.r](r),worth:BONUS_PTS,lab:"Quick "+(k+1)});
+  let i=0;
+  const next=()=>{i++;if(i<probs.length)run();else{S.step++;soloStep()}};
+  const run=()=>{const q=probs[i];soloProblem(q.p,q.worth,`${R.short} · ${q.lab}`,got=>{soloAdd(x.r,got,q.worth)},next)};
+  run();
+}
+function soloProblem(p,worth,label,onScore,onNext){
+  const stages=p.full?p.stages:[p],stageW=Math.round(worth/stages.length);let s=0;
+  const one=()=>{
+    const sg=stages[s];let tries=0,used=0;
+    app.innerHTML=`<div class="panel">${soloHead(label)}${p.full?`<div class="steps">${stages.map((y,k)=>`<span class="${k<s?"ok":k===s?"on":""}">${y.name}</span>`).join("")}</div>`:""}
+     <div class="work" style="${sg.wide?"grid-template-columns:1fr":""}"><div class="prob"><div class="co">${p.title}<span class="tag">up to ${stageW} pts</span></div><p>${sg.text||p.text}</p>${(sg.facts||p.facts)?`<dl class="facts">${(sg.facts||p.facts).map(([a,c])=>`<dt>${a}</dt><dd>${c}</dd>`).join("")}</dl>`:""}${hintsHTML()}</div>
+     <div>${fieldsHTML(sg.fields,sg.wide)}${sg.je?jeHTML(sg.je):""}<div id="fb"></div><div class="acts"><button class="btn" id="chk">Check</button><button class="btn sec" id="nx" style="display:none">Next</button></div></div></div></div>`;
+    mountHints(sg.hints,stageW,used,u=>{used=u});
+    $("#chk").onclick=()=>{tries++;const res=grade(sg.fields,sg.je);
+      if(res.ok){const w=Math.round(stageW*HINT_MULT[used]),got=tries===1?w:Math.round(w/2);$("#hbtn")&&$("#hbtn").remove();onScore(got);$("#fb").innerHTML=`<div class="fb ok"><b>Correct! +${got} points${tries>1?" (second try)":""}.</b><br>${sg.why}</div>`;fin()}
+      else if(tries<2)$("#fb").innerHTML=`<div class="fb no"><b>Not yet.</b> The red boxes are off. Check your work and try once more for half points.</div>`;
+      else{$("#hbtn")&&$("#hbtn").remove();onScore(0);showAnswers(sg.fields,sg.je);$("#fb").innerHTML=`<div class="fb show"><b>Here's how it works.</b>${p.full&&s<stages.length-1?" Use these numbers for the next step.":""}<br>${sg.why}</div>`;fin()}};
+    function fin(){$("#chk").style.display="none";$("#nx").style.display="";$("#nx").focus();$("#nx").onclick=()=>{s++;s<stages.length?one():onNext()}}
+  };
+  one();
+}
+function soloKahoot(k,r){
+  $("#ttl").innerHTML=`On your own · <span>Kahoot ${k}: ${KNAME[k]}</span>`;
+  const bank=REVIEW?KAHOOT_R:KAHOOT;
+  const qs=shuffle(r,bank[k]).slice(0,SOLO_KQ).map(([q,o,a,h])=>{const idx=shuffle(r,[0,1,2,3]);return{q,o:idx.map(i=>o[i]),a:idx.indexOf(a),h}});
+  const SH=["▲","◆","●","■"];let qi=0;
+  const ask=()=>{
+    const q=qs[qi];let max=SOLO_KMAX,answered=false;
+    app.innerHTML=`<div class="panel">${soloHead(`Kahoot ${k}: ${KNAME[k]} · Question ${qi+1} of ${qs.length}`)}
+     <div class="kq">${q.q}</div>${q.h?`<div class="center" id="khb" style="margin:-6px 0 12px"><button class="btn hbtn" id="kh">💡 Hint: drops this to ${SOLO_KMAX/2}</button></div>`:""}
+     <div class="kopts">${q.o.map((o,j)=>`<button class="kopt" data-k="${j}"><span class="sh">${SH[j]}</span><span>${o}</span></button>`).join("")}</div><div id="kf"></div></div>`;
+    if($("#kh"))$("#kh").onclick=()=>{max=SOLO_KMAX/2;$("#khb").innerHTML=`<div class="hint" style="display:inline-block;text-align:left;font-size:1.1em"><b>Hint:</b> ${q.h}</div>`};
+    app.querySelectorAll(".kopt").forEach(el=>el.onclick=()=>{
+      if(answered)return;answered=true;const j=+el.dataset.k,ok=j===q.a,got=ok?max:0;soloAdd("k"+k,got,SOLO_KMAX);
+      app.querySelectorAll(".kopt").forEach((e2,ix)=>e2.classList.add(ix===q.a?"right":"dim"));
+      $("#khb")&&$("#khb").remove();
+      $("#kf").innerHTML=`<div class="fb ${ok?"ok":"no"}" style="font-size:1.15em"><b>${ok?"Correct! +"+got:"Not this time."}</b>${ok?"":" The answer was: "+q.o[q.a]+"."}${q.h&&!ok?" "+q.h:""}</div><div class="acts" style="justify-content:center"><button class="btn" id="nk">${qi<qs.length-1?"Next question":"Keep going ▶"}</button></div>`;
+      $("#nk").focus();$("#nk").onclick=()=>{qi++;if(qi<qs.length)ask();else{SOLO.step++;soloStep()}};
+    });
+  };
+  ask();
+}
+function soloEnd(){
+  const S=SOLO,best=store.get("tibSoloBest",0),isBest=S.pts>best;if(isBest)store.set("tibSoloBest",S.pts);
+  $("#ttl").innerHTML=`On your own · <span>Results</span>`;
+  const rows=SOLO_PLAN.map(x=>{const key=x.k?"k"+x.k:x.r,b=S.by[key]||{got:0,max:0},pc=b.max?b.got/b.max:0;
+    return `<tr><td>${x.k?"Kahoot: "+KNAME[x.k]:ROUNDS[x.r].short}</td><td style="text-align:right"><b>${fmt(b.got)}</b> / ${fmt(b.max)}</td><td style="width:40%"><div style="height:12px;background:#eee;border-radius:9px;overflow:hidden"><i style="display:block;height:100%;width:${Math.max(3,pc*100)}%;background:${pc>=.8?"var(--ok)":pc>=.5?"var(--gold)":"var(--red)"}"></i></div></td></tr>`}).join("");
+  const weak=SOLO_PLAN.filter(x=>x.r).map(x=>({x,b:S.by[x.r]||{got:0,max:1}})).sort((a,b)=>a.b.got/a.b.max-b.b.got/b.b.max).slice(0,2);
+  app.innerHTML=`<div class="panel" style="max-width:820px;margin:20px auto"><div class="muted">Teach It Back · Review · on your own</div><h1 style="font-size:46px;margin:4px 0">${fmt(S.pts)} points</h1>
+   <p>${isBest?"That's your new best!":best?`Your best is ${fmt(best)}.`:""}</p>
+   <table style="width:100%;border-collapse:collapse;margin:10px 0">${rows}</table>
+   <p><b>Practice next:</b> ${weak.map(w=>ROUNDS[w.x.r].short).join(" and ")}. Play again for new numbers, or try <a href="/practice-hedging-desk">The Hedging Desk</a>.</p>
+   <div class="acts"><button class="btn" id="sagain">Play again</button><button class="btn sec" id="shome">Back</button></div></div>`;
+  $("#sagain").onclick=()=>{SOLO={seed:Math.floor(Math.random()*1e9),step:0,pts:0,by:{}};soloStep()};
+  $("#shome").onclick=soloHome;
+}
 function mmss(s){s=Math.max(0,Math.round(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
 /* ---------- start ---------- */
 if(ROLE==="teacher"){$("#pvBtn").style.display="none";app.style.maxWidth="1700px";$("#homeBtn").style.display="none";hostSetup()}
-else{const s=store.get(SKEY,null),qc=params.get("code");if(s&&s.code&&s.pid&&(!qc||qc===s.code))startDevice(s);else joinForm()}
+else{const s=store.get(SKEY,null),qc=params.get("code");if(s&&s.code&&s.pid&&(!qc||qc===s.code))startDevice(s);else if(REVIEW&&!qc)soloHome();else joinForm()}
 

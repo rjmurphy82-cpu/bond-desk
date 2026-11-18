@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Unit 5 Test Review | District 214 Finance &amp; Investing</title>
+<meta name="description" content="Unit 5 derivatives test review you play on your own: futures, options, swaps and credit default swaps.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:wght@400;600;700&display=swap">
+<style>
+/* Play-on-your-own test review. Questions come from REVIEW in deriv-data.js (the same ones the class version uses). */
+:root{--bg:#F4F3F3;--paper:#fff;--ink:#111;--muted:#5C5C5C;--line:rgba(17,17,17,.14);--red:#C1102F;--good:#1E7A3C;--goodsoft:#E7F4EB;--bad:#C1102F;--badsoft:#FBE7EA;
+  --c0:#C1102F;--c1:#1F5FAD;--c2:#9A6B00;--c3:#23763A;--display:"Oswald","Arial Narrow",Arial,sans-serif;--body:"Barlow",system-ui,Arial,sans-serif;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#121212;--paper:#1E1E1E;--ink:#F2F2F2;--muted:#A8A8A8;--line:rgba(242,242,242,.14);--good:#3FB86A;--goodsoft:#123020;--bad:#FF4D63;--badsoft:#3A1219;color-scheme:dark}}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:18px/1.45 var(--body);min-height:100vh}
+button{font:inherit;cursor:pointer}
+.top{background:#111;color:#fff;display:flex;align-items:center;gap:12px;padding:10px max(16px,env(safe-area-inset-left));border-bottom:4px solid var(--red)}
+.top img{height:30px;background:#fff;border-radius:4px;padding:2px 5px}.top a{color:#fff;text-decoration:none;font-weight:600;font-size:15px}
+.top .t{font-family:var(--display);font-weight:600;font-size:20px;letter-spacing:.03em;text-transform:uppercase;margin-left:auto}
+.wrap{max-width:900px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-left)) 40px}
+h1{font:700 clamp(36px,6vw,58px)/1 var(--display);margin:8px 0 6px;text-transform:uppercase}
+.lede{color:var(--muted);margin:0 0 18px}
+.picks{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pick{text-align:left;background:var(--paper);border:2px solid var(--line);border-top:5px solid var(--red);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:4px;color:inherit}
+.pick:hover{border-color:var(--ink)}.pick b{font:600 26px/1.1 var(--display);text-transform:uppercase}.pick span{color:var(--muted);font-size:16px}
+.pick small{font-weight:700;color:var(--red);letter-spacing:.06em;text-transform:uppercase;font-size:13px}
+.bar{display:flex;align-items:center;gap:12px;margin-bottom:10px;font-weight:700;color:var(--muted);font-size:15px}
+.bar .sc{margin-left:auto;font-family:var(--display);font-size:22px;color:var(--ink)}
+.prog{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:14px}.prog i{display:block;height:100%;background:var(--red)}
+.card{background:var(--paper);border:2px solid var(--line);border-radius:14px;padding:20px 22px}
+.story .k{font:600 15px var(--display);letter-spacing:.12em;text-transform:uppercase;color:var(--red)}
+.story h2{font:700 34px/1.05 var(--display);margin:2px 0 8px;text-transform:uppercase}
+.story p{font-size:21px;margin:0}
+.q{font-size:clamp(21px,2.6vw,27px);font-weight:600;line-height:1.3;margin:0}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.opt{display:flex;gap:12px;align-items:center;text-align:left;border:0;border-radius:12px;padding:12px 16px;min-height:76px;font-size:20px;font-weight:700;color:#fff;background:var(--oc);box-shadow:0 4px 0 rgba(0,0,0,.22)}
+.opt .sh{flex:none;width:36px;height:36px;border-radius:8px;background:rgba(0,0,0,.22);display:grid;place-items:center}
+.opt:disabled{cursor:default}.opt.dim{opacity:.3}.opt.right{outline:5px solid var(--good);outline-offset:2px;opacity:1}.opt.pick{outline:5px solid var(--ink);outline-offset:2px}
+.fb{margin-top:14px;border-radius:12px;padding:12px 16px;border-left:8px solid var(--good);background:var(--goodsoft);font-size:19px}
+.fb.no{border-color:var(--bad);background:var(--badsoft)}.fb b{display:block;font:600 22px var(--display)}
+.acts{display:flex;justify-content:flex-end;gap:10px;margin-top:14px;flex-wrap:wrap}
+.btn{background:var(--red);color:#fff;border:0;border-radius:10px;padding:10px 26px;font:600 22px var(--display)}
+.btn.sec{background:var(--paper);color:var(--ink);border:2px solid var(--line)}
+.tag{font-size:14px;color:var(--muted);font-weight:600}
+.end h2{font:700 clamp(40px,7vw,64px)/1 var(--display);margin:6px 0}
+.miss{background:var(--paper);border:2px solid var(--line);border-left:8px solid var(--bad);border-radius:12px;padding:12px 16px;margin-top:10px;font-size:17px}
+.miss b{display:block}.miss .a{color:var(--good);font-weight:700}
+@media (max-width:640px){.picks,.opts{grid-template-columns:1fr}.opt{min-height:60px;font-size:18px}}
+</style>
+</head>
+<body>
+<div class="top"><a href="/"><img src="/logo-214.png" alt="District 214"></a><a href="/">Finance &amp; Investing</a><span class="t" id="ttl">Unit 5 Test Review</span></div>
+<main class="wrap" id="app"></main>
+<script type="module">
+import { GAMES } from "/deriv-data.js";
+const $ = s => document.querySelector(s), app = $("#app");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const SHAPES = ["▲", "◆", "●", "■"], TOPICS = ["futures", "options", "swaps", "cds"];
+const BLURB = { futures: "Pick the side, gain or loss on the futures, and the price the business really got or paid.", options: "Cost, breakeven, profit, protective puts and shares vs. calls.", swaps: "Fixed vs. variable payments, and whether the swap helped or hurt.", cds: "Who pays whom, why ratings change the premium, and the premium math." };
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const best = t => { try { return +localStorage.getItem("rv_best_" + t) || 0; } catch { return 0; } };
+const setBest = (t, v) => { try { localStorage.setItem("rv_best_" + t, v); } catch {} };
+
+function menu() {
+  history.replaceState(null, "", "/review");
+  $("#ttl").textContent = "Unit 5 Test Review";
+  app.innerHTML = `<h1>Test review</h1><p class="lede">Play on your own, as many times as you want. Have a calculator ready. After every answer you see the right one and why. At the end you see what you missed.</p>
+    <div class="picks">${TOPICS.map(t => { const G = GAMES[t + "-review"], n = G.rounds.filter(r => r.t === "q").length, b = best(t);
+      return `<button class="pick" data-t="${t}"><small>${n} questions${b ? ` · your best: ${b} of ${n}` : ""}</small><b>${esc(G.title)}</b><span>${BLURB[t]}</span></button>`; }).join("")}</div>`;
+  app.querySelectorAll(".pick").forEach(b => b.onclick = () => play(b.dataset.t));
+}
+
+function play(t) {
+  const G = GAMES[t + "-review"]; if (!G) return menu();
+  history.replaceState(null, "", "/review?t=" + t);
+  $("#ttl").textContent = G.title;
+  const steps = G.rounds.filter(r => r.t !== "board");
+  const nq = steps.filter(r => r.t === "q").length;
+  let i = 0, right = 0, done = 0; const missed = [];
+  const head = () => `<div class="bar"><span>${esc(G.title)}</span><span>Question ${Math.min(done + 1, nq)} of ${nq}</span><span class="sc">${right} right</span></div><div class="prog"><i style="width:${done / nq * 100}%"></i></div>`;
+  const next = () => { i++; i < steps.length ? show() : end(); };
+  function show() {
+    const R = steps[i]; window.scrollTo(0, 0);
+    if (R.t === "card") {
+      app.innerHTML = head() + `<div class="card story"><div class="k">${i === 0 ? "Start here" : "New situation"}</div><h2>${esc(R.title)}</h2><p>${esc(R.text)}</p></div><div class="acts"><button class="btn" id="go">${i === 0 ? "Start" : "Next"} →</button></div>`;
+      $("#go").onclick = next; $("#go").focus(); return;
+    }
+    // shuffle the answer order each play so it's not about remembering the color
+    const order = shuffle([0, 1, 2, 3]);
+    app.innerHTML = head() + `<div class="card"><p class="q">${esc(R.q)}</p>
+      <div class="opts">${order.map((k, j) => `<button class="opt" data-k="${k}" style="--oc:var(--c${j})"><span class="sh">${SHAPES[j]}</span><span>${esc(R.a[k])}</span></button>`).join("")}</div><div id="fb"></div></div>`;
+    app.querySelectorAll(".opt").forEach(b => b.onclick = () => {
+      const k = +b.dataset.k, ok = k === R.c; done++; if (ok) right++; else missed.push({ q: R.q, a: R.a[R.c], why: R.why, you: R.a[k] });
+      app.querySelectorAll(".opt").forEach(x => { x.disabled = true; const kk = +x.dataset.k; x.classList.add(kk === R.c ? "right" : "dim"); if (kk === k && !ok) x.classList.add("pick"); });
+      $("#fb").innerHTML = `<div class="fb ${ok ? "" : "no"}"><b>${ok ? "Correct!" : "Not quite. Answer: " + esc(R.a[R.c])}</b>${esc(R.why)}</div><div class="acts"><button class="btn" id="nx">${i === steps.length - 1 ? "See my score" : "Next"} →</button></div>`;
+      app.querySelector(".sc").textContent = right + " right";
+      $("#nx").onclick = next; $("#nx").focus();
+    });
+  }
+  function end() {
+    if (right > best(t)) setBest(t, right);
+    const pct = Math.round(right / nq * 100), others = TOPICS.filter(x => x !== t);
+    app.innerHTML = `<div class="end"><div class="tag">${esc(G.title)}</div><h2>${right} of ${nq} right</h2>
+      <p class="lede">${pct === 100 ? "Perfect. You're ready for this part of the test." : pct >= 80 ? "Strong. Read the ones you missed below, then play again." : "Read each miss below, then play again. The answer order changes each time."} Your best: ${best(t)} of ${nq}.</p>
+      <div class="acts" style="justify-content:flex-start"><button class="btn" id="again">Play again</button><button class="btn sec" id="menu">Other reviews</button></div>
+      ${missed.length ? `<h3 style="font:600 26px var(--display);margin:22px 0 0;text-transform:uppercase">What you missed</h3>` + missed.map(m => `<div class="miss"><b>${esc(m.q)}</b>You picked: ${esc(m.you)}<br><span class="a">Answer: ${esc(m.a)}</span><br>${esc(m.why)}</div>`).join("") : ""}
+      <p class="tag" style="margin-top:20px">Next up: ${others.map(x => `<a href="/review?t=${x}" data-t="${x}" class="nl">${esc(GAMES[x + "-review"].title)}</a>`).join(" · ")} · <a href="/practice-hedging-desk">The Hedging Desk</a></p></div>`;
+    $("#again").onclick = () => play(t); $("#menu").onclick = menu;
+    app.querySelectorAll(".nl").forEach(a => a.onclick = e => { e.preventDefault(); play(a.dataset.t); });
+  }
+  show();
+}
+const t0 = new URLSearchParams(location.search).get("t");
+TOPICS.includes(t0) ? play(t0) : menu();
+</script>
+</body>
+</html>

@@ -8,7 +8,7 @@
     { href: "/futures-live", ch: "5", label: "Futures Live (quiz)", page: "futures-live" },
     { href: "/teach-it-back", ch: "5", label: "Teach It Back", page: "teach-it-back" },
     { sub: "Review games" },
-    { href: "/deriv", ch: "5", label: "Futures, Options, Swaps & CDS Reviews", page: "deriv-review" },
+    { href: "/review", ch: "5", label: "Futures, Options, Swaps & CDS Reviews", page: "review" },
     { href: "/teach-it-back-review", ch: "5", label: "Teach It Back: Review", page: "teach-it-back-review" },
     { href: "/derivatives-live", ch: "5", label: "Derivatives Live (review quiz)", page: "derivatives-live" },
     { href: "/lock-it-in", ch: "5", label: "Lock It In", page: "lock-it-in" },

@@ -2714,23 +2714,24 @@ const MOCK=/[?&]mock=1/.test(location.search);
 const ROLE=window.BRL_ROLE||"student";
 const GAME="derivlive"; // keeps each live game's codes separate
 const hdr=()=>`<h1 class="title">Derivatives <span>Live.</span></h1>
-  <p class="lede">${ROLE==="teacher"?"Teacher screen. Put this on the projector, create a game, and students join on their devices with the code. A test review with four rounds: futures, options, swaps and credit default swaps, each with concept questions and test-style math; right answers earn 600 points plus up to 400 for speed, and wrong answers cost a lot (set below), so students should never guess.":"Four quick review rounds, run by your teacher: futures, options, swaps and credit default swaps. Have a calculator ready. Right answers earn 600 points plus up to 400 more for speed. Wrong answers cost a lot of points, so never guess. If you are not sure, let the clock run out and you get 0. At the end you get a report on what to practice, and you can practice it right here."}</p>`;
+  <p class="lede">${ROLE==="teacher"?"Teacher screen. Put this on the projector, create a game, and students join on their devices with the code. A test review with four rounds: futures, options, swaps and credit default swaps, each with concept questions and test-style math; right answers earn 600 points plus up to 400 for speed, and wrong answers cost a lot (set below), so students should never guess.":"A test review you play on your own: futures, options, swaps and credit default swaps. Have a calculator ready. Right answers earn 600 points plus up to 400 more for speed. At the end you get a report on what to practice, and you can practice it right here."}</p>`;
 function home(){
   stopTick();KEYPICK=KEYNEXT=null;setFit(false);$("#who").hidden=true;
-  ROLE==="teacher"?hostSetup():joinForm();
+  ROLE==="teacher"?hostSetup():/[?&]code=\d{4}/.test(location.search)?joinForm():soloStart();
 }
 
 /* ============================================================ SOLO */
 let SOLO=null;
 function soloStart(){
-  app.innerHTML=`<div class="panel"><h2>What's your name?</h2><p>First name and last initial is perfect.</p>
+  setFit(false);
+  app.innerHTML=`${hdr()}<div class="panel" style="margin-top:0"><h2>Play on your own</h2><p>Four rounds: futures, options, swaps and credit default swaps, 3 questions each. Type your name (first name and last initial) to start. Play as many times as you want: you get new questions each time.</p>
     <input class="field" id="nm" maxlength="24" autocomplete="off" placeholder="Jordan M.">
-    <div class="err" id="er"></div><button class="btn main" id="go">Start</button> <button class="btn" id="back">Back</button></div>`;
+    <div class="err" id="er"></div><button class="btn main" id="go">Start</button> <button class="btn" id="back">Join a class game instead</button></div>`;
   const nm=$("#nm");nm.focus();
   const go=()=>{const n=nm.value.trim();if(!n){$("#er").textContent="Type your name first.";return}
     timeMult=1;SOLO={name:n,ids:buildGame(3,Math.floor(Math.random()*1e9)),seed:Math.floor(Math.random()*1e9),i:0,score:0,log:[]};
     $("#who").textContent=n;$("#who").hidden=false;soloNext()};
-  $("#go").onclick=go;nm.onkeydown=e=>{if(e.key==="Enter")go()};$("#back").onclick=home;
+  $("#go").onclick=go;nm.onkeydown=e=>{if(e.key==="Enter")go()};$("#back").onclick=joinForm;
 }
 function interstitial(sk,roundNo,total,cb){
   const S=SKILLS[sk];setFit(false);
@@ -2776,11 +2777,11 @@ function report(name,log,score,rank){
     <div class="todo"><h3>${perfect?"What to work on":"Practice these next"}</h3>
       ${perfect?`<div class="tip"><div class="t"><b>Every answer right. Nice work.</b>Your next goal is speed. ${slow?`Your slowest round was ${esc(SKILLS[slow].short)}. `:""}Next game, try to beat ${score.toLocaleString()}.</div></div>`:tips}
     </div>
-    <div class="links">More practice on the site: <a href="/practice-hedging-desk">The Hedging Desk</a> · <a href="/lock-it-in">Lock It In</a> · <a href="/">All games and practices</a> · <a href="#" id="home2">Join another game</a></div>
+    <div class="links">More practice on the site: <a href="/practice-hedging-desk">The Hedging Desk</a> · <a href="/lock-it-in">Lock It In</a> · <a href="/">All games and practices</a> · <a href="#" id="home2">Play again</a></div>
   </div>`;
   app.querySelectorAll(".prac").forEach(b=>b.onclick=()=>practice(b.dataset.sk,()=>{report(name,log,score,rank);const pr=PRACTICED[b.dataset.sk];if(pr){const d=app.querySelector(`[data-done="${b.dataset.sk}"]`);if(d)d.textContent=`Practiced: ${pr.r} of ${pr.n} right.`}}));
   const ag=$("#again");if(ag)ag.onclick=soloStart;
-  $("#home2").onclick=e=>{e.preventDefault();home()};
+  $("#home2").onclick=e=>{e.preventDefault();history.replaceState(null,"",location.pathname);home()};
   // restore practice marks
   Object.entries(PRACTICED).forEach(([k,pr])=>{const d=app.querySelector(`[data-done="${k}"]`);if(d)d.textContent=`Practiced: ${pr.r} of ${pr.n} right.`});
   window.scrollTo(0,0);
@@ -3066,7 +3067,7 @@ const SKEY="dlSession";
 const saveSess=o=>{try{localStorage.setItem(SKEY,JSON.stringify(o))}catch(e){}};
 const loadSess=()=>{try{return JSON.parse(localStorage.getItem(SKEY)||"null")}catch(e){return null}};
 const baseFor=st=>!st||st.phase==="lobby"?-1:st.phase==="reveal"||st.phase==="end"?st.qi:st.qi-1;
-function rejoinBtn(){const b=$("#rejoin");if(!b||ROLE==="teacher")return;b.hidden=false}
+function rejoinBtn(){const b=$("#rejoin");if(!b||ROLE==="teacher")return;b.hidden=!(ME||loadSess())}
 async function joinForm(){
   const N=await net().catch(()=>null);if(!N)return needSetup();
   const sv=loadSess(),qcode=(location.search.match(/[?&]code=(\d{4})/)||[])[1];
