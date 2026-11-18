@@ -813,6 +813,110 @@ const cds = {
 const DESK = { futures: exchange, options, swaps, cds }, DESK2 = { options: options2 }, DESK3 = { options: options2b };
 
 /* =====================================================================
+   REVIEW GAMES (test prep; same Kahoot engine as the story games and warm-ups)
+   Written with the right answer first; place() moves it to a spread-out letter so answers aren't predictable.
+   ===================================================================== */
+const PLACE = [2, 0, 3, 1, 1, 3, 0, 2, 3, 1, 0, 2, 0, 3, 2, 1, 3, 0];
+function place(rounds) {
+  let k = 0;
+  return rounds.map(r => {
+    if (r.t !== "q") return r;
+    const pos = PLACE[k++ % PLACE.length], a = r.a.slice(1);
+    a.splice(pos, 0, r.a[0]);
+    return { ...r, a, c: pos };
+  });
+}
+const RV = (q, a, why, secs) => secs ? { t: "q", q, a, why, secs } : { t: "q", q, a, why };
+const REVIEW = {
+  futures: { title: "Futures Review", rounds: place([
+    { t: "card", title: "Futures Review", text: "Test review. Concepts first, then the same math as the test: the gain or loss on the futures, and what the business really got or paid. Calculators out. Math questions give you more time." },
+    RV("Think back to the Prom Bus. What made the deal a futures contract?", ["The item, date and price were locked in today, and both sides had to follow through", "Your group could back out if buses got cheaper", "Your group paid a premium for the right to the bus", "The bus company could raise the price in May"], "A futures contract locks in what, when and how much, and it's an obligation for BOTH sides."),
+    RV("What is a derivative?", ["A contract whose value comes from something else, like corn, a stock or an interest rate", "A share of ownership in a company", "A loan from a bank", "A savings account"], "Futures, options and swaps all get their value from an underlying asset or rate."),
+    RV("A hedger is someone who...", ["Uses a derivative to reduce a risk it already has", "Takes on risk to try to make money", "Never loses money on a contract", "Only trades stocks"], "Hedgers have something real to protect: a crop, a fuel bill, a loan."),
+    RV("A trader who owns no wheat buys wheat futures because she thinks a drought is coming. She is...", ["Speculating", "Hedging", "Swapping", "Insuring her crop"], "She has no wheat to protect. She's taking on risk to try to profit."),
+    RV("A cattle ranch will sell its herd in the fall. Which position protects it?", ["Sell cattle futures", "Buy cattle futures", "Buy a call on cattle", "No futures position fits"], "The ranch SELLS cattle, so falling prices hurt it. Sellers sell futures."),
+    RV("A pizza chain buys tons of cheese every month. Which position protects it from price spikes?", ["Buy cheese futures", "Sell cheese futures", "Buy a put on cheese", "Wait and buy cheese later"], "The chain BUYS cheese, so rising prices hurt it. Buyers buy futures."),
+    { t: "card", title: "The Wheat Farmer", text: "A farmer expects to harvest 30,000 bushels of wheat. She sells wheat futures at a locked price of $6.00 a bushel." },
+    RV("At harvest, the market price is $5.40. What is her gain or loss on the futures?", ["$18,000 gain", "$18,000 loss", "$1,800 gain", "$162,000 gain"], "She sold at $6.00 and the price fell to $5.40. ($6.00 − $5.40) × 30,000 = $18,000 gained.", 40),
+    RV("She sells her real wheat at $5.40 ($162,000). Add the futures result. What does she end up with?", ["$180,000", "$162,000", "$144,000", "$198,000"], "$162,000 + $18,000 = $180,000. That's 30,000 × $6.00, the amount she locked in.", 40),
+    RV("Rewind. The market price RISES to $6.50 instead. What is her result on the futures?", ["$15,000 loss", "$15,000 gain", "$1,500 loss", "$195,000 loss"], "($6.00 − $6.50) × 30,000 = −$15,000. Sold futures lose when the price goes up.", 40),
+    RV("With wheat at $6.50, her crop sells for $195,000. What does she end up with in total?", ["$180,000", "$195,000", "$210,000", "$165,000"], "$195,000 − $15,000 = $180,000. Same locked-in amount either way. That's the hedge working.", 40),
+    { t: "board" },
+    { t: "card", title: "Sunny Juice Co.", text: "Sunny Juice buys orange juice futures for 50,000 pounds at a locked price of $2.60 a pound." },
+    RV("When it needs the juice, the market price is $3.00. What is its gain or loss on the futures?", ["$20,000 gain", "$20,000 loss", "$2,000 gain", "$150,000 gain"], "Bought futures gain when the price rises. ($3.00 − $2.60) × 50,000 = $20,000.", 40),
+    RV("It buys its juice at the market price of $3.00. After the futures gain, what did it REALLY pay per pound?", ["$2.60", "$3.00", "$0.40", "$3.40"], "$3.00 paid − $0.40 gained per pound = $2.60, the price it locked in.", 35),
+    RV("If Sunny Juice gains $20,000 on the contract, what happens to the seller on the other side?", ["It loses $20,000 on the contract", "It also gains $20,000", "It breaks even", "It gets a refund"], "Every futures contract has a buyer and a seller. One side's gain is the other side's loss."),
+    RV("How is a futures contract different from an option?", ["Both sides MUST follow through", "Futures cost a premium up front", "Only one side of a futures contract can lose", "Futures have no locked price"], "Futures are an obligation for both sides. An option buyer has a right and can walk away."),
+    RV("A business lost money on its futures, but it paid exactly the price it locked in. Was the hedge a mistake?", ["No. The goal was a known price, and it got one", "Yes. It lost money", "Yes. It should have speculated", "No, because futures never really lose"], "Hedging trades the chance to win for no surprises. The budget came in right on target."),
+    { t: "board" }
+  ]) },
+  options: { title: "Options Review", rounds: place([
+    { t: "card", title: "Options Review", text: "Test review. Calls, puts, premiums and breakevens, then the test math: cost, profit, protective puts and leverage. One contract = 100 shares. Calculators out." },
+    RV("The Sneaker Drop: you paid $20 for the right to buy sneakers at $200. In option words, the $20 is the...", ["Premium", "Strike price", "Breakeven", "Payoff"], "The premium is what you pay up front for the right."),
+    RV("...and the $200 is the...", ["Strike price", "Premium", "Market price", "Dividend"], "The strike is the set price you have the right to buy or sell at."),
+    RV("A CALL is the right to...", ["Buy at the strike price", "Sell at the strike price", "Trade interest payments", "Borrow at a fixed rate"], "Call = buy. You want the price to go UP."),
+    RV("A PUT is the right to...", ["Sell at the strike price", "Buy at the strike price", "Lend at a fixed rate", "Skip the premium"], "Put = sell. You want the price to go DOWN, or you want insurance."),
+    RV("You think HRSY is about to jump. Which option do you buy?", ["A call", "A put", "Either one works the same", "Neither"], "A call pays off when the stock rises above the strike."),
+    RV("What is the MOST an option buyer can lose?", ["The premium paid", "The strike price", "There's no limit", "The market price"], "If the option isn't worth using, you let it expire and lose only the premium."),
+    { t: "card", title: "Calls on VOLT", text: "You buy 2 VOLT call contracts with a $40 strike price and a $3 premium." },
+    RV("What is your total cost?", ["$600", "$300", "$6", "$8,000"], "$3 × 100 shares × 2 contracts = $600.", 35),
+    RV("What is your breakeven price?", ["$43", "$37", "$40", "$46"], "Call breakeven = strike + premium = $40 + $3 = $43.", 30),
+    RV("VOLT closes at $50. What is your profit?", ["$1,400", "$2,000", "$700", "$1,000"], "($50 − $40 − $3) × 100 × 2 = $1,400.", 45),
+    RV("VOLT closes at $38 instead. What happens?", ["The calls expire worthless and you lose $600", "You use the calls and lose $200", "You make $200", "You lose $3,800"], "Buying at $40 makes no sense when VOLT is $38. You lose the whole premium: $600.", 35),
+    { t: "board" },
+    { t: "card", title: "Protecting SKYH", text: "You own 100 SKYH shares you bought at $60. You buy 1 put with a $55 strike for a $2 premium. Then SKYH crashes to $40." },
+    RV("How much does the put pay you?", ["$1,500", "$500", "$2,000", "$1,300"], "($55 − $40) × 100 = $1,500.", 40),
+    RV("Your shares lost $2,000. Add the $1,500 put payoff and the $200 premium. What is your total loss?", ["$700", "$2,000", "$500", "$1,700"], "−$2,000 + $1,500 − $200 = −$700.", 45),
+    RV("What is the most you can lose with this put, no matter how far SKYH falls?", ["$700", "$500", "$200", "$5,500"], "($60 − $55 + $2) × 100 = $700. That's the floor on your loss.", 40),
+    RV("Why does buying a put on shares you own count as hedging?", ["It works like insurance and sets a floor on your loss", "It's a bet that the stock will rise", "It doubles your shares", "It means you never pay a premium"], "You're protecting something you already own."),
+    { t: "card", title: "Shares vs. Calls", text: "You have $1,000. NIMB is at $50. A $50 call costs a $2 premium, so one contract costs $200. You could buy 20 shares, or 5 call contracts." },
+    RV("NIMB rises to $56. The 20 shares gain $120. What do the 5 calls make?", ["$2,000", "$1,000", "$3,000", "$600"], "($56 − $50 − $2) × 100 × 5 = $2,000. That's leverage: a 200% return vs. 12% on shares.", 45),
+    RV("NIMB just stays at $50. What happens to the 5 calls?", ["They expire worthless, and you lose all $1,000", "They break even", "You gain $200", "You get the premium back"], "Leverage works both ways. The shares would still be worth $1,000; the calls are worth $0."),
+    { t: "board" }
+  ]) },
+  swaps: { title: "Swaps Review", rounds: place([
+    { t: "card", title: "Swaps Review", text: "Test review. What gets traded in a swap, who wins when rates move, and the test math: fixed payments, variable payments, and whether the swap helped or hurt. Calculators out." },
+    RV("The Tip Jar Trade: Maya swapped her up-and-down tips for Jordan's steady paycheck. What did Maya want?", ["Predictable income", "A chance at more money", "To quit her job", "More tips"], "Swaps turn an uncertain payment into a predictable one."),
+    RV("In an interest rate swap, two companies trade...", ["Interest payments", "Their loans", "Shares of stock", "Commodities"], "The loan amount never changes hands. Only the interest payments are swapped."),
+    RV("A variable rate usually equals...", ["The Federal Funds Rate plus a spread", "The strike price", "The premium", "The stock price"], "When the Fed moves its rate, variable payments move with it."),
+    RV("A company with a variable-rate loan is worried the Fed will raise rates. It should swap to...", ["A fixed rate", "A higher variable rate", "No interest at all", "A put option"], "A fixed rate can't go up."),
+    RV("Rates RISE sharply. Who comes out ahead in a fixed-for-variable swap?", ["The fixed-rate payer", "The variable-rate payer", "Neither side", "The bank only"], "The fixed payer's payment stays put while variable payments grow."),
+    RV("Rates FALL sharply. Who comes out ahead?", ["The variable-rate payer", "The fixed-rate payer", "Both sides equally", "Neither side"], "Variable payments shrink when rates fall."),
+    { t: "card", title: "Prairie Freight", text: "Prairie Freight has a $5,000,000 loan at a variable rate of the Federal Funds Rate + 2%. It swaps into a fixed rate of 6%." },
+    RV("What is Prairie Freight's yearly payment at the fixed rate?", ["$300,000", "$30,000", "$600,000", "$3,000,000"], "$5,000,000 × 6% = $300,000.", 35),
+    RV("Year 1: the Federal Funds Rate is 3%. What would the variable payment be?", ["$250,000", "$150,000", "$300,000", "$100,000"], "3% + 2% = 5%. $5,000,000 × 5% = $250,000.", 40),
+    RV("In Year 1, did the swap help or hurt, and by how much?", ["Hurt by $50,000", "Helped by $50,000", "Hurt by $250,000", "No difference"], "It pays $300,000 fixed instead of $250,000 variable: $50,000 more.", 35),
+    RV("Year 2: the Fed raises the Federal Funds Rate to 5.5%. What would the variable payment be?", ["$375,000", "$275,000", "$350,000", "$300,000"], "5.5% + 2% = 7.5%. $5,000,000 × 7.5% = $375,000.", 40),
+    RV("In Year 2, did the swap help or hurt, and by how much?", ["Helped by $75,000", "Hurt by $75,000", "Helped by $375,000", "No difference"], "It pays $300,000 instead of $375,000: $75,000 saved.", 35),
+    { t: "board" },
+    RV("Why would a company keep a swap even in a year it cost money?", ["It gets predictable payments it can plan around", "It made a mistake and can't fix it", "Swaps always lose money", "The bank forces it to"], "Certainty is what a hedger is paying for."),
+    RV("A $2,000,000 loan is at the Federal Funds Rate + 1.5%. The rate is 4%. What is the yearly variable interest?", ["$110,000", "$80,000", "$30,000", "$1,100,000"], "4% + 1.5% = 5.5%. $2,000,000 × 5.5% = $110,000.", 40),
+    RV("A company wants to stop worrying about its loan payments going up. Which tool fits?", ["An interest rate swap", "Futures", "A call option", "A put option"], "Swapping variable for fixed locks in the payment."),
+    { t: "board" }
+  ]) },
+  cds: { title: "Credit Default Swaps Review", rounds: place([
+    { t: "card", title: "CDS Review", text: "Review. What a credit default swap is, who pays whom, why ratings matter, and the premium math. Calculators out." },
+    RV("The Cousin Loan: you lend your cousin $500 and pay a friend $25 to cover you if he never pays you back. The $25 is like the CDS...", ["Premium", "Face value", "Strike price", "Spread"], "You pay a premium for protection, just like insurance."),
+    RV("A credit default swap works most like...", ["Insurance against a borrower not paying", "A savings account", "A share of stock", "A futures contract on corn"], "A CDS pays off if the borrower defaults."),
+    RV("In a CDS, who pays the yearly premium?", ["The buyer of protection", "The borrower", "The seller of protection", "The Federal Reserve"], "The bond owner buys protection and pays the premium every year."),
+    RV("If the borrower defaults, the seller of protection must...", ["Cover the loss on the bonds", "Do nothing", "Refund only the premium", "Buy more bonds"], "That's the promise the seller made when it collected the premiums."),
+    RV("A company's credit rating is cut from A to BB. Its CDS premium will most likely...", ["Go up", "Go down", "Stay the same", "Disappear"], "A lower rating means a higher chance of default, so protection costs more."),
+    RV("Which company should have the CHEAPEST CDS protection?", ["A company rated AAA", "A company rated B", "A company rated CCC", "A company about to miss a payment"], "The safest borrower is the cheapest to protect."),
+    { t: "card", title: "The Bond Fund", text: "Your fund owns $4,000,000 of a company's bonds. CDS protection costs 2% a year." },
+    RV("What is the yearly premium?", ["$80,000", "$8,000", "$800,000", "$40,000"], "$4,000,000 × 2% = $80,000.", 35),
+    RV("There's no default for 3 years. What did protection cost in total?", ["$240,000", "$80,000", "$160,000", "$120,000"], "$80,000 × 3 = $240,000.", 35),
+    RV("The company defaults after 2 years, and the CDS covers your $4,000,000. What is your net gain on the CDS after premiums?", ["$3,840,000", "$4,000,000", "$3,920,000", "$3,760,000"], "$4,000,000 − ($80,000 × 2) = $3,840,000.", 45),
+    RV("The company never defaulted. Was buying protection a waste?", ["No. Like insurance, you paid for safety you didn't end up needing", "Yes. It never paid anything", "Yes. Premiums are always too high", "No, because the premiums come back at the end"], "A hedge is about protection, not profit."),
+    { t: "board" },
+    RV("In 2008, AIG had sold huge amounts of CDS protection and couldn't pay when defaults hit. What is that risk called?", ["Counterparty risk", "Price risk", "Interest rate risk", "Leverage"], "Your protection is only as good as the company that promised to pay."),
+    RV("Buying CDS on bonds you OWN is ___. Buying CDS on a company whose bonds you don't own, betting it will fail, is ___.", ["Hedging; speculating", "Speculating; hedging", "Hedging; hedging", "Swapping; hedging"], "Protecting something you own is hedging. Betting without owning it is speculating."),
+    RV("You own $1,000,000 of AAA bonds (0.5% a year to protect) and $1,000,000 of B bonds (5% a year). What is the yearly cost to protect both?", ["$55,000", "$5,500", "$50,000", "$550,000"], "$5,000 + $50,000 = $55,000. The riskier bond costs ten times as much to protect.", 40),
+    RV("A bond fund is worried a company won't pay it back. Which tool fits?", ["A credit default swap", "Futures", "A call option", "An interest rate swap"], "A CDS protects against default."),
+    { t: "board" }
+  ]) }
+};
+
+/* =====================================================================
    The games (eight, plus warm-ups)
    ===================================================================== */
 const TOPIC = { futures: "Futures", options: "Options", swaps: "Swaps", cds: "Credit Default Swaps" };
@@ -823,11 +927,12 @@ for (const t of Object.keys(TOPIC)) {
   if (DESK2[t]) GAMES[t + "-desk2"] = { id: t + "-desk2", kind: "desk", topic: t, topicName: TOPIC[t], ...DESK2[t] };
   if (DESK3[t]) GAMES[t + "-desk3"] = { id: t + "-desk3", kind: "desk", topic: t, topicName: TOPIC[t], ...DESK3[t] };
   if (WARMUP[t]) GAMES[t + "-warmup"] = { id: t + "-warmup", kind: "story", warmup: true, topic: t, topicName: TOPIC[t], title: WARMUP[t].title, rounds: WARMUP[t].rounds };
+  if (REVIEW[t]) GAMES[t + "-review"] = { id: t + "-review", kind: "story", review: true, topic: t, topicName: TOPIC[t], title: REVIEW[t].title, rounds: REVIEW[t].rounds };
 }
 // The Futures Exchange (futures-desk) is pulled from class. To bring it back, delete it from HIDDEN and put it back in ORDER.
 export const HIDDEN = ["futures-desk"];
 HIDDEN.forEach(id => delete GAMES[id]);
-export const ORDER = ["futures-warmup", "futures-story", "options-warmup", "options-story", "options-desk", "options-desk2", "options-desk3", "swaps-story", "swaps-desk", "cds-story", "cds-desk"];
+export const ORDER = ["futures-warmup", "futures-story", "futures-review", "options-warmup", "options-story", "options-desk", "options-desk2", "options-desk3", "options-review", "swaps-story", "swaps-desk", "swaps-review", "cds-story", "cds-desk", "cds-review"];
 export const nRounds = id => GAMES[id].rounds.length;
 export const nQuestions = id => GAMES[id].kind === "story" ? GAMES[id].rounds.filter(r => r.t === "q").length : GAMES[id].rounds.length;
 

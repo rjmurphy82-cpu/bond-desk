@@ -72,6 +72,24 @@
       <p>The futures, options and swaps review, built from the Accounting site's Teach It Back. Students join with just their name and get paired at stations: a stayer (station iPad) and a mover. For each derivative: learn a skill together, the mover teaches it, then the stayer teaches it, 4 minutes each. Teachers earn 3× points. A Kahoot break after each derivative, then one Three Clients rotation that mixes all three. 50 minutes.</p>
       <div class="stu"><span>Students go to <b>/teach-it-back</b> or scan the QR</span><span class="go">Host →</span></div>
     </a>
+    <a class="card" href="/deriv-host?g=futures-review">
+      <span class="chip">Unit 5</span>
+      <h2>Test Reviews: Futures, Options, Swaps, CDS</h2>
+      <p>Four Kahoot-style test reviews on the Derivatives Live host screen, one per derivative, listed as "Test review" under each topic. Concept questions first, then the same kind of math as the test with calculators (math questions get up to 45 seconds). Futures (15 questions), Options (16), Swaps (14), CDS (14). About 20 minutes each.</p>
+      <div class="stu"><span>Students go to <b>/deriv</b> or scan the QR</span><span class="go">Host →</span></div>
+    </a>
+    <a class="card" href="/teacher/derivatives-live">
+      <span class="chip">Unit 5</span>
+      <h2>Derivatives Live</h2>
+      <p>The review version of Futures Live, one student per iPad. Four rounds: futures, options, swaps and credit default swaps, with 2 to 4 questions per round. Ends with the Top 5, class results and a "Reteach first" list.</p>
+      <div class="stu"><span>Students go to <b>/derivatives-live</b> or scan the QR</span><span class="go">Host →</span></div>
+    </a>
+    <a class="card" href="/teacher/teach-it-back-review">
+      <span class="chip">Unit 5</span>
+      <h2>Teach It Back: Review</h2>
+      <p>Review Edition of Teach It Back with all new problems. Partners solve every problem together (no teaching role) and get a new partner each rotation. Two 3-minute rotations per derivative, a Kahoot break after each (new review questions), then two Three Clients rotations. About 35 minutes.</p>
+      <div class="stu"><span>Students go to <b>/teach-it-back-review</b> or scan the QR</span><span class="go">Host →</span></div>
+    </a>
     <a class="card" href="/lock-it-in">
       <span class="chip">Unit 5</span>
       <h2>Lock It In</h2>
@@ -306,6 +324,53 @@ const HOW = [
    ],
    need:["A whiteboard, marker and calculator at every station."],
    tip:"Late arrivals can still join: click <b>Add them as extra stayers</b>."},
+ { id:"drev", name:"Test Reviews (Derivatives Live)", unit:"Unit 5", href:"/deriv-host?g=futures-review",
+   games:"Futures Review, Options Review, Swaps Review, CDS Review",
+   who:"1 student per iPad (Kahoot style).", go:"/deriv",
+   learn:[
+    "Futures: pick the side, the gain or loss on the futures, and the price the business really got or paid.",
+    "Options: cost, breakeven, profit, protective puts (the most you can lose) and shares vs. calls.",
+    "Swaps: fixed and variable payments, and whether the swap helped or hurt as rates moved.",
+    "CDS: who pays whom, why ratings change the premium, and the premium math."
+   ],
+   tell:[
+    "Calculators out. Math questions get more time (up to 45 seconds).",
+    "Right answers earn 500 to 1,000 points. Faster right answers earn more. Wrong answers earn 0.",
+    "These questions look like the test. Work each one out."
+   ],
+   strat:["Write the formula first, then plug in the numbers.","On the futures questions, ask: did they buy futures or sell futures?"],
+   steps:[
+    "Open Derivatives Live. Under each topic, pick the game marked <b>Test review</b> and click <b>Start this game</b>.",
+    "Students go to <code>/deriv</code> and type the code and their name.",
+    "Click <b>Start</b>, then <b>Next</b> through each card and question. Leaderboards show along the way.",
+    "When one review ends, open the menu, pick the next topic's review and start it."
+   ],
+   need:["A calculator for every student."],
+   tip:"Run the reviews in test order: futures, options, swaps, then CDS if it's on the test."},
+ { id:"dlive", name:"Derivatives Live", unit:"Unit 5", href:"/teacher/derivatives-live",
+   who:"1 student per iPad (Kahoot style).", go:"/derivatives-live",
+   learn:["One round each on futures, options, swaps and credit default swaps.","Concept questions and test-style math in every round.","A report at the end shows each student what to practice."],
+   tell: KAHOOT_TELL, strat: KAHOOT_STRAT,
+   steps: KAHOOT_STEPS("Derivatives Live", "/derivatives-live"),
+   need:["Calculators. Play it close to the test."],
+   tip:"A student who drops taps <b>Rejoin</b> on their iPad."},
+ { id:"tibr", name:"Teach It Back: Review", unit:"Unit 5", href:"/teacher/teach-it-back-review",
+   who:"Every student joins on their own iPad with just their name. Pairs at stations: the stayer's iPad is the station iPad.", go:"/teach-it-back-review",
+   learn:["The same six skills as Teach It Back, with all new problems.","Two Three Clients rotations at the end mix futures, options and swaps."],
+   tell:[
+    "Every rotation, you and your partner solve the problems together and both earn the points.",
+    "Stayers never move. Movers slide up one station every rotation, so you get a new partner each time.",
+    "A wrong answer gets one more try for half points. Hints cut a problem's points in half, then to a quarter."
+   ],
+   strat:["Both partners should be able to explain every answer.","Save hints for when you're truly stuck."],
+   steps:[
+    "Open the host screen and click <b>Create game</b>. Students scan the QR or go to <b>/teach-it-back-review</b> and type their name.",
+    "Click <b>Assign stations</b> when everyone is in, then <b>Start Rotation 1</b>.",
+    "Each block: <b>Start timer</b> (3 minutes), watch the stations submit, then <b>Next block</b>.",
+    "After the last Three Clients rotation, <b>Final standings</b> runs the podium."
+   ],
+   need:["A whiteboard, marker and calculator at every station."],
+   tip:"About 35 minutes. Games from the original Teach It Back use separate codes."},
  { id:"lock", name:"Lock It In", unit:"Unit 5", href:"/lock-it-in",
    who:"Teams. Projector only, no iPads or Wi-Fi.", go:"Nothing. Students watch the projector.",
    learn:["Review of all four derivatives: futures, options, swaps and credit default swaps.","Uses the story games (prom buses, sneaker drops, tip money, the cousin loan) to bring each one back."],

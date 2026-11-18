@@ -12,6 +12,11 @@ const between=(r,a,b)=>a+Math.floor(r()*(b-a+1));
 function shuffle(r,a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
 const params=new URLSearchParams(location.search);
+/* Review Edition (/teach-it-back-review): same engine, new problems, partners solve together, about 35 minutes. */
+const REVIEW=!!window.TIB_REVIEW;
+const TNAME=REVIEW?"Review":"Derivatives";
+const TPATH=REVIEW?"/teach-it-back-review":"/teach-it-back";
+const SALT=REVIEW?500009:0;
 const HOST=params.has("host");
 const NOCARD=params.has("nocard");
 let FS=store.get("tibFS",1);
@@ -47,17 +52,25 @@ const KNAME={1:"Futures",2:"Options",3:"Swaps"};
 const PAIRS=[["f1","f2"],["o1","o2"],["s1","s2"]];
 const SCHED=[];
 const addRot=o=>{const rot=SCHED.filter(b=>b.type==="rot").length+1;SCHED.push({type:"rot",rot,label:"Rotation "+rot,...o})};
+if(REVIEW){
+  /* Review Edition: every rotation both partners solve together (new partner each time), two skills per derivative,
+     a Kahoot break after each derivative, then two Three Clients rotations. */
+  PAIRS.forEach((pr,ix)=>{pr.forEach(rd=>addRot({round:rd,teach:"co"}));SCHED.push({type:"kahoot",k:ix+1,label:"Kahoot Break "+(ix+1)})});
+  addRot({round:"full",teach:"co"});addRot({round:"full",teach:"co"});
+}else{
 PAIRS.forEach((pr,ix)=>{
   addRot({pair:pr,phase:"co",teach:"co"});addRot({pair:pr,phase:"mt",teach:"move"});addRot({pair:pr,phase:"st",teach:"stay"});
   SCHED.push({type:"kahoot",k:ix+1,label:"Kahoot Break "+(ix+1)});
 });
 addRot({round:"full",teach:"co"});
+}
 const ROT_TOTAL=SCHED.filter(b=>b.type==="rot").length;
 function wrapFix(N,station){return N>2&&N%2===1&&station===1}
 function roundAt(b,station,N){if(!b.pair)return b.round;const odd=station%2===1;if(b.phase==="st"&&wrapFix(N,station))return b.pair[0];return b.phase==="co"?(odd?b.pair[0]:b.pair[1]):(odd?b.pair[1]:b.pair[0])}
 function teachAt(b,station,N){return b.pair&&b.phase==="mt"&&wrapFix(N,station)?"co":b.teach}
 /* 50 minutes: 9 skill rotations (36), 3 Kahoot breaks (9), 1 Three Clients (5). */
-const MINUTES={rot:4,full:5,kahoot:3,def:3};
+/* Review Edition: 6 skill rotations (18), 3 Kahoot breaks (9), 2 Three Clients (8) = 35 minutes. */
+const MINUTES=REVIEW?{rot:3,full:4,kahoot:3,def:3}:{rot:4,full:5,kahoot:3,def:3};
 function blockMinutes(b){return b.type==="kahoot"?MINUTES.kahoot:b.type==="def"?MINUTES.def:(b.round==="full"?MINUTES.full:MINUTES.rot)}
 const PHASE_NAME={co:"learn together",mt:"mover teaches",st:"stayer teaches"};
 const SCHED_NO=x=>x.type==="kahoot"?"Quiz "+x.k:x.type==="def"?"Def "+x.d:"Rot "+x.rot;
@@ -306,7 +319,7 @@ const MAIN_COUNT={f1:1,f2:1,o1:1,o2:1,s1:1,s2:1,full:1};
 /* Problem k of a set: k=0 and k=1 are the two versions of the skill (call and put, buyer and seller, falls and rises...).
    Half the stations get them in the other order. */
 function buildSet(station,bIdx,round){
-  const r=rng(station*7919+bIdx*104729+13),flip=r()<.5?1:0,probs=[];
+  const r=rng(station*7919+bIdx*104729+13+SALT),flip=r()<.5?1:0,probs=[];
   for(let k=0;k<MAIN_COUNT[round];k++)probs.push(GEN[round](r,false,(k+flip)%2));
   return{probs,bonus:GEN[round](r,true)}
 }
@@ -363,7 +376,7 @@ const QUICK={
   return QUICK[pick(r,["f1","f2","o1","o2","s1","s2"])](r)}
 };
 function bonusAt(station,bIdx,round,k){
-  return QUICK[round](rng(station*7919+bIdx*104729+977*(k+1)+31))}
+  return QUICK[round](rng(station*7919+bIdx*104729+977*(k+1)+31+SALT))}
 
 /* ================= kahoot banks ================= */
 const KAHOOT={
@@ -396,6 +409,36 @@ const KAHOOT={
  ["Pay a premium for the right, but not the obligation, to buy later. Which tool?",["Option","Futures","Swap","A loan"],0,"A right you pay a premium for."]]
 };
 
+/* Review Edition Kahoot breaks: new test-style questions. Right answer listed first (index 0); shuffled when shown. */
+const KAHOOT_R={
+1:[
+ ["A cattle ranch will sell its herd in the fall. To hedge, it should:",["Sell cattle futures","Buy cattle futures","Buy a call","Swap to a fixed rate"],0,"Sellers are hurt when prices fall."],
+ ["A pizza chain buys cheese every month. To hedge, it should:",["Buy cheese futures","Sell cheese futures","Buy a put","Do nothing"],0,"Buyers are hurt when prices rise."],
+ ["You SOLD 10,000 bushels of corn futures at $4.80. At delivery corn is $4.30. The futures:",["Gain $5,000","Lose $5,000","Gain $500","Gain $43,000"],0,"Sold futures: (Futures − Delivery) × Quantity."],
+ ["You BOUGHT 20,000 gallons of diesel futures at $3.50. At delivery diesel is $3.90. The futures:",["Gain $8,000","Lose $8,000","Gain $800","Lose $800"],0,"Bought futures: (Delivery − Futures) × Quantity."],
+ ["A bakery bought wheat futures at $6.20 and pays $6.90 at the market. What did it really pay per bushel?",["$6.20","$6.90","$0.70","$7.60"],0,"The hedge lands on the locked price."],
+ ["A trader with no oil buys oil futures, hoping prices jump. He is:",["Speculating","Hedging","Swapping","Insuring"],0,"No oil to protect."],
+ ["If the buyer of a futures contract gains $20,000, the seller:",["Loses $20,000","Gains $20,000","Breaks even","Gets a refund"],0,"One side's gain is the other side's loss."],
+ ["A farmer's futures lost money because corn prices rose. Was hedging a mistake?",["No. She sold her corn for more and still got her locked price","Yes. She lost money","Yes. She should have speculated","No. Futures can't lose"],0,"The goal is a known price."]],
+2:[
+ ["You buy 2 calls, $40 strike, $3 premium. Total cost:",["$600","$300","$6","$8,000"],0,"Premium × 100 × contracts."],
+ ["A $45 call costs a $3 premium. Breakeven:",["$48","$42","$45","$300"],0,"Strike + premium."],
+ ["An $80 put costs a $5 premium. Breakeven:",["$75","$85","$80","$500"],0,"Strike − premium."],
+ ["1 call, $40 strike, $3 premium. The stock closes at $48. Profit:",["$500","$800","$300","$1,100"],0,"(Close − Strike − Premium) × 100."],
+ ["1 call, $60 strike, $4 premium. The stock closes at $57. Result:",["Lose $400","Lose $300","Make $300","Lose $700"],0,"Below the strike, the call pays $0."],
+ ["You own 100 shares bought at $60 and buy a $55 put for $2. The most you can lose:",["$700","$500","$200","$5,500"],0,"(Purchase − Strike + Premium) × 100."],
+ ["Why can calls give a bigger percent return than shares?",["A small premium controls 100 shares","Calls never lose","Calls pay dividends","Shares can't rise"],0,"Leverage."],
+ ["You spend all your money on calls and the stock doesn't move. You:",["Lose the entire premium","Break even","Double your money","Must buy the shares"],0,"Leverage cuts both ways."]],
+3:[
+ ["A $5,000,000 loan is swapped to a fixed 6%. Yearly payment:",["$300,000","$30,000","$600,000","$3,000,000"],0,"Loan × rate."],
+ ["A $5,000,000 loan pays FF + 2%. FF is 3%. Yearly variable payment:",["$250,000","$150,000","$300,000","$100,000"],0,"Add the rates first: 3% + 2%."],
+ ["Fixed is $300,000; variable would be $250,000. The swap:",["Hurt by $50,000","Helped by $50,000","Hurt by $250,000","Made no difference"],0,"Compare the two payments."],
+ ["Fixed is $300,000; after a rate hike, variable would be $375,000. The swap:",["Helped by $75,000","Hurt by $75,000","Helped by $375,000","Made no difference"],0,"The fixed payment didn't move."],
+ ["Rates FALL. Who comes out ahead in a fixed-for-variable swap?",["The variable-rate payer","The fixed-rate payer","Neither","Both"],0,"Variable payments shrink."],
+ ["In a swap, the loan amounts themselves:",["Never change hands","Are traded every year","Are traded at the end","Double"],0,"Only interest payments are traded."],
+ ["Lock in the price of diesel you'll buy in May, no way out. Which tool?",["Futures","Option","Swap","A bond"],0,"Locked price, both sides must follow through."],
+ ["Protect shares you own from a drop but keep the upside. Which tool?",["A put option","Sell futures","A swap","A call option"],0,"The right to sell at the strike."]]
+};
 /* ================= formula card overlay ================= */
 function formulaOverlay(){
   const o=document.createElement("div");o.className="ovl";
@@ -414,12 +457,12 @@ const ACCTS=[];
 /* ================= live game ================= */
 const ROLE=window.TIB_ROLE||"station";
 const MOCK=/[?&]mock=1/.test(location.search);
-const GAME="teachback-deriv";
+const GAME=REVIEW?"teachback-deriv-review":"teachback-deriv";
 const TEACH_X=3; // teachers earn triple
 
 /* ---------- backend (same database as the other live games) ---------- */
 function mockNet(){
-  const KEY="tibLiveMock",bc=("BroadcastChannel" in window)?new BroadcastChannel(KEY):null,subs=[];
+  const KEY=REVIEW?"tibReviewMock":"tibLiveMock",bc=("BroadcastChannel" in window)?new BroadcastChannel(KEY):null,subs=[];
   const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){return{}}};
   const write=t=>{localStorage.setItem(KEY,JSON.stringify(t));fire();if(bc)bc.postMessage(1)};
   const at=(t,p)=>p.split("/").filter(Boolean).reduce((o,k)=>o==null?undefined:o[k],t);
@@ -484,8 +527,8 @@ let ME=null; // {code,station}
 let CUR=null; // {block} currently rendered
 let LIVE={state:null,recs:{}};
 let KTIMER=null;
-const SKEY="tibPlayer";
-function lkey(b){return `tib_${ME.code}_s${ME.station}_b${b}`}
+const SKEY=REVIEW?"tibReviewPlayer":"tibPlayer";
+function lkey(b){return `tib${REVIEW?"r":""}_${ME.code}_s${ME.station}_b${b}`}
 let GCODE="";
 function normName(n){return String(n||"").trim().replace(/\s+/g," ").toLowerCase()}
 async function joinForm(err){
@@ -493,7 +536,7 @@ async function joinForm(err){
   CUR=null;
   const sess=store.get(SKEY,null)||{};const qc=params.get("code");
   const code0=qc&&/^\d{4}$/.test(qc)?qc:(sess.code||"");
-  $("#ttl").innerHTML="Teach It Back: <span>Derivatives</span>";
+  $("#ttl").innerHTML=`Teach It Back: <span>${TNAME}</span>`;
   app.innerHTML=`<div class="panel" style="max-width:640px;margin:0 auto"><h1 style="font-size:38px;margin-bottom:6px">Join Teach It Back</h1>
    <p class="muted">Type your name. Your teacher will put you at a station with a partner.</p>
    <div class="fld"><label>Game code</label><input id="jc" inputmode="numeric" maxlength="4" value="${esc(code0)}" style="text-align:center;letter-spacing:.2em"></div>
@@ -552,7 +595,7 @@ function companionRender(seat){
     const b=SCHED[st.block],at=seatNow(seat,st.block,N),pr=pairAt(recs,at,st.block,N)||{stay:[],move:""},host=recs["s"+at]||{};
     const mates=[...pr.stay,pr.move].filter(n=>n&&normName(n)!==normName(DEV.name));
     let role="";
-    if(b.type==="rot"&&teachAt(b,at,N)==="co")role=`<div style="border-radius:12px;padding:14px 18px;color:#fff;background:var(--k2);font-size:1.2em;margin-top:12px"><b class="osw" style="font-size:1.5em;display:block">Learn it together · 1× points</b>You're both learners. Next rotation, one of you teaches it.</div>`;
+    if(b.type==="rot"&&teachAt(b,at,N)==="co")role=`<div style="border-radius:12px;padding:14px 18px;color:#fff;background:var(--k2);font-size:1.2em;margin-top:12px"><b class="osw" style="font-size:1.5em;display:block">${REVIEW?"Solve it together · both earn the points":"Learn it together · 1× points"}</b>${REVIEW?"Work every problem as a team. Next rotation you get a new partner.":"You're both learners. Next rotation, one of you teaches it."}</div>`;
     else if(b.type==="rot"){const teach=(b.teach==="move")===(seat.role==="move");
       role=`<div class="${teach?"te":"le"}" style="border-radius:12px;padding:14px 18px;color:#fff;background:${teach?"var(--ink)":"var(--red)"};font-size:1.2em;margin-top:12px"><b class="osw" style="font-size:1.5em;display:block">${teach?"You're the TEACHER · 3× points":"You're the LEARNER · 1× points"}</b>${teach?"Coach on the whiteboard. Don't touch the iPad.":"Work it out on the whiteboard, then type it in."}</div>`}
     else role=`<div style="border-radius:12px;padding:14px 18px;color:#fff;background:var(--k2);font-size:1.2em;margin-top:12px"><b class="osw" style="font-size:1.5em;display:block">${b.type==="kahoot"?"Kahoot Break":"Define It"}: you're teammates</b>You both get the points.</div>`;
@@ -625,7 +668,7 @@ function rotation(bIdx){
   $("#ttl").innerHTML=`Station ${ME.station} · ${b.label}: <span>${R.name}</span>`;
   const nm=names(bIdx),TT=teachAt(b,ME.station,SN),stay=TT==="stay",co=TT==="co";
   const tName=stay?nm.stay.join(" & "):nm.move,lName=stay?nm.move:nm.stay.join(" & ");
-  const roleHTML=()=>co?`<div class="role"><div class="le" style="grid-column:span 2;background:var(--k2)"><small>LEARN IT TOGETHER · both earn 1×</small><b>${esc([...nm.stay,nm.move].join(" & "))}</b><small>You're both learners this time. Next rotation one of you teaches ${esc(R.name)} to a new partner, so make sure you BOTH can do it. <button class="btn" id="exBtn" data-ex="${RK}|${ME.station*97+bIdx*13+5}" style="background:#fff;color:var(--k2);padding:6px 12px;margin-left:8px;font-size:.95em">📖 Show a worked example</button></small></div></div><div id="exBox"></div>`:`<div class="role"><div class="te"><small>TEACHER · earns ${TEACH_X}× points</small><b>${esc(tName)}</b><small>${stay?"Stays here":"Just moved here"}. Coach on the whiteboard. Don't touch the iPad.</small></div>
+  const roleHTML=()=>co?`<div class="role"><div class="le" style="grid-column:span 2;background:var(--k2)"><small>${REVIEW?"SOLVE IT TOGETHER · both earn the points":"LEARN IT TOGETHER · both earn 1×"}</small><b>${esc([...nm.stay,nm.move].join(" & "))}</b><small>${REVIEW?`Review: work it out as a team and make sure you BOTH can explain the answer. New partner next rotation.`:`You're both learners this time. Next rotation one of you teaches ${esc(R.name)} to a new partner, so make sure you BOTH can do it.`} <button class="btn" id="exBtn" data-ex="${RK}|${ME.station*97+bIdx*13+5}" style="background:#fff;color:var(--k2);padding:6px 12px;margin-left:8px;font-size:.95em">📖 Show a worked example</button></small></div></div><div id="exBox"></div>`:`<div class="role"><div class="te"><small>TEACHER · earns ${TEACH_X}× points</small><b>${esc(tName)}</b><small>${stay?"Stays here":"Just moved here"}. Coach on the whiteboard. Don't touch the iPad.</small></div>
     <div class="le"><small>LEARNER · earns 1× points</small><b>${esc(lName)}</b><small>${stay?"Just moved here":"Stays here"}. Work it out on the whiteboard, then type it in.</small></div></div>`;
   function draw(){
     if(!live())return;
@@ -788,7 +831,7 @@ function kahoot(bIdx){
   let st=store.get(lkey(bIdx),null);
   $("#ttl").innerHTML=`Station ${ME.station} · <span>${b.label}</span>`;
   const r=rng(ME.station*31+b.k*977);
-  const qs=shuffle(r,KAHOOT[b.k]).map(([q,o,a,h])=>{const idx=shuffle(r,[0,1,2,3]);return{q,o:idx.map(i=>o[i]),a:idx.indexOf(a),h}});
+  const qs=shuffle(r,(REVIEW?KAHOOT_R:KAHOOT)[b.k]).map(([q,o,a,h])=>{const idx=shuffle(r,[0,1,2,3]);return{q,o:idx.map(i=>o[i]),a:idx.indexOf(a),h}});
   const N=qs.length;
   let qi=(st&&st.qi)||0,total=(st&&st.total)||0,right=(st&&st.right)||0,bpts=(st&&st.bpts)||0;
   const save=()=>{store.set(lkey(bIdx),{qi,total,right,bpts});pushResult(bIdx,{pts:total,done:qi>=N,bon:Math.max(0,qi-N)})};
@@ -819,14 +862,14 @@ function kahoot(bIdx){
 
 /* ============================================================ TEACHER (projector) */
 let H=null; // {N,code,state,recs,off}
-const HKEY="tibHostCode";
+const HKEY=REVIEW?"tibReviewHostCode":"tibHostCode";
 async function hostSetup(err){
   const N=await net().catch(()=>null);if(!N)return needSetup();
   stopFireworks();
-  $("#ttl").innerHTML="Teach It Back: <span>Derivatives</span> &nbsp;·&nbsp; Teacher";
+  $("#ttl").innerHTML=`Teach It Back: <span>${TNAME}</span> &nbsp;·&nbsp; Teacher`;
   let last="";try{last=localStorage.getItem(HKEY)||""}catch(e){}
-  app.innerHTML=`<div class="panel" style="max-width:820px;margin:20px auto"><h1 style="font-size:44px">Teach It Back: Derivatives</h1>
-   <p style="font-size:1.1em">Pairs at stations, one iPad per station. Every rotation the pair gets a new partner, a new skill or a new problem, and the learner from the last rotation becomes the teacher. Teachers earn <b>${TEACH_X}× points</b>, learners 1×. One derivative at a time: futures, then options, then swaps. Each one gets three 4-minute rotations and a Kahoot break. Then one Three Clients rotation mixes all three. About 50 minutes; click any block in the schedule to skip ahead. If a tab closes, <b>Resume</b> picks the game back up for 4 hours.</p>
+  app.innerHTML=`<div class="panel" style="max-width:820px;margin:20px auto"><h1 style="font-size:44px">Teach It Back: ${TNAME}</h1>
+   <p style="font-size:1.1em">Pairs at stations, one iPad per station. Every rotation the pair gets a new partner, a new skill or a new problem, and the learner from the last rotation becomes the teacher. Teachers earn <b>${TEACH_X}× points</b>, learners 1×. ${REVIEW?"Review Edition: new problems, and partners solve every problem together (no teaching role, both earn points), with a new partner each rotation. Two 3-minute rotations per derivative (futures, then options, then swaps), each followed by a Kahoot break, then two Three Clients rotations that mix all three. About 35 minutes;":"One derivative at a time: futures, then options, then swaps. Each one gets three 4-minute rotations and a Kahoot break. Then one Three Clients rotation mixes all three. About 50 minutes;"} click any block in the schedule to skip ahead. If a tab closes, <b>Resume</b> picks the game back up for 4 hours.</p>
    <div class="acts"><button class="btn" id="go">Create game</button></div>
    <h3 style="margin-top:22px">Resume a game</h3><div class="row" style="margin-top:8px"><input id="rc" value="${esc(last)}" maxlength="4" inputmode="numeric" style="width:130px;padding:10px;font-size:22px;letter-spacing:.2em;text-align:center;border:2px solid var(--ln);border-radius:9px"><button class="btn sec" id="resume">Resume</button></div>
    <div id="rer" style="color:var(--red);font-weight:700;margin-top:8px">${err||""}</div></div>`;
@@ -886,9 +929,9 @@ async function placeLate(){
 }
 function hostLobby(){
   const ps=hostPlayers(),A=H.state.assign,list=stationList(),late=A?unplaced():[];
-  const joinURL=location.origin+"/teach-it-back?code="+H.code;
-  const url=location.host?location.host+"/teach-it-back":"/teach-it-back";
-  $("#ttl").innerHTML=`Teach It Back: <span>Derivatives</span> &nbsp;·&nbsp; Code ${H.code}`;
+  const joinURL=location.origin+TPATH+"?code="+H.code;
+  const url=location.host?location.host+TPATH:TPATH;
+  $("#ttl").innerHTML=`Teach It Back: <span>${TNAME}</span> &nbsp;·&nbsp; Code ${H.code}`;
   const right=!A?`<h3 style="font-size:28px">Students joined: ${ps.length}</h3><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">${ps.map(p=>`<span style="background:var(--bg);border-radius:20px;padding:6px 14px;font-size:20px">${esc(p.name)}</span>`).join("")||`<p class="muted" style="font-size:20px">Waiting for students...</p>`}</div>`
     :`<h3 style="font-size:28px">${list.length} stations</h3><table class="pvt" style="font-size:19px;margin-top:10px"><tr><th>#</th><th style="text-align:left">Stayer (station iPad)</th><th style="text-align:left">Starting mover</th></tr>
       ${list.map(r=>`<tr><td>${r.station}</td><td style="text-align:left">${esc(r.stay)}${r.stay2?" & "+esc(r.stay2):""}${r.stay3?" & "+esc(r.stay3):""}</td><td style="text-align:left">${esc(r.move)}</td></tr>`).join("")}</table>
@@ -909,10 +952,10 @@ function hostLobby(){
 }
 function hostPlay(){
   const st=H.state,b=SCHED[st.block];
-  $("#ttl").innerHTML=`Teach It Back: <span>Derivatives</span> &nbsp;·&nbsp; Code ${H.code}`;
+  $("#ttl").innerHTML=`Teach It Back: <span>${TNAME}</span> &nbsp;·&nbsp; Code ${H.code}`;
   const what=b.type==="kahoot"?`<small>Kahoot Break ${b.k} of 3 · ${KNAME[b.k]}</small>Partners are teammates`:b.type==="def"?`<small>Define It ${b.d} of 3 · ${KNAME[b.d]}</small>Write it. Then spot the real one.`:(b.pair?`<small>${b.label} of ${ROT_TOTAL} · ${ROUNDS[b.pair[0]].unit} · ${PHASE_NAME[b.phase]}</small><span style="font-size:.8em">Odd stations: ${ROUNDS[roundAt(b,3,st.stations)].name}<br>Even stations: ${ROUNDS[roundAt(b,2,st.stations)].name}${wrapFix(st.stations,1)&&b.phase!=="co"?`<br>Station 1: ${ROUNDS[roundAt(b,1,st.stations)].name}${b.phase==="mt"?" (learn together)":""}`:""}</span>`:`<small>${b.label} of ${ROT_TOTAL}</small>${ROUNDS[b.round].name}`);
   const roles=b.type==="def"?"":b.type==="kahoot"?`<div class="whob"><div style="background:var(--k2);grid-column:span 2"><b>Stay with your partner</b>Answer together. You both get the points.</div></div>`
-   :b.teach==="co"?`<div class="whob"><div style="background:var(--k2);grid-column:span 2"><b>LEARN IT TOGETHER · 1× points</b>Both partners are learners. Use the free worked example if you need it.</div></div>`
+   :b.teach==="co"?`<div class="whob"><div style="background:var(--k2);grid-column:span 2"><b>${REVIEW?"SOLVE IT TOGETHER · both earn the points":"LEARN IT TOGETHER · 1× points"}</b>${REVIEW?"Partners work every problem as a team. New partner next rotation.":"Both partners are learners. Use the free worked example if you need it."}</div></div>`
    :`<div class="whob"><div style="background:var(--ink)"><b>TEACHER · ${TEACH_X}× points</b>${b.teach==="stay"?"The STAYER":"The MOVER"}</div><div style="background:var(--red)"><b>LEARNER · 1× points</b>${b.teach==="stay"?"The MOVER":"The STAYER"}</div></div>`;
   const move=b.type==="def"?"No moving. Same partner as the Kahoot break.":b.type==="kahoot"?"No moving. Same partner as the last rotation.":(b.rot===1?"Movers: start at your own station.":"MOVERS: slide up one station. The last station goes to Station 1.");
   const note=b.type==="rot"&&b.pair?(b.phase==="co"?"Two new skills: odd and even stations learn different ones. Next rotation, each mover teaches theirs to a partner who learned the other.":b.phase==="mt"?"Movers teach the skill they just learned. Stayers learn it.":"Stayers teach the skill they learned last rotation to a mover who hasn't had it."):b.type==="rot"?"Futures, options and swaps in one problem, then name the tool. Both partners work it together.":"";
@@ -991,7 +1034,7 @@ function fullStandings(){
   $("#bk").onclick=()=>{if(H.state.phase==="end")finale();else hostRender(true)};
   $("#csv").onclick=()=>{const rows=[["Rank","Student","Total","From teaching"],...order.map(n=>[rk[n],n,tot[n],tch[n]])];
     const blob=new Blob([rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(",")).join("\n")],{type:"text/csv"});
-    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`teach-it-back-${H.code}.csv`;a.click()};
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`teach-it-back${REVIEW?"-review":""}-${H.code}.csv`;a.click()};
 }
 /* ---------- finale (5th to 1st, slow, with room for applause) ---------- */
 function fanfare(){[[523,0],[659,.12],[784,.24],[1047,.4]].forEach(([f,t])=>setTimeout(()=>beep(f,.35),t*1000))}
@@ -1026,7 +1069,7 @@ function finale(){
   const rows=top.slice(3).map((n,k)=>`<div class="row45" data-i="${k+3}"><span class="r">${rk[n]}</span><span class="n">${esc(n)}</span><span class="s">${fmt(tot[n])}</span></div>`).join("");
   document.body.classList.add("finale-on");
   app.innerHTML=`<div class="finale"><canvas id="fw"></canvas><div class="rays"></div>
-    <div class="fhead"><img class="lg" src="/logo-214.png" alt="District 214"><div class="kick">Teach It Back · Derivatives</div><h2>Final standings</h2></div>
+    <div class="fhead"><img class="lg" src="/logo-214.png" alt="District 214"><div class="kick">Teach It Back · ${TNAME}</div><h2>Final standings</h2></div>
     <div class="podium">${slot(order[1],1,"p2")}${slot(order[0],0,"p1")}${slot(order[2],2,"p3")}</div><div class="rest">${rows}</div>
     <div class="fbar"><button class="btn" id="cr">All standings</button><button class="btn" id="again">Replay</button><button class="btn" id="resumeG">Back to the game</button><button class="btn" id="erase">Erase game</button></div></div>`;
   $("#cr").onclick=()=>fullStandings();$("#again").onclick=()=>{stopFireworks();finale()};$("#erase").onclick=()=>{stopFireworks();hostErase()};
