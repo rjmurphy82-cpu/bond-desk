@@ -310,42 +310,90 @@ function buildSet(station,bIdx,round){
   for(let k=0;k<MAIN_COUNT[round];k++)probs.push(GEN[round](r,false,(k+flip)%2));
   return{probs,bonus:GEN[round](r,true)}
 }
-/* Bonus problems never run out: after the main problems, a new one appears every time until the teacher moves on.
-   They alternate between the harder bonus version and a fresh regular problem of the same skill. */
+/* Bonus problems never run out: after the main problem, a new one appears every time until the teacher moves on.
+   They are QUICK: one answer each, so pairs keep moving. */
+const QUICK={
+ f1(r){const c=pick(r,FUT);if(r()<.5){const q=pick(r,c.q);
+    return{title:"Quick: pick the side",text:`${c.w} ${c.a==="buy"?"needs to buy":"will sell"} ${fmt(q)} ${pl(c,q)} of ${c.it} in ${pick(r,MONTHS)}.`,
+     fields:[{k:"q",label:"To hedge, it should",kind:"choice",opts:SIDE,ans:c.a==="buy"?SIDE[0]:SIDE[1]}],why:sideWhy(c),
+     hints:["Does it BUY the item or SELL it?","Buyers buy futures. Sellers sell futures."]}}
+  const x=futCase(r,c,r()<.5),g=x.pnl>0?"Gain":"Loss";
+  return{title:"Quick: gain or loss?",text:`${c.w} ${c.a==="buy"?"bought":"sold"} ${c.it} futures at ${fp(x.F,c)}. At delivery, ${c.it} is ${fp(x.S,c)}.`,
+   fields:[{k:"q",label:"The futures position had a",kind:"choice",opts:GL,ans:g}],why:`${futMath(x)}: a ${g.toLowerCase()}.`,
+   hints:["Bought futures gain when the price goes UP.","Sold futures gain when the price goes DOWN."]}},
+ f2(r){const x=futCase(r),c=x.c;if(r()<.6)
+    return{title:"Quick: futures gain or loss",text:`${c.w} ${c.a==="buy"?"bought":"sold"} <b>${fmt(x.q)} ${pl(c,x.q)}</b> of ${c.it} futures at <b>${fp(x.F,c)}</b>. At delivery, ${c.it} is <b>${fp(x.S,c)}</b>.`,
+     fields:[{k:"q",label:"Futures gain or loss (− for a loss)",kind:"signed",ans:x.pnl}],why:futMath(x)+".",
+     hints:["Bought: (Delivery − Futures) × Quantity. Sold: (Futures − Delivery) × Quantity.",`Start with the price difference: ${fp(x.S,c)} vs. ${fp(x.F,c)}.`]};
+  return{title:"Quick: locked-in price",text:`${c.w} hedged ${c.it} with futures at <b>${fp(x.F,c)}</b>. At delivery, ${c.it} is <b>${fp(x.S,c)}</b>.`,
+   fields:[{k:"q",label:`Effective ${c.a==="buy"?"cost":"price"} per ${c.u}`,kind:"cents",ans:x.F}],why:`The futures gain or loss makes up the difference, so ${c.w} ends up at the futures price: ${fp(x.F,c)}.`,
+   hints:["A hedge locks in a price.","Which price did it lock in?"]}},
+ o1(r){const call=r()<.5,K=pick(r,[25,30,40,45,50,60,75,80]),p=pick(r,[1,1.5,2,2.5,3,4]);
+  if(r()<.5){const be=call?K+p:K-p;return{title:"Quick: breakeven",text:`A ${call?"call":"put"} with a <b>${px(K)} strike</b> costs a <b>${px(p)} premium</b>.`,
+    fields:[{k:"q",label:"Breakeven price",kind:"cents",ans:be}],why:`${call?"Call":"Put"}: ${px(K)} ${call?"+":"−"} ${px(p)} = ${cents(be)}.`,
+    hints:["Call breakeven = strike + premium.","Put breakeven = strike − premium."]}}
+  const S=call?K+pick(r,[-3,2,4,6,8]):K-pick(r,[-3,2,4,6,8]),pay=Math.max(call?S-K:K-S,0)*100;
+  return{title:"Quick: payoff",text:`You own one <b>${px(K)} ${call?"call":"put"}</b> contract (100 shares). At expiration the stock is <b>${px(S)}</b>.`,
+   fields:[{k:"q",label:"Option payoff (before the premium)",kind:"money",ans:pay}],why:`max(${call?px(S)+" − "+px(K):px(K)+" − "+px(S)}, 0) × 100 = ${money(pay)}.`,
+   hints:[call?"Call payoff = max(Price − Strike, 0).":"Put payoff = max(Strike − Price, 0).","Multiply by 100 shares. Out of the money pays $0."]}},
+ o2(r){if(r()<.5){const sh=pick(r,[100,200,300,500,1000]),p=pick(r,[1,1.5,2,2.5,3]),K=pick(r,[40,45,50,60]);
+    return{title:"Quick: cost to hedge",text:`You buy puts on <b>${fmt(sh)} shares</b>: <b>${px(K)} strike</b>, <b>${px(p)} premium</b> per share.`,
+     fields:[{k:"q",label:"Total cost to hedge",kind:"money",ans:r2(sh*p)}],why:`${fmt(sh)} × ${px(p)} = ${money(sh*p)}. The strike is not a cost.`,
+     hints:["You pay the premium on every share.","The strike price is not a cost."]}}
+  const x=protCase(r,r()<.6);
+  return{title:"Quick: put payoff",text:`You own 100 shares of ${x.tk} with a <b>${px(x.K)} protective put</b>. ${x.tk} is now <b>${px(x.S)}</b>.`,
+   fields:[{k:"q",label:"Put payoff",kind:"money",ans:x.pay}],why:`max(${px(x.K)} − ${px(x.S)}, 0) × 100 = ${money(x.pay)}.`,
+   hints:["Put payoff = max(Strike − Price, 0) × 100.","Above the strike, the put pays $0."]}},
+ s1(r){const s=swapCase(r,null),w=s.win===s.A?"Company A":"Company B";
+  return{title:"Quick: who comes out ahead?",text:`Company A pays <b>FF + ${s.sp}%</b>. Company B pays a <b>fixed ${s.fx}%</b>. They swap: A now pays fixed, B now pays variable. FF is <b>${s.ff}%</b>.`,
+   fields:[{k:"q",label:"Who comes out ahead?",kind:"choice",opts:["Company A","Company B","Neither"],ans:w}],
+   why:`Variable: ${s.ff}% + ${s.sp}% = ${s.vr}% vs. fixed ${s.fx}%. ${s.vr>s.fx?"Variable costs more, so A (now paying fixed) comes out ahead.":"Variable costs less, so B (now paying variable) comes out ahead."}`,
+   hints:["Variable rate = FF + spread.","If variable is higher than fixed, the fixed payer wins."]}},
+ s2(r){const s=swapCase(r,null);if(r()<.5)
+    return{title:"Quick: variable interest",text:`A <b>${money(s.n)}</b> loan pays the <b>Federal Funds Rate + ${s.sp}%</b>. FF is <b>${s.ff}%</b>.`,
+     fields:[{k:"q",label:"Yearly interest",kind:"money",ans:s.before}],why:`${money(s.n)} × (${s.ff}% + ${s.sp}%) = ${money(s.n)} × ${s.vr}% = ${money(s.before)}.`,
+     hints:["Add the spread to the Federal Funds Rate first.",`Then: ${money(s.n)} × ${s.vr}%.`]};
+  return{title:"Quick: how much ahead?",text:`On a <b>${money(s.n)}</b> loan, the variable rate is <b>${s.vr}%</b> and the fixed rate is <b>${s.fx}%</b>.`,
+   fields:[{k:"q",label:"Difference in yearly interest",kind:"money",ans:s.gap}],why:`${money(s.n)} × ${s.vr}% = ${money(s.before)}; ${money(s.n)} × ${s.fx}% = ${money(s.after)}. Difference: ${money(s.gap)}.`,
+   hints:["Find each yearly payment: loan × rate.","Or: loan × the difference in the rates."]}},
+ full(r){if(r()<.4){const [t,a]=pick(r,TOOL_POOL);
+    return{title:"Quick: name the tool",text:t,fields:[{k:"q",label:"Which derivative?",kind:"choice",opts:TOOLS,ans:a}],
+     why:a==="Futures"?"A price locked today for a later trade: futures.":a==="Option"?"A right, not an obligation, bought with a premium: an option.":"Trading a changing payment for a fixed one: a swap.",
+     hints:["Locked-in price, no way out: futures. A right you pay a premium for: option.","Trading a changing payment for a fixed one: swap."]}}
+  return QUICK[pick(r,["f1","f2","o1","o2","s1","s2"])](r)}
+};
 function bonusAt(station,bIdx,round,k){
-  const r=rng(station*7919+bIdx*104729+977*(k+1)+31);
-  if(round==="full"||k%2===0)return GEN[round](r,true);
-  return GEN[round](r,false,((k-1)/2)%2)}
+  return QUICK[round](rng(station*7919+bIdx*104729+977*(k+1)+31))}
 
 /* ================= kahoot banks ================= */
 const KAHOOT={
 1:[
- ["A futures contract is:",["An agreement today to buy or sell later at a locked price","The right, but not the obligation, to buy","A trade of fixed and variable payments","Insurance against a default"],0],
- ["A bakery will buy wheat in three months. To hedge, it should:",["Buy wheat futures","Sell wheat futures","Buy a put on wheat","Do nothing"],0],
- ["A corn farmer will sell her crop at harvest. To hedge, she should:",["Buy corn futures","Sell corn futures","Swap to a fixed rate","Buy a call"],1],
- ["A business that BUYS a commodity is hurt when its price:",["Rises","Falls","Stays flat","It doesn't matter"],0],
- ["An airline bought jet fuel futures. Then fuel prices fall. The futures:",["Lose money, but the airline pays less for fuel","Gain money","Are cancelled","Pay a dividend"],0],
- ["You BOUGHT futures at $6.00. At delivery the price is $6.50. Per unit, the futures:",["Gain $0.50","Lose $0.50","Gain $6.50","Break even"],0],
- ["You SOLD futures at $4.50. At delivery the price is $4.00. Per unit, the futures:",["Gain $0.50","Lose $0.50","Lose $4.00","Break even"],0],
- ["What does a good futures hedge give a business?",["A known price, wherever the market goes","A guaranteed profit","The lowest possible price","Free insurance"],0]],
+ ["A futures contract is:",["An agreement today to buy or sell later at a locked price","The right, but not the obligation, to buy","A trade of fixed and variable payments","Insurance against a default"],0,"It's about a price you lock in now for later."],
+ ["A bakery will buy wheat in three months. To hedge, it should:",["Buy wheat futures","Sell wheat futures","Buy a put on wheat","Do nothing"],0,"Buyers are hurt when prices rise. Buyers buy futures."],
+ ["A corn farmer will sell her crop at harvest. To hedge, she should:",["Buy corn futures","Sell corn futures","Swap to a fixed rate","Buy a call"],1,"Sellers are hurt when prices fall. Sellers sell futures."],
+ ["A business that BUYS a commodity is hurt when its price:",["Rises","Falls","Stays flat","It doesn't matter"],0,"Would you rather pay more or less?"],
+ ["An airline bought jet fuel futures. Then fuel prices fall. The futures:",["Lose money, but the airline pays less for fuel","Gain money","Are cancelled","Pay a dividend"],0,"Bought futures gain only when the price goes UP."],
+ ["You BOUGHT futures at $6.00. At delivery the price is $6.50. Per unit, the futures:",["Gain $0.50","Lose $0.50","Gain $6.50","Break even"],0,"Bought futures: Delivery − Futures."],
+ ["You SOLD futures at $4.50. At delivery the price is $4.00. Per unit, the futures:",["Gain $0.50","Lose $0.50","Lose $4.00","Break even"],0,"Sold futures: Futures − Delivery."],
+ ["What does a good futures hedge give a business?",["A known price, wherever the market goes","A guaranteed profit","The lowest possible price","Free insurance"],0,"Hedging is about certainty, not profit."]],
 2:[
- ["A call option is the right to:",["Buy at the strike price","Sell at the strike price","Swap payments","Collect a dividend"],0],
- ["A put option is the right to:",["Sell at the strike price","Buy at the strike price","Lock in a loan rate","Skip a payment"],0],
- ["The price you pay for an option is the:",["Premium","Strike price","Breakeven","Spread"],0],
- ["The most an option BUYER can lose is:",["The premium","The strike price","Unlimited","Nothing"],0],
- ["Call breakeven =",["Strike + premium","Strike − premium","Premium − strike","Strike × 100"],0],
- ["A $50 put costs $3. Its breakeven price is:",["$47","$53","$50","$3"],0],
- ["You own shares and you're worried the price will drop. Which protects you?",["Buy a put","Buy a call","Buy futures","Pay variable in a swap"],0],
- ["One stock option contract covers:",["100 shares","1 share","10 shares","1,000 shares"],0]],
+ ["A call option is the right to:",["Buy at the strike price","Sell at the strike price","Swap payments","Collect a dividend"],0,"Call = buy."],
+ ["A put option is the right to:",["Sell at the strike price","Buy at the strike price","Lock in a loan rate","Skip a payment"],0,"Put = sell."],
+ ["The price you pay for an option is the:",["Premium","Strike price","Breakeven","Spread"],0,"It's like the $20 sneaker reservation."],
+ ["The most an option BUYER can lose is:",["The premium","The strike price","Unlimited","Nothing"],0,"You can always let the option expire."],
+ ["Call breakeven =",["Strike + premium","Strike − premium","Premium − strike","Strike × 100"],0,"The stock has to climb past the strike enough to pay back what you paid."],
+ ["A $50 put costs $3. Its breakeven price is:",["$47","$53","$50","$3"],0,"Put breakeven = strike − premium."],
+ ["You own shares and you're worried the price will drop. Which protects you?",["Buy a put","Buy a call","Buy futures","Pay variable in a swap"],0,"You want the right to SELL at a set price."],
+ ["One stock option contract covers:",["100 shares","1 share","10 shares","1,000 shares"],0,"It's a round number. Multiply by it in every payoff."]],
 3:[
- ["In an interest rate swap, two companies trade:",["Interest payments","Their loans","Shares of stock","Their credit ratings"],0],
- ["The variable rate on a loan usually moves with the:",["Federal Funds Rate","Stock market","Price of oil","Strike price"],0],
- ["A company with a variable loan fears rising rates. After a swap, it wants to pay:",["A fixed rate","A variable rate","Nothing","Twice as much"],0],
- ["Rates rise quickly. Who comes out ahead in a fixed-for-variable swap?",["The fixed-rate payer","The variable-rate payer","Both equally","Neither"],0],
- ["A $1,000,000 loan is at FF + 2%. FF is 4%. Yearly interest is:",["$60,000","$40,000","$20,000","$80,000"],0],
- ["What's the main reason companies use swaps?",["To turn uncertain payments into predictable ones","To get rid of borrowing costs","To make rates fall","To raise their stock price"],0],
- ["Lock in the price of wheat you'll buy in May. Which tool?",["Futures","Option","Swap","A bond"],0],
- ["Pay a premium for the right, but not the obligation, to buy later. Which tool?",["Option","Futures","Swap","A loan"],0]]
+ ["In an interest rate swap, two companies trade:",["Interest payments","Their loans","Shares of stock","Their credit ratings"],0,"Remember Maya and Jordan trading tips for a paycheck."],
+ ["The variable rate on a loan usually moves with the:",["Federal Funds Rate","Stock market","Price of oil","Strike price"],0,"It's the rate the Fed targets."],
+ ["A company with a variable loan fears rising rates. After a swap, it wants to pay:",["A fixed rate","A variable rate","Nothing","Twice as much"],0,"It wants a payment that can't go up."],
+ ["Rates rise quickly. Who comes out ahead in a fixed-for-variable swap?",["The fixed-rate payer","The variable-rate payer","Both equally","Neither"],0,"Whose payment stays the same while the other grows?"],
+ ["A $1,000,000 loan is at FF + 2%. FF is 4%. Yearly interest is:",["$60,000","$40,000","$20,000","$80,000"],0,"Add the rates first: 4% + 2%."],
+ ["What's the main reason companies use swaps?",["To turn uncertain payments into predictable ones","To get rid of borrowing costs","To make rates fall","To raise their stock price"],0,"Think predictable payments."],
+ ["Lock in the price of wheat you'll buy in May. Which tool?",["Futures","Option","Swap","A bond"],0,"A locked price for a later trade, no way out."],
+ ["Pay a premium for the right, but not the obligation, to buy later. Which tool?",["Option","Futures","Swap","A loan"],0,"A right you pay a premium for."]]
 };
 
 /* ================= formula card overlay ================= */
@@ -563,7 +611,7 @@ function exampleHTML(round,seed){
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("#exBtn");if(!b)return;const box=$("#exBox");if(!box)return;
   if(box.innerHTML){box.innerHTML="";b.textContent="📖 Show a worked example"}else{const [rk,seed]=b.dataset.ex.split("|");box.innerHTML=exampleHTML(rk,+seed);b.textContent="📖 Hide the worked example"}});
 /* ---------- rotation ---------- */
-const MAIN_PTS=100,BONUS_PTS=30;
+const MAIN_PTS=100,BONUS_PTS=20;
 function rotation(bIdx){
   const SN=LIVE.state&&LIVE.state.stations,b=SCHED[bIdx],RK=roundAt(b,ME.station,SN),R=ROUNDS[RK];
   const set=buildSet(ME.station,bIdx,RK);
@@ -591,7 +639,7 @@ function rotation(bIdx){
     let tries=0;st.h=st.h||{};const hk=isBonus?"b"+st.bk:"p"+st.idx;let used=st.h[hk]||0;
     app.innerHTML=`${roleHTML()}<div class="panel">${progress()}
       <div class="work" style="${p.wide?"grid-template-columns:1fr":""}">
-       <div class="prob">${isBonus&&st.bk===0?`<div class="fb ok" style="margin:0 0 12px"><b>Main problems submitted: ${total()} points.</b> Keep going! Bonus problems keep coming until your teacher moves on. Each one is worth up to ${BONUS_PTS} more points.</div>`:""}<div class="co">${isBonus?"BONUS "+(st.bk+1)+": ":""}${p.title}${isBonus?'<span class="tag">+'+BONUS_PTS+' bonus</span>':""}</div><p>${p.text}</p>${p.facts?`<dl class="facts">${p.facts.map(([a,c])=>`<dt>${a}</dt><dd>${c}</dd>`).join("")}</dl>`:""}${hintsHTML()}</div>
+       <div class="prob">${isBonus&&st.bk===0?`<div class="fb ok" style="margin:0 0 12px"><b>Main problem submitted: ${total()} points.</b> Keep going! Quick bonus questions keep coming until your teacher moves on. Each one is worth up to ${BONUS_PTS} more points.</div>`:""}<div class="co">${isBonus?"BONUS "+(st.bk+1)+": ":""}${p.title}${isBonus?'<span class="tag">+'+BONUS_PTS+' bonus</span>':""}</div><p>${p.text}</p>${p.facts?`<dl class="facts">${p.facts.map(([a,c])=>`<dt>${a}</dt><dd>${c}</dd>`).join("")}</dl>`:""}${hintsHTML()}</div>
        <div>${fieldsHTML(p.fields,p.wide)}${p.je?jeHTML(p.je):""}
         <div id="fb"></div><div class="acts"><button class="btn" id="chk">Check</button><button class="btn sec" id="nx" style="display:none">Next</button></div></div>
       </div></div>`;
@@ -715,37 +763,56 @@ function defBlock(bIdx){
     <p class="center" style="font-size:1.2em;margin-top:12px"><b>${team}: +${tot} each</b></p></div>`;
 }
 /* ---------- kahoot ---------- */
-const KSEC=15,KMAX=10;
+const KSEC=15,KMAX=10,KBMAX=6; // bonus questions after the main 8 are worth up to 6
+/* Endless bonus questions for each Kahoot break, made fresh each time: [question, options, index of the right one] */
+function mc(r,q,right,wrongs,h){const o=[right];wrongs.forEach(w=>{if(o.length<4&&!o.includes(w))o.push(w)});
+  ["None of these","It breaks even","Can't tell","$0"].forEach(w=>{if(o.length<4&&!o.includes(w))o.push(w)});const s=shuffle(r,o);return{q,o:s,a:s.indexOf(right),h}}
+const KBONUS={
+ 1(r){const x=futCase(r,null,r()<.5),c=x.c,d=Math.abs(r2(x.S-x.F)),t=pick(r,[0,1,2]);
+  if(t===0)return mc(r,`${c.w} ${c.a==="buy"?"needs to buy":"will sell"} ${c.it} later. To hedge, it should:`,c.a==="buy"?"Buy futures":"Sell futures",[c.a==="buy"?"Sell futures":"Buy futures","Buy a put","Pay fixed in a swap"],"Buyers buy futures. Sellers sell futures.");
+  if(t===1)return mc(r,`You ${c.a==="buy"?"BOUGHT":"SOLD"} ${c.it} futures at ${fp(x.F,c)}. At delivery it's ${fp(x.S,c)}. Per ${c.u}, the futures:`,(x.pnl>0?"Gain ":"Lose ")+fp(d,c),[(x.pnl>0?"Lose ":"Gain ")+fp(d,c),"Break even",(x.pnl>0?"Gain ":"Lose ")+fp(x.S,c)],c.a==="buy"?"Bought futures gain when the price goes UP.":"Sold futures gain when the price goes DOWN.");
+  return mc(r,`${c.w} hedged at ${fp(x.F,c)}. At delivery the price is ${fp(x.S,c)}. Its effective price per ${c.u}:`,fp(x.F,c),[fp(x.S,c),fp(r2(x.F+x.S),c),fp(d,c)],"A hedge locks in a price. Which one?")},
+ 2(r){const call=r()<.5,K=pick(r,[20,25,30,40,50,60,75]),p=pick(r,[1,1.5,2,2.5,3,4]),t=pick(r,[0,1,2]);
+  if(t===0){const be=call?K+p:K-p;return mc(r,`A ${px(K)} ${call?"call":"put"} costs ${px(p)}. Breakeven:`,cents(be),[cents(call?K-p:K+p),cents(K),cents(p)],call?"Call breakeven = strike + premium.":"Put breakeven = strike − premium.")}
+  if(t===1){const S=call?K+pick(r,[2,4,5,8]):K-pick(r,[2,4,5,8]),pay=Math.abs(S-K)*100;
+    return mc(r,`One ${px(K)} ${call?"call":"put"} contract. The stock ends at ${px(S)}. Payoff before the premium:`,money(pay),[money(pay/100),money(0),money(pay+p*100)],"Price difference past the strike × 100 shares.")}
+  const sh=pick(r,[100,200,300,500]);return mc(r,`Protective puts on ${fmt(sh)} shares, ${px(p)} premium each. Total cost:`,money(sh*p),[money(p*100),money(sh*K),money(sh*(K+p))],"Premium × every share. The strike isn't a cost.")},
+ 3(r){const s=swapCase(r,null),t=pick(r,[0,1,2]);
+  if(t===0)return mc(r,`${money(s.n)} loan at FF + ${s.sp}%. FF is ${s.ff}%. Yearly interest:`,money(s.before),[money(s.n*s.ff/100),money(s.n*s.sp/100),money(s.n*(s.ff+s.sp)/1000)],`Add the rates first: ${s.ff}% + ${s.sp}%.`);
+  if(t===1)return mc(r,`A pays FF + ${s.sp}%, B pays fixed ${s.fx}%. They swap. FF is ${s.ff}%. Who comes out ahead?`,s.vr>s.fx?"Company A (now paying fixed)":"Company B (now paying variable)",[s.vr>s.fx?"Company B (now paying variable)":"Company A (now paying fixed)","Both equally","Neither"],`Variable is ${s.vr}%. Is that more or less than ${s.fx}% fixed?`);
+  const [tt,a]=pick(r,TOOL_POOL);return mc(r,tt+" Which tool?",a,TOOLS.filter(x=>x!==a).concat(["A bond"]),"Locked price: futures. A right with a premium: option. Trading payments: swap.")}
+};
 function kahoot(bIdx){
   const b=SCHED[bIdx];const live=()=>CUR&&CUR.block===bIdx;
   const nm=names(bIdx);const team=[...nm.stay,nm.move].map(esc).join(" & ");
   let st=store.get(lkey(bIdx),null);
   $("#ttl").innerHTML=`Station ${ME.station} · <span>${b.label}</span>`;
-  const done=s=>{app.innerHTML=`<div class="panel center"><h2 style="font-size:32px;color:var(--k2)">Kahoot Break ${b.k} done</h2><p>${team}</p><div class="big" style="margin:10px 0">+${s.total} each</div><p class="muted">${s.right} of ${KAHOOT[b.k].length} right. Points are on the class scoreboard.</p></div>`};
-  if(st&&st.finished)return done(st);
   const r=rng(ME.station*31+b.k*977);
-  const qs=shuffle(r,KAHOOT[b.k]).map(([q,o,a])=>{const idx=shuffle(r,[0,1,2,3]);return{q,o:idx.map(i=>o[i]),a:idx.indexOf(a)}});
-  let qi=(st&&st.qi)||0,total=(st&&st.total)||0,right=(st&&st.right)||0;
-  const save=fin=>{const s={qi,total,right,finished:!!fin};store.set(lkey(bIdx),s);pushResult(bIdx,{pts:total,done:!!fin})};
-  app.innerHTML=`<div class="panel center"><h1 style="font-size:46px;color:var(--k2)">Kahoot Break ${b.k}</h1><p style="font-size:1.25em"><b>${team}</b>, you're teammates now.</p><p>${qs.length} questions, ${KSEC} seconds each. Faster right answers earn more (up to ${KMAX} each), and you BOTH get the points.</p>
+  const qs=shuffle(r,KAHOOT[b.k]).map(([q,o,a,h])=>{const idx=shuffle(r,[0,1,2,3]);return{q,o:idx.map(i=>o[i]),a:idx.indexOf(a),h}});
+  const N=qs.length;
+  let qi=(st&&st.qi)||0,total=(st&&st.total)||0,right=(st&&st.right)||0,bpts=(st&&st.bpts)||0;
+  const save=()=>{store.set(lkey(bIdx),{qi,total,right,bpts});pushResult(bIdx,{pts:total,done:qi>=N,bon:Math.max(0,qi-N)})};
+  const qAt=i=>i<N?qs[i]:KBONUS[b.k](rng(ME.station*31+b.k*977+i*101+7));
+  app.innerHTML=`<div class="panel center"><h1 style="font-size:46px;color:var(--k2)">Kahoot Break ${b.k}</h1><p style="font-size:1.25em"><b>${team}</b>, you're teammates now.</p><p>${N} questions, ${KSEC} seconds each. Faster right answers earn more (up to ${KMAX} each), and you BOTH get the points. A hint cuts a question\'s points in half. Then bonus questions keep coming until your teacher moves on.</p>
    <div class="acts" style="justify-content:center"><button class="btn" id="go" style="background:var(--k2);font-size:1.3em;padding:16px 40px">${qi?"Keep going":"Start"}</button></div></div>`;
   $("#go").onclick=ask;
   const SH=["▲","◆","●","■"];
   function ask(){
     if(!live())return;
-    const q=qs[qi];let left=KSEC*10,answered=false;
-    app.innerHTML=`<div class="panel"><div class="kmeta"><span>Question ${qi+1} of ${qs.length}</span><span id="tl">${KSEC}</span><span>${total} pts</span></div><div class="kbar"><i id="bar" style="width:100%"></i></div>
-     <div class="kq">${q.q}</div><div class="kopts">${q.o.map((o,k)=>`<button class="kopt" data-k="${k}"><span class="sh">${SH[k]}</span><span>${o}</span></button>`).join("")}</div><div id="kf"></div></div>`;
+    const bonus=qi>=N,q=qAt(qi);let max=bonus?KBMAX:KMAX,left=KSEC*10,answered=false;
+    app.innerHTML=`<div class="panel">${bonus&&qi===N?`<div class="fb ok" style="margin:0 0 12px;font-size:1.1em"><b>All ${N} done: ${right} right, ${total} points.</b> Bonus questions now, up to ${KBMAX} points each, until your teacher moves on.</div>`:""}<div class="kmeta"><span>${bonus?`<span style="color:var(--gold)">BONUS ${qi-N+1}</span>`:`Question ${qi+1} of ${N}`}</span><span id="tl">${KSEC}</span><span>${total} pts</span></div><div class="kbar"><i id="bar" style="width:100%"></i></div>
+     <div class="kq">${q.q}</div>${q.h?`<div class="center" id="khb" style="margin:-6px 0 12px"><button class="btn hbtn" id="kh">💡 Hint: drops this to ${Math.round(max/2)} max</button></div>`:""}<div class="kopts">${q.o.map((o,k)=>`<button class="kopt" data-k="${k}"><span class="sh">${SH[k]}</span><span>${o}</span></button>`).join("")}</div><div id="kf"></div></div>`;
     clearInterval(KTIMER);
     KTIMER=setInterval(()=>{if(!live()){clearInterval(KTIMER);return}left--;$("#bar").style.width=(left/(KSEC*10)*100)+"%";$("#tl").textContent=Math.ceil(left/10);if(left<=0)answer(-1)},100);
     app.querySelectorAll(".kopt").forEach(el=>el.onclick=()=>answer(+el.dataset.k));
+    if($("#kh"))$("#kh").onclick=()=>{max=max/2;$("#khb").innerHTML=`<div class="hint" style="display:inline-block;text-align:left;font-size:1.1em"><b>Hint:</b> ${q.h}</div>`};
     function answer(k){
-      if(answered)return;answered=true;clearInterval(KTIMER);
-      const ok=k===q.a;const got=ok?Math.round(KMAX/2+KMAX/2*Math.max(0,left)/(KSEC*10)):0;
-      if(ok){total+=got;right++}qi++;save(qi>=qs.length);
+      if(answered)return;answered=true;clearInterval(KTIMER);$("#khb")&&$("#khb").remove();
+      const ok=k===q.a;const got=ok?Math.round(max/2+max/2*Math.max(0,left)/(KSEC*10)):0;
+      if(ok){total+=got;if(bonus)bpts+=got;else right++}qi++;save();
       app.querySelectorAll(".kopt").forEach((el,ix)=>{if(ix===q.a)el.classList.add("right");else el.classList.add("dim")});
-      $("#kf").innerHTML=`<div class="fb ${ok?"ok":"no"}" style="font-size:1.2em"><b>${ok?"Correct! +"+got:k<0?"Time's up!":"Not this time."}</b>${ok?"":" The answer was: "+q.o[q.a]}</div><div class="acts" style="justify-content:center"><button class="btn" id="nk" style="background:var(--k2)">${qi<qs.length?"Next question":"See results"}</button></div>`;
-      $("#nk").onclick=()=>{if(qi<qs.length)ask();else done({total,right})};
+      $("#kf").innerHTML=`<div class="fb ${ok?"ok":"no"}" style="font-size:1.2em"><b>${ok?"Correct! +"+got:k<0?"Time's up!":"Not this time."}</b>${ok?"":" The answer was: "+q.o[q.a]}</div><div class="acts" style="justify-content:center"><button class="btn" id="nk" style="background:var(--k2)">${qi<N?"Next question":qi===N?"Bonus questions ▶":"Next bonus question"}</button></div>`;
+      $("#nk").onclick=ask;
     }
   }
 }
@@ -883,7 +950,7 @@ function hostLiveBits(){
   const list=stationList(),R=r=>(r.res&&r.res[st.block])||{},dn=list.filter(r=>R(r).done).length,isRot=SCHED[st.block].type==="rot";
   const d=$("#done");if(d)d.innerHTML=`<div style="font-size:24px"><b>${dn}</b> of ${list.length} stations ${isRot?"submitted":"finished"}</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:10px">${list.map(r=>{const v=R(r),ok=!!v.done;
-      return `<div style="border-radius:10px;padding:8px 6px;text-align:center;border:2px solid ${ok?"var(--ok)":"var(--ln)"};background:${ok?"#EFF8F2":"#fff"}"><div class="osw" style="font-size:22px">Station ${r.station}</div><div style="font-size:16px;font-weight:700;color:${ok?"var(--ok)":"var(--mu)"}">${ok?(isRot?"✓ Submitted":"✓ Done"):"Working..."}</div>${isRot&&ok?`<div style="font-size:14px" class="muted">${v.bon||0} bonus done</div>`:""}</div>`}).join("")}</div>`;
+      return `<div style="border-radius:10px;padding:8px 6px;text-align:center;border:2px solid ${ok?"var(--ok)":"var(--ln)"};background:${ok?"#EFF8F2":"#fff"}"><div class="osw" style="font-size:22px">Station ${r.station}</div><div style="font-size:16px;font-weight:700;color:${ok?"var(--ok)":"var(--mu)"}">${ok?(isRot?"✓ Submitted":"✓ Done"):"Working..."}</div>${ok&&v.bon?`<div style="font-size:14px" class="muted">${v.bon} bonus done</div>`:""}</div>`}).join("")}</div>`;
   if(SCHED[st.block].type==="def")hostDefBits();
   let warn=$("#latejoin");const late=unplaced();
   if(late.length){
