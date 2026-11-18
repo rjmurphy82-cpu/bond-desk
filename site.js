@@ -6,6 +6,7 @@
     { sub: "Live class games" },
     { href: "/deriv", ch: "5", label: "Derivatives Live", page: "deriv" },
     { href: "/futures-live", ch: "5", label: "Futures Live (quiz)", page: "futures-live" },
+    { href: "/teach-it-back", ch: "5", label: "Teach It Back", page: "teach-it-back" },
     { sub: "Review games" },
     { href: "/lock-it-in", ch: "5", label: "Lock It In", page: "lock-it-in" },
     { sub: "Practice on your own" },
