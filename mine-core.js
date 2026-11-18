@@ -1,7 +1,7 @@
 // Hash Wars Live: game server logic. Same setup as the other live games (Upstash Redis on Vercel,
 // in-memory store for local testing), with its own keys (hw:).
 // Phases: lobby -> build (r = 0, desks buy their rig) -> reveal (step "rigs") -> open (r = 1..5) ->
-// reveal (steps: answer -> [writeups in the halving round] -> results -> stand) -> next ... -> final.
+// reveal (steps: answer -> [writeups in the halving round] -> results and standings) -> next ... -> final.
 // The exit ticket opens on the final screen: each student answers on their own iPad.
 import { N, ROUNDS, PLANS, MODEL_KEYS, EXIT, HALVING_ROUND, apply, replay } from "./mine-data.js";
 import { GameError, memoryKV } from "./core.js";
@@ -90,7 +90,7 @@ async function checkDecision(kv, code, s, gid, p) {
   if (!base.built) fail("bad_pick", "Your desk didn't build a rig, so it sits out. Watch the board!");
   const R = ROUNDS[r], q = Math.floor(+p.q);
   if (!(q >= 0 && q < R.q.opts.length) || p.q === null || p.q === undefined || p.q === "") fail("bad_pick", "Answer the Prove It question first.");
-  const d = { q, run: p.run !== false, sell: !!p.sell, buy: num(p.buy), dump: num(p.dump), plan: PLANS[p.plan] ? p.plan : base.plan, t: Date.now() };
+  const d = { q, run: p.run !== false, sell: !!p.sell, cashout: !!p.cashout && !base.out, t: Date.now() };
   if (R.calc) { const c = String(p.calc ?? "").replace(/[^0-9.\-]/g, "").slice(0, 12); if (!c) fail("bad_pick", "Type your answer to the math question."); d.calc = c; }
   if (R.writeup) { const w = String(p.text || "").replace(/[<>`]/g, "").replace(/\s+/g, " ").trim().slice(0, 240); if (w.length < 15) fail("bad_pick", "Write your 1 to 2 sentence halving answer."); d.text = w; }
   const a = apply(base, d, r, false, true); if (a.err) fail("bad_pick", a.err);
@@ -123,7 +123,7 @@ export async function exitTicket(kv, { code, name, answers }) {
   return { ok: true, right, of: EXIT.length, key: EXIT.map(e => e.ans) };
 }
 
-const stepsFor = r => r === 0 ? ["rigs"] : r === HALVING_ROUND ? ["answer", "writeups", "results", "stand"] : ["answer", "results", "stand"];
+const stepsFor = r => r === 0 ? ["rigs"] : r === HALVING_ROUND ? ["answer", "writeups", "results"] : ["answer", "results"];
 export async function hostOp(kv, { code, hostKey, op, gid, name, step, on }) {
   const s = await loadState(kv, code); if (!isHost(s, hostKey)) fail("not_host", "Only the host screen can do that.");
   const save = (extra = []) => touch(kv, code, [["SET", K(code, "state"), JSON.stringify(s), "EX", TTL], ...extra]);
@@ -132,7 +132,7 @@ export async function hostOp(kv, { code, hostKey, op, gid, name, step, on }) {
   else if (op === "step") { if (s.phase !== "reveal") fail("bad_op", "Reveal first."); if (!stepsFor(s.r).includes(step)) fail("bad_op", "Unknown step."); if (s.step !== step) { s.step = step; await save(); } }
   else if (op === "reopen") { if (s.phase !== "reveal") fail("bad_op", "Nothing to reopen."); s.phase = s.r === 0 ? "build" : "open"; delete s.step; await save(); }
   else if (op === "next") { if (s.phase !== "reveal") fail("bad_op", "Reveal first."); delete s.step; if (s.r >= N) s.phase = "final"; else { s.r++; s.phase = "open"; } await save(); }
-  else if (op === "back") { if (s.phase !== "final") fail("bad_op", "Not finished."); s.phase = "reveal"; s.step = "stand"; await save(); }
+  else if (op === "back") { if (s.phase !== "final") fail("bad_op", "Not finished."); s.phase = "reveal"; s.step = "results"; await save(); }
   else if (op === "award") { if (s.r !== HALVING_ROUND || s.phase !== "reveal") fail("bad_op", "Awards are for the halving write-ups."); s.awards = { ...(s.awards || {}) }; if (s.awards[gid]) delete s.awards[gid]; else s.awards[gid] = true; await save(); }
   else if (op === "exit") { s.exit = !!on; await save(); }
   else if (op === "clear") { await save([["HDEL", K(code, "d" + s.r), gid]]); }

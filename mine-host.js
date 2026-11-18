@@ -32,12 +32,12 @@ function renderMenu(msg = "") {
         <button class="btn big" id="mResume">Resume</button></div></div>` : ""}
     <div class="card ${live ? "" : "dark"}"><div class="label">Build a rig. Outlast the market.</div>
       <h2 style="font-size:${live ? 30 : 44}px;line-height:1.05;margin:4px 0 10px">Can your desk make money mining Bitcoin?</h2>
-      <div style="font-size:18px;line-height:1.5">Each desk gets <b>$10,000</b> to buy mining machines and pick a power plan. Then five half-years, January 2027 to June 2029: a gold rush, a bull run, <b>the halving</b>, a heat wave and a crypto winter. Each round, desks answer a <b>Prove It</b> question (a different seat each time), then decide to run or shut off, buy or sell machines, and sell or hold their Bitcoin.</div>
+      <div style="font-size:18px;line-height:1.5">Each desk gets <b>$10,000</b> to buy mining machines and pick a power plan. Then five half-years, January 2027 to June 2029: a gold rush, a bull run, <b>the halving</b>, a heat wave and a crypto winter. Each round is three taps: a <b>Prove It</b> question (a different seat each time), run or shut off, and hold or sell their Bitcoin. Any round, a desk can <b>Cash out</b>: sell everything and sit out.</div>
       <div style="font-size:17px;margin-top:8px">Score = net worth + <b>${usd(D.POINT_VALUE)} per analyst point</b>, so understanding beats luck. Ends with an individual <b>exit ticket</b>. About 35 to 40 minutes.</div>
       <div class="actions" style="justify-content:flex-start"><button class="btn ${live ? "dk" : "big"}" id="newGame">${live ? "End it &amp; start a new game" : "Start a new game"}</button></div>
       ${msg ? `<div class="err">${esc(msg)}</div>` : ""}</div>
     <div class="card"><div class="label">How a round runs (about 5 minutes)</div>
-      <ol style="font-size:17px;line-height:1.5;margin:0;padding-left:20px"><li>Open the round. Read the event card out loud.</li><li>Desks answer Prove It, then make their moves and lock in (timer: 3:00).</li><li>Reveal: the answer and why, then everyone's results, then standings.</li></ol>
+      <ol style="font-size:17px;line-height:1.5;margin:0;padding-left:20px"><li>Open the round. Read the event card out loud.</li><li>Desks answer Prove It, then make their moves and lock in (timer: 3:00).</li><li>Reveal: the answer and why, then results and standings.</li></ol>
       <div class="label" style="margin-top:16px">Practice on their own</div>
       <div style="font-size:17px;line-height:1.5">The Mining Rig simulator (<b>/practice-mining-rig</b>) lets students rerun the numbers any time.</div></div></div>`;
   if ($("#mResume")) $("#mResume").onclick = () => { ui.menu = false; ui.lastKey = ""; render(); };
@@ -137,7 +137,8 @@ function renderOpen() {
         <div class="hw-opts">${R.q.opts.map(o => `<button disabled style="opacity:1">${esc(o)}</button>`).join("")}</div>
         ${R.calc ? `<div style="font-size:20px;margin-top:12px"><b>Math (+1 point and ${usd(D.CALC_BONUS)}):</b> ${esc(R.calc.text)}</div>` : ""}
         ${R.writeup ? `<div style="font-size:20px;margin-top:12px"><b>Write it:</b> ${esc(D.writeupPrompt)}</div>` : ""}</div>
-      <div class="card"><div class="label">Then every desk decides</div><div style="font-size:19px;line-height:1.5">⚡ Run or ⏸ shut off · Buy or sell machines (prices this round: ${D.MODEL_KEYS.map(k => `${D.MODELS[k].short} ${usd(D.MARKET[k][S.r])}`).join(", ")}) · Switch power plans · 💎 Hold or 💵 sell your Bitcoin at ${usd(R.price)}</div>
+      <div class="card"><div class="label">Then every desk decides</div><div style="font-size:21px;line-height:1.5">⚡ Run or ⏸ shut off · 💎 Hold or 💵 sell your Bitcoin at ${usd(R.price)}</div>
+        <div style="font-size:18px;margin-top:6px">Or 🏁 <b>Cash out</b>: sell every machine (${D.MODEL_KEYS.map(k => `${D.MODELS[k].short} ${usd(D.sellPrice(k, S.r))}`).join(", ")}) and all your Bitcoin, then sit out. You still answer Prove It.</div>
         ${R.est ? "" : `<div class="small" style="margin-top:6px;font-size:15px">From Round 3 on, iPads no longer show profit estimates. Desks work it out.</div>`}</div>
     </div>${tilesCard("Desks locked in")}</div>`;
   wireClock(); $("#revealBtn").onclick = () => op("reveal");
@@ -147,9 +148,9 @@ function renderOpen() {
 function stepBar(steps, labels) {
   return `<div class="tabs2">${steps.map((s, i) => `<button data-step="${s}" class="${S.step === s ? "on" : ""}">${i + 1}. ${labels[s]}</button>`).join("")}</div>`;
 }
-const LABELS = { rigs: "Everyone's rigs", answer: "The answer", writeups: "Halving answers", results: "Results", stand: "Standings" };
+const LABELS = { rigs: "Everyone's rigs", answer: "The answer", writeups: "Halving answers", results: "Results & standings" };
 function renderReveal() {
-  const r = S.r, steps = r === 0 ? ["rigs"] : r === D.HALVING_ROUND ? ["answer", "writeups", "results", "stand"] : ["answer", "results", "stand"];
+  const r = S.r, steps = r === 0 ? ["rigs"] : r === D.HALVING_ROUND ? ["answer", "writeups", "results"] : ["answer", "results"];
   const i = steps.indexOf(S.step), last = i === steps.length - 1;
   const nextLbl = last ? (r >= D.N ? "Final results" : `Open ${D.ROUNDS[r + 1].tag}`) : "Next: " + LABELS[steps[i + 1]];
   let body = "";
@@ -174,10 +175,10 @@ function renderReveal() {
   } else if (S.step === "results") {
     const rows = S.groups.map(g => ({ name: g.name, row: now[g.gid].rows[r], before: prev[g.gid].nw }));
     const ran = rows.filter(x => !x.row.skipped && x.row.run), best = rows.filter(x => !x.row.skipped).sort((a, b) => (b.row.nw - b.before) - (a.row.nw - a.before))[0];
+    const outs = rows.filter(x => x.row.cashout).map(x => esc(x.name));
     body = `<div class="card">${resultsTable(rows)}
-      <div class="lessonbox">${ran.length} of ${rows.length} desks ran their machines. ${best ? `Biggest gain this round: <b>${esc(best.name)}</b> (${sgnUsd(best.row.nw - best.before)}).` : ""} Net worth counts your machines at what they'd sell for now, so it moves when machine prices move.</div></div>`;
-  } else {
-    body = `<div class="card">${standTable(D.standings(S.groups, S.decisions, S.awards, r))}</div>`;
+      <div class="lessonbox">${ran.length} of ${rows.length} desks ran their machines.${outs.length ? ` Cashed out this round: <b>${outs.join(", ")}</b>.` : ""} ${best ? `Biggest gain: <b>${esc(best.name)}</b> (${sgnUsd(best.row.nw - best.before)}).` : ""} Net worth counts your machines at what they'd sell for now, so it moves when machine prices move.</div></div>
+      <div class="card" style="margin-top:12px"><div class="label">Standings after ${esc(D.ROUNDS[r].tag)}</div>${standTable(D.standings(S.groups, S.decisions, S.awards, r))}</div>`;
   }
   $("#view").innerHTML = `<div class="topbar"><div class="yr"><div class="sub">${r === 0 ? "The build" : esc(D.ROUNDS[r].tag + " · " + D.ROUNDS[r].when)}</div><h2>${r === 0 ? "Everyone's rigs" : esc(D.ROUNDS[r].icon + " " + D.ROUNDS[r].title)}</h2></div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">${stepBar(steps, LABELS)}<button class="btn ghost sm" id="reopen">Reopen round</button><button class="btn big" id="nextBtn">${nextLbl}</button></div></div>
@@ -198,10 +199,10 @@ function renderFinal() {
     body = `${st[0] ? `<div class="podium">${pod.map((x, i) => x ? `<div class="pod ${i === 1 ? "first" : ""}"><div class="p">${i === 1 ? 1 : i === 0 ? 2 : 3}</div><div class="n">${esc(x.g.name)}</div><div class="v">${usd(x.score)}</div></div>` : "<div></div>").join("")}</div>` : ""}
       <div class="card">${standTable(st)}</div>
       <div class="card" style="margin-top:12px"><div class="label">Where each desk's money went</div>
-      <table class="hw-res"><tr><th>Desk</th><th class="r">Mining revenue</th><th class="r">Power bills</th><th class="r">Machines bought</th><th class="r">Machines sold</th><th class="r">Machines left (value)</th><th class="r">Bitcoin held</th></tr>
+      <table class="hw-res"><tr><th>Desk</th><th class="r">Mining revenue</th><th class="r">Power bills</th><th class="r">Machines bought</th><th class="r">Cashed out for</th><th class="r">Machines left (value)</th><th class="r">Bitcoin held</th></tr>
       ${st.map(x => { const rr = x.rows.slice(1).filter(y => !y.skipped); const sum = f => rr.reduce((a, y) => a + (y[f] || 0), 0); const mv = D.MODEL_KEYS.reduce((a, k) => a + (x.desk.rig[k] || 0) * D.sellPrice(k, 6), 0);
-        return `<tr><td class="nm">${esc(x.g.name)}</td><td class="r">${usd(sum("minedUSD"))}</td><td class="r neg">${usd(-sum("power"))}</td><td class="r">${usd(-(sum("spent") + ((x.rows[0] || {}).spent || 0)))}</td><td class="r">${usd(sum("sold"))}</td><td class="r">${usd(mv)}</td><td class="r">${x.desk.btc.toFixed(4)}</td></tr>`; }).join("")}</table>
-      <div class="lessonbox">Ask: Did anyone make money from mining itself, or from selling machines and Bitcoin at the right time? Who shut off when the numbers turned red?</div></div>`;
+        return `<tr><td class="nm">${esc(x.g.name)}</td><td class="r">${usd(sum("minedUSD"))}</td><td class="r neg">${usd(-sum("power"))}</td><td class="r">${usd(-((x.rows[0] || {}).spent || 0))}</td><td class="r">${(() => { const c = rr.find(y => y.cashout); return c ? usd(c.sold + c.btcCash) + `<div class="small">${esc(D.ROUNDS[c.r].tag)}</div>` : "–"; })()}</td><td class="r">${usd(mv)}</td><td class="r">${x.desk.btc.toFixed(4)}</td></tr>`; }).join("")}</table>
+      <div class="lessonbox">Ask: Did anyone make money from mining itself, or from cashing out at the right time? Who shut off when the numbers turned red? Was holding Bitcoin a smart bet or a lucky one?</div></div>`;
   } else if (ui.tab === "debrief") {
     body = `<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(380px,1fr))">${D.ROUNDS.slice(1).map((R, j) => { const dec = S.decisions[j + 1] || {}; const right = S.groups.filter(g => dec[g.gid] && dec[g.gid].q === R.q.ans).length;
       return `<div class="card"><div class="label">${esc(R.tag)} · ${R.icon} ${esc(R.title)} · ${right} of ${S.groups.length} desks right</div><div style="font-size:18px;font-weight:600">${esc(R.q.text)}</div><div class="pos" style="font-size:18px;margin-top:4px">✓ ${esc(R.q.opts[R.q.ans])}</div><div style="font-size:17px;line-height:1.45;margin-top:6px">${esc(R.q.why)}</div></div>`; }).join("")}</div>`;

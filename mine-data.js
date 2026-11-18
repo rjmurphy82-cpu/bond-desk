@@ -1,8 +1,9 @@
 // Hash Wars Live: all the numbers, wording and scoring for the Bitcoin mining game.
 // Shared by the server (mine-core.js), the host screen and the iPads, so everyone computes the same results.
 // Every desk starts with $10,000, builds a rig, then plays five half-year rounds (Jan 2027 to Jun 2029).
-// Each round: an event card, a Prove It question (right answer = +1 analyst point), then run/shut off,
-// buy/sell machines, sell or hold Bitcoin. Final score = net worth + $400 per analyst point.
+// Each round is three taps: a Prove It question (right answer = +1 analyst point), run or shut off, and hold or sell
+// Bitcoin. Any round a desk can Cash out instead: sell every machine and all its Bitcoin, then sit out (it still answers
+// Prove It). The power plan is locked at the build. Final score = net worth + $400 per analyst point.
 
 export const START_CASH = 10000, DAYS = 182, POOL_FEE = 0.02, FEES_PER_BLOCK = 0.02, SELL_PCT = 0.85;
 export const POINT_VALUE = 400, CALC_BONUS = 250;
@@ -14,7 +15,7 @@ export const MODELS = {
   old: { name: "Antminer S19j Pro (used)", short: "S19j Pro", th: 104, kw: 3.068, jth: 29.5, tag: "Old, cheap, power hungry" }
 };
 export const MODEL_KEYS = ["xp", "pro", "old"];
-// Market price of each model. Index 0 = build, 1 to 5 = when you decide in Round 1 to 5, 6 = end of the game.
+// Market price of each model. Index 0 = build, 1 to 5 = Round 1 to 5 (cash-out price is 85% of this), 6 = end of the game.
 // Machine prices rise in the bull run and crash after the halving, like the real used-miner market.
 export const MARKET = {
   xp:  [5000, 5000, 5800, 4600, 3600, 2900, 2400],
@@ -47,9 +48,7 @@ export const ROUNDS = [null,
     story: "In April 2028 the block reward is cut in half, from 3.125 to 1.5625 BTC, as it is every four years. Half of this round is before the halving and half is after. The price slips to $104,000 and the network keeps growing (1,300 EH/s).",
     price: 104000, net: 1300, reward: 2.34375, rewardText: "3.125, then 1.5625 BTC", pm: 1, est: false, writeup: true,
     q: { text: "Compared to last round, how much Bitcoin will each of your machines mine this round?", opts: ["About the same", "About 25% less", "About 50% less", "More"], ans: 1,
-      why: "Only half the round is after the halving, so the average reward drops about 25%, not 50%. The network also grew a little. Next round is the full 50% cut." },
-    calc: { text: "After the halving, how many NEW Bitcoin does the whole network create per day? (About 144 blocks a day.)", unit: "BTC per day", kind: "fixed", answer: 225,
-      why: "144 blocks × 1.5625 BTC = 225 BTC a day, down from 450. That is the entire pie every miner in the world splits." } },
+      why: "Only half the round is after the halving, so the average reward drops about 25%, not 50%. The network also grew a little. Next round is the full 50% cut." } },
   { tag: "Round 4", when: "Jul to Dec 2028", title: "Heat Wave Shakeout", icon: "🔥",
     story: "A summer heat wave pushes electricity prices up 25% for homes and hosting facilities. (Industrial contracts are locked in.) With half the reward, thousands of miners can't pay their bills and shut off. The network shrinks to 1,120 EH/s. Bitcoin dips to $88,000.",
     price: 88000, net: 1120, reward: 1.5625, rewardText: "1.5625 BTC", pm: 1.25, est: false,
@@ -83,12 +82,11 @@ export const calcAnswer = (r, plan) => { const c = ROUNDS[r] && ROUNDS[r].calc; 
 export const calcRight = (r, plan, v) => { const a = calcAnswer(r, plan), x = parseFloat(String(v ?? "").replace(/[$,\s]/g, "")); return a != null && isFinite(x) && Math.abs(x - a) <= Math.max(0.05 * a, 0.01); };
 
 // Empty desk before the build
-export const blankDesk = () => ({ cash: START_CASH, btc: 0, plan: null, rig: { xp: 0, pro: 0, old: 0 }, pts: 0, built: false });
+export const blankDesk = () => ({ cash: START_CASH, btc: 0, plan: null, rig: { xp: 0, pro: 0, old: 0 }, pts: 0, built: false, out: false });
 const intq = v => Math.max(0, Math.min(20, Math.floor(+v || 0)));
 
 // Applies one decision to a copy of a desk. r = 0 for the build, 1..5 for rounds.
-// Returns { desk, row, err }. With strict, an impossible decision returns err (the server uses this to refuse it).
-// Without strict (results), impossible parts are skipped so a desk is never stuck.
+// Returns { desk, row, err }. With strict, an impossible build returns err (the server uses this to refuse it).
 export function apply(desk0, d, r, award, strict) {
   const desk = JSON.parse(JSON.stringify(desk0)), row = { r, startCash: desk.cash };
   const err = m => ({ desk: desk0, row: null, err: m });
@@ -106,44 +104,28 @@ export function apply(desk0, d, r, award, strict) {
     Object.assign(row, { plan, buy, spent: cost, setup: PLANS[plan].setup });
     row.endCash = desk.cash; row.nw = netWorth(desk, 1); return { desk, row };
   }
-  const R = ROUNDS[r];
-  d = d || { run: true, sell: false, buy: {}, dump: {}, plan: desk.plan };
-  // 1. plan switch
-  let plan = desk.plan;
-  if (d.plan && d.plan !== desk.plan && PLANS[d.plan]) {
-    if (strict && desk.cash < PLANS[d.plan].setup) return err("Not enough cash to switch plans.");
-    plan = d.plan; desk.cash -= PLANS[plan].setup; row.switched = plan; row.switchFee = PLANS[plan].setup;
-  }
-  // 2. sell machines, 3. buy machines
-  const dump = {}, buy = {}; let sold = 0, spent = 0;
-  MODEL_KEYS.forEach(k => { dump[k] = Math.min(intq((d.dump || {})[k]), desk.rig[k] || 0); });
-  MODEL_KEYS.forEach(k => { desk.rig[k] -= dump[k]; sold += dump[k] * sellPrice(k, r); });
-  desk.cash += sold;
-  MODEL_KEYS.forEach(k => { buy[k] = intq((d.buy || {})[k]); spent += buy[k] * MARKET[k][r]; });
-  if (spent > 0 && spent > desk.cash) { if (strict) return err(`Those machines cost $${spent.toLocaleString()}. You'll have $${Math.round(desk.cash).toLocaleString()}.`); MODEL_KEYS.forEach(k => buy[k] = 0); spent = 0; }
-  MODEL_KEYS.forEach(k => desk.rig[k] += buy[k]); desk.cash -= spent;
-  const n = count(desk.rig);
-  if (plan && PLANS[plan].max && n > PLANS[plan].max) {
-    if (strict) return err(`Your garage can only run ${PLANS[plan].max} machines. Sell some or switch plans.`);
-  }
-  if (plan && PLANS[plan].min && n > 0 && n < PLANS[plan].min) {
-    if (strict) return err(`An industrial contract needs at least ${PLANS[plan].min} machines. Buy more, or switch plans.`);
-  }
-  desk.plan = plan;
-  Object.assign(row, { plan, sold, spent, dump, buy, rig: { ...desk.rig } });
-  // 4. run or shut off
-  const run = d.run !== false && n > 0 && !!plan;
-  let btc = 0, power = 0;
-  if (run) MODEL_KEYS.forEach(k => { btc += desk.rig[k] * unitBTC(k, r); power += desk.rig[k] * unitPower(k, plan, r); });
-  desk.cash -= power; desk.btc += btc;
-  Object.assign(row, { run, mined: btc, minedUSD: btc * R.price, power });
-  // 5. Prove It points and bonus
-  const qRight = !!d && d.q === R.q.ans, cRight = !!(R.calc && d && calcRight(r, plan, d.calc));
+  const R = ROUNDS[r], plan = desk.plan;
+  d = d || { run: true, sell: false };
+  // Prove It points and bonus (desks that cashed out still answer)
+  const qRight = d.q === R.q.ans, cRight = !!(R.calc && calcRight(r, plan, d.calc));
   if (cRight) desk.cash += CALC_BONUS;
   const gained = (qRight ? 1 : 0) + (cRight ? 1 : 0) + (award ? 1 : 0);
   desk.pts += gained;
-  Object.assign(row, { qRight, cRight, award: !!award, gained, bonus: cRight ? CALC_BONUS : 0, answered: d.q !== undefined && d.q !== null });
-  // 6. sell or hold Bitcoin
+  Object.assign(row, { plan, qRight, cRight, award: !!award, gained, bonus: cRight ? CALC_BONUS : 0, answered: d.q !== undefined && d.q !== null });
+  if (desk.out) { Object.assign(row, { out: true, run: false, mined: 0, minedUSD: 0, power: 0, rig: { ...desk.rig } }); row.endCash = desk.cash; row.btcHeld = 0; row.nw = desk.cash; row.pts = desk.pts; return { desk, row }; }
+  if (d.cashout) {
+    let sold = 0; MODEL_KEYS.forEach(k => { sold += (desk.rig[k] || 0) * sellPrice(k, r); });
+    Object.assign(row, { cashout: true, rig: { ...desk.rig }, sold, run: false, mined: 0, minedUSD: 0, power: 0, btcSold: desk.btc, btcCash: desk.btc * R.price, sellBTC: true });
+    desk.cash += sold + desk.btc * R.price; desk.btc = 0; desk.rig = { xp: 0, pro: 0, old: 0 }; desk.out = true;
+    row.endCash = desk.cash; row.btcHeld = 0; row.nw = desk.cash; row.pts = desk.pts; return { desk, row };
+  }
+  // run or shut off
+  const run = d.run !== false && count(desk.rig) > 0;
+  let btc = 0, power = 0;
+  if (run) MODEL_KEYS.forEach(k => { btc += desk.rig[k] * unitBTC(k, r); power += desk.rig[k] * unitPower(k, plan, r); });
+  desk.cash -= power; desk.btc += btc;
+  Object.assign(row, { rig: { ...desk.rig }, run, mined: btc, minedUSD: btc * R.price, power });
+  // sell or hold Bitcoin
   row.sellBTC = !!d.sell;
   if (d.sell && desk.btc > 0) { row.btcSold = desk.btc; row.btcCash = desk.btc * R.price; desk.cash += desk.btc * R.price; desk.btc = 0; }
   row.endCash = desk.cash; row.btcHeld = desk.btc; row.nw = netWorth(desk, r + 1, R.price); row.pts = desk.pts;

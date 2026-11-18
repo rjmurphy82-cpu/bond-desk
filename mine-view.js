@@ -49,6 +49,10 @@ export const CSS = `
 .hw-two button{border:2px solid var(--rule);background:#fff;border-radius:10px;font-size:19px;padding:12px 6px;color:var(--brown)}
 .hw-two button.on{background:var(--brown);border-color:var(--brown);color:#fff}
 .hw-two button.on.go{background:var(--orange);border-color:var(--orange)}
+.hw-cash{display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;background:#fff;border:2px dashed var(--rule);border-radius:10px;padding:12px 14px;text-transform:none;font-family:Barlow,Arial,sans-serif;color:var(--ink)}
+.hw-cash b{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:20px;font-weight:600}
+.hw-cash span{font-size:15px;color:var(--muted)}
+.hw-cash.on{border-style:solid;border-color:var(--brown);background:var(--brown);color:#fff}.hw-cash.on span{color:#CFCFCF}
 .hw-desk{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px}
 .hw-desk div{background:var(--brown);color:#fff;border-radius:8px;padding:7px 10px}
 .hw-desk small{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#CFCFCF}
@@ -86,11 +90,11 @@ export const planLine = k => { const p = D.PLANS[k]; return p ? `<b>${esc(p.name
 export function resultsTable(rows) { // rows: [{name, row, nwBefore}]
   return `<table class="hw-res"><tr><th>Desk</th><th>Machines</th><th>Ran?</th><th class="r">Mined</th><th class="r">Power bill</th><th class="r">Mining profit</th><th>Bitcoin</th><th class="r">Bonus</th><th class="r">Net worth</th></tr>
   ${rows.map(({ name, row, before }) => row.skipped ? `<tr><td class="nm">${esc(name)}</td><td colspan="8" class="small">Sat out (no rig)</td></tr>` :
-    `<tr><td class="nm">${esc(name)}</td><td>${esc(rigText(row.rig))}<div class="small">${esc((D.PLANS[row.plan] || {}).name || "")}${row.switched ? " (switched)" : ""}</div></td>
-    <td>${row.run ? `<span class="pill g">Ran</span>` : `<span class="pill ig">Off</span>`}</td>
+    `<tr><td class="nm">${esc(name)}</td><td>${row.out ? "–" : esc(rigText(row.rig))}<div class="small">${esc((D.PLANS[row.plan] || {}).name || "")}</div></td>
+    <td>${row.cashout ? `<span class="pill j">Cashed out</span>` : row.out ? `<span class="pill ig">Out</span>` : row.run ? `<span class="pill g">Ran</span>` : `<span class="pill ig">Off</span>`}</td>
     <td class="r">${usd(row.minedUSD)}<div class="small">${btc(row.mined)}</div></td><td class="r">${usd(-row.power)}</td>
     <td class="r ${cls(row.minedUSD - row.power)}">${sgnUsd(row.minedUSD - row.power)}</td>
-    <td>${row.sellBTC ? "Sold" : "Held"}</td><td class="r">${row.bonus ? "+" + usd(row.bonus) : ""}</td>
+    <td>${row.out ? "–" : row.cashout ? "Sold all + machines " + usd(row.sold) : row.sellBTC ? "Sold" : "Held"}</td><td class="r">${row.bonus ? "+" + usd(row.bonus) : ""}</td>
     <td class="r"><b>${usd(row.nw)}</b><div class="small ${cls(row.nw - before)}">${sgnUsd(row.nw - before)}</div></td></tr>`).join("")}</table>`;
 }
 export function standTable(st, opts = {}) {

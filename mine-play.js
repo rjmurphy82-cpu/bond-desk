@@ -127,28 +127,29 @@ function renderLobby() {
 /* ---------- build + rounds ---------- */
 function startDraft(desk) {
   if (draft) return;
-  draft = S.r === 0 ? { plan: null, buy: { xp: 0, pro: 0, old: 0 } } : { q: null, calc: "", text: "", run: true, sell: false, buy: { xp: 0, pro: 0, old: 0 }, dump: { xp: 0, pro: 0, old: 0 }, plan: desk.plan };
+  draft = S.r === 0 ? { plan: null, buy: { xp: 0, pro: 0, old: 0 } } : { q: null, calc: "", text: "", run: true, sell: false, cashout: false };
 }
+const cashVal = (desk, r) => D.MODEL_KEYS.reduce((a, k) => a + (desk.rig[k] || 0) * D.sellPrice(k, r), 0);
 function preview(base) { return D.apply(base, draft, S.r, false, true); }
 function renderPick(err = "") {
   const r = S.r, base = r === 0 ? D.blankDesk() : myDesk(r - 1).desk;
   startDraft(base);
   if (r > 0 && !base.built) { $("#view").innerHTML = `<div class="center card"><div class="label">Sitting out</div><h2>Your desk didn't build a rig</h2><p>Watch the board and follow along on your Game Log.</p></div>`; return; }
   const pv = preview(base), idx = r;
-  const shop = D.MODEL_KEYS.map(k => {
+  const shop = r > 0 ? "" : D.MODEL_KEYS.map(k => {
     const M = D.MODELS[k], own = base.rig[k] || 0;
     return `<div class="hw-item"><div><div class="nm">${esc(M.name)} ${own ? `<span class="pill ig">You own ${own}</span>` : ""}</div>
       <div class="sp">${M.th} TH/s · ${(M.kw * 1000).toLocaleString()} W · ${M.jth} J/TH · ${esc(M.tag)}</div>
-      <div class="pr">Buy ${usd(D.MARKET[k][idx])}${r ? ` · Sell ${usd(D.sellPrice(k, idx))}` : ""}</div></div>
-      <div style="display:grid;gap:6px">${stepper("buy", k, "Buy")}${r && own ? stepper("dump", k, "Sell") : ""}</div></div>`;
+      <div class="pr">${usd(D.MARKET[k][idx])}</div></div>
+      <div style="display:grid;gap:6px">${stepper("buy", k, "Buy")}</div></div>`;
   }).join("");
-  const plans = `<div class="hw-plans">${D.PLAN_KEYS.map(k => `<button data-plan="${k}" class="${draft.plan === k ? "on" : ""}">${planLine(k)}${r && k !== base.plan ? `<small style="color:var(--rust)">Switching costs ${usd(D.PLANS[k].setup)}.</small>` : ""}${r && k === base.plan ? `<small style="color:var(--green)">Your current plan.</small>` : ""}</button>`).join("")}</div>`;
+  const plans = r > 0 ? "" : `<div class="hw-plans">${D.PLAN_KEYS.map(k => `<button data-plan="${k}" class="${draft.plan === k ? "on" : ""}">${planLine(k)}</button>`).join("")}</div>`;
   let html;
   if (r === 0) {
     const cost = D.MODEL_KEYS.reduce((a, k) => a + draft.buy[k] * D.MARKET[k][0], 0) + (draft.plan ? D.PLANS[draft.plan].setup : 0);
     html = `<div class="yrhead"><div><div class="sub">Build your rig</div><h2>You have $10,000</h2></div></div>
-      <div class="card"><div class="small" style="font-size:16px">Electricity is your biggest cost. A machine runs 24/7: power cost = kW × 24 hours × days × price per kWh. Machines lose value over time, and you can sell them back later at 85% of the market price.</div></div>
-      <div class="hw-step"><b>1</b>Where will you plug in?</div>${plans}
+      <div class="card"><div class="small" style="font-size:16px">Electricity is your biggest cost. A machine runs 24/7: power cost = kW × 24 hours × days × price per kWh. <b>Your power plan is locked for the whole game</b>, and you can't buy more machines later. Any round, you can Cash out: sell everything and sit out.</div></div>
+      <div class="hw-step"><b>1</b>Where will you plug in? (locked for the game)</div>${plans}
       <div class="hw-step"><b>2</b>Buy machines</div><div class="hw-shop">${shop}</div>
       <div class="hw-tot"><span>Spending: <b>${usd(cost)}</b></span><span>Cash left: <b class="${10000 - cost < 0 ? "neg" : ""}">${usd(10000 - cost)}</b></span></div>
       ${pv.err && (draft.plan || D.count(draft.buy)) ? `<div class="err">${esc(pv.err)}</div>` : ""}`;
@@ -163,22 +164,23 @@ function renderPick(err = "") {
       <div class="hw-q"><div class="t">${esc(R.q.text)}</div><div class="hw-opts">${R.q.opts.map((o, i) => `<button data-q="${i}" class="${draft.q === i ? "on" : ""}">${esc(o)}</button>`).join("")}</div>
         ${R.calc ? `<div style="margin-top:12px;font-size:18px;font-weight:600">${esc(R.calc.text)}</div><label class="field" style="margin-top:6px"><span>${esc(R.calc.unit)} (within 5% = +1 point and $${D.CALC_BONUS})</span><input id="calc" inputmode="decimal" value="${esc(draft.calc)}" style="font-size:24px"></label>` : ""}
         ${R.writeup ? `<label class="field"><span>${esc(D.writeupPrompt)}</span><textarea id="wu" rows="3" maxlength="240" style="width:100%;font-size:18px;padding:10px;border:2px solid var(--rule);border-radius:10px;font-family:Barlow,Arial">${esc(draft.text)}</textarea></label><div class="small">Your teacher can award +1 point for the best answers.</div>` : ""}</div>
+      ${base.out ? `<div class="card dark" style="margin-top:12px"><div class="label">You cashed out</div><div style="font-size:18px">Your money is safe in cash (${usd(base.cash)}). Keep answering Prove It: every right answer is still worth ${usd(D.POINT_VALUE)}.</div></div>` : `
       <div class="hw-step"><b>2</b>Run your machines this round?</div>
-      <div class="hw-two"><button data-run="1" class="${draft.run ? "on go" : ""}">⚡ Run them</button><button data-run="0" class="${!draft.run ? "on" : ""}">⏸ Shut off (no Bitcoin, no power bill)</button></div>
-      <div class="hw-step"><b>3</b>Buy or sell machines (optional)</div><div class="hw-shop">${shop}</div>
-      <div class="hw-step"><b>4</b>Power plan</div>${plans}
-      <div class="hw-step"><b>5</b>Your Bitcoin</div>
-      <div class="hw-two"><button data-sell="0" class="${!draft.sell ? "on" : ""}">💎 Hold it all</button><button data-sell="1" class="${draft.sell ? "on go" : ""}">💵 Sell it all at ${usd(R.price)}</button></div>
+      <div class="hw-two"><button data-run="1" class="${draft.run && !draft.cashout ? "on go" : ""}">⚡ Run them</button><button data-run="0" class="${!draft.run && !draft.cashout ? "on" : ""}">⏸ Shut off (no Bitcoin, no power bill)</button></div>
+      <div class="hw-step"><b>3</b>Your Bitcoin</div>
+      <div class="hw-two"><button data-sell="0" class="${!draft.sell && !draft.cashout ? "on" : ""}">💎 Hold it all</button><button data-sell="1" class="${draft.sell && !draft.cashout ? "on go" : ""}">💵 Sell it all at ${usd(R.price)}</button></div>
       <div class="small" style="margin-top:4px">Selling turns every Bitcoin you hold (including what you mine this round) into cash at this round's price.</div>
-      ${pv.err ? `<div class="err">${esc(pv.err)}</div>` : `<div class="hw-tot"><span>Cash after this round's buys, sells and power: <b class="${pv.desk.cash < 0 ? "neg" : ""}">${usd(pv.desk.cash)}</b></span></div>${pv.desk.cash < 0 ? `<div class="err" style="background:#FFF3B0;color:#111">Heads up: that puts your desk in debt. You can still lock it in, but shutting off or selling machines would stop the bleeding.</div>` : ""}`}`;
+      <div class="hw-step" style="font-size:17px">Or: get out of mining</div>
+      <button class="hw-cash ${draft.cashout ? "on" : ""}" id="cashout"><b>${draft.cashout ? "✓ Cashing out" : "🏁 Cash out"}</b><span>Sell all your machines for ${usd(cashVal(base, r))} and all your Bitcoin for ${usd(base.btc * R.price)}, now. You stop mining for the rest of the game, but you still answer Prove It.${draft.cashout ? " Tap again to undo." : ""}</span></button>`}`;
   }
   $("#view").innerHTML = `${html}<div class="actions" style="justify-content:stretch"><button class="btn big" id="lock" style="width:100%" ${pv.err ? "disabled" : ""}>Lock it in</button></div>
     ${err ? `<div class="err">${esc(err)}</div>` : ""}<div class="status" id="conn">${esc(conn)}</div>`;
   $$("[data-plan]").forEach(b => b.onclick = () => keepY(() => { draft.plan = b.dataset.plan; renderPick(); }));
   $$("[data-q]").forEach(b => b.onclick = () => keepY(() => { draft.q = +b.dataset.q; renderPick(); }));
-  $$("[data-run]").forEach(b => b.onclick = () => keepY(() => { draft.run = b.dataset.run === "1"; renderPick(); }));
-  $$("[data-sell]").forEach(b => b.onclick = () => keepY(() => { draft.sell = b.dataset.sell === "1"; renderPick(); }));
-  $$("[data-st]").forEach(b => b.onclick = () => keepY(() => { const [f, k, d] = b.dataset.st.split(":"); const max = f === "dump" ? base.rig[k] : 20; draft[f][k] = Math.max(0, Math.min(max, draft[f][k] + +d)); renderPick(); }));
+  $$("[data-run]").forEach(b => b.onclick = () => keepY(() => { draft.run = b.dataset.run === "1"; draft.cashout = false; renderPick(); }));
+  $$("[data-sell]").forEach(b => b.onclick = () => keepY(() => { draft.sell = b.dataset.sell === "1"; draft.cashout = false; renderPick(); }));
+  if ($("#cashout")) $("#cashout").onclick = () => keepY(() => { draft.cashout = !draft.cashout; renderPick(); });
+  $$("[data-st]").forEach(b => b.onclick = () => keepY(() => { const [f, k, d] = b.dataset.st.split(":"); draft[f][k] = Math.max(0, Math.min(20, draft[f][k] + +d)); renderPick(); }));
   if ($("#calc")) $("#calc").oninput = e => { draft.calc = e.target.value; };
   if ($("#wu")) $("#wu").oninput = e => { draft.text = e.target.value; };
   $("#lock").onclick = lockIn;
@@ -197,7 +199,7 @@ async function lockIn() {
 function renderLocked() {
   const d = mine(), r = S.r;
   const lines = r === 0 ? `<p style="font-size:20px">${esc(D.PLANS[d.plan].name)} · ${esc(rigText(d.buy))}</p>`
-    : `<p style="font-size:19px;line-height:1.5">Prove It: <b>${esc(D.ROUNDS[r].q.opts[d.q])}</b>${d.calc ? ` · Math: <b>${esc(d.calc)}</b>` : ""}<br>${d.run ? "⚡ Running" : "⏸ Shut off"} · ${d.sell ? "💵 Selling Bitcoin" : "💎 Holding Bitcoin"}${D.count(d.buy) ? ` · Buying ${esc(rigText(d.buy))}` : ""}${D.count(d.dump) ? ` · Selling ${esc(rigText(d.dump))}` : ""}</p>`;
+    : `<p style="font-size:19px;line-height:1.5">Prove It: <b>${esc(D.ROUNDS[r].q.opts[d.q])}</b>${d.calc ? ` · Math: <b>${esc(d.calc)}</b>` : ""}<br>${d.cashout ? "🏁 Cashing out" : `${d.run ? "⚡ Running" : "⏸ Shut off"} · ${d.sell ? "💵 Selling Bitcoin" : "💎 Holding Bitcoin"}`}</p>`;
   $("#view").innerHTML = `<div class="center lockedcard"><h2>🔒 Locked in</h2>${lines}
     <p style="font-size:17px;color:#CFCFCF">${S.locked.length} of ${S.groups.length} desks are locked. Eyes on the board.</p>
     <button class="btn ghost" id="undo" style="color:#fff;border-color:#fff">Change our answer</button></div><div class="status" id="conn">${esc(conn)}</div>`;
@@ -219,14 +221,14 @@ function renderReveal() {
   } else if (row) {
     body = `<div class="card"><div class="label">Your round</div>${row.skipped ? "Sat out." : `<table class="hw-res">
       <tr><td>Machines</td><td class="r">${esc(rigText(row.rig))}</td></tr>
-      <tr><td>${row.run ? "Bitcoin mined" : "Shut off"}</td><td class="r">${row.run ? `${btc(row.mined)} (${usd(row.minedUSD)})` : "–"}</td></tr>
+      <tr><td>${row.run ? "Bitcoin mined" : row.cashout ? "Cashed out" : row.out ? "Out of mining" : "Shut off"}</td><td class="r">${row.run ? `${btc(row.mined)} (${usd(row.minedUSD)})` : "–"}</td></tr>
       <tr><td>Power bill</td><td class="r neg">${usd(-row.power)}</td></tr>
       <tr><td>Mining profit</td><td class="r ${cls(row.minedUSD - row.power)}">${sgnUsd(row.minedUSD - row.power)}</td></tr>
-      ${row.sold ? `<tr><td>Machines sold</td><td class="r">+${usd(row.sold)}</td></tr>` : ""}${row.spent ? `<tr><td>Machines bought</td><td class="r">${usd(-row.spent)}</td></tr>` : ""}
+      ${row.sold ? `<tr><td>Machines sold (cash out)</td><td class="r">+${usd(row.sold)}</td></tr>` : ""}
       ${row.btcSold ? `<tr><td>Bitcoin sold</td><td class="r">+${usd(row.btcCash)}</td></tr>` : ""}
       <tr><td>Analyst points this round</td><td class="r">+${row.gained}${row.bonus ? ` and +${usd(row.bonus)}` : ""}</td></tr>
       <tr><td><b>Net worth</b></td><td class="r"><b>${usd(row.nw)}</b></td></tr></table>`}</div>`;
-    if (S.step === "stand") body += `<div class="card dark" style="margin-top:12px;text-align:center"><div class="label">Standings</div><div class="rank" style="justify-content:center"><div class="p">#${mi + 1}</div><div style="font-size:20px">of ${st.length} · score ${usd(my.score)}</div></div></div>`;
+    if (S.step === "results") body += `<div class="card dark" style="margin-top:12px;text-align:center"><div class="label">Standings</div><div class="rank" style="justify-content:center"><div class="p">#${mi + 1}</div><div style="font-size:20px">of ${st.length} · score ${usd(my.score)}</div></div></div>`;
   }
   $("#view").innerHTML = `<div class="yrhead"><div><div class="sub">${r === 0 ? "The build" : esc(D.ROUNDS[r].tag + " · " + D.ROUNDS[r].title)}</div><h2>Eyes on the board</h2></div></div>${body}<div class="status" id="conn">${esc(conn)}</div>`;
 }
