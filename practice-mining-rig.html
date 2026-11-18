@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Mining Rig | District 214 Finance &amp; Investing</title>
+<link rel="canonical" href="https://214-investing.vercel.app/practice-mining-rig">
+<meta name="description" content="Bitcoin mining simulator for District 214 Finance &amp; Investing: buy a rig, model ROI and power use, and mine a real SHA-256 block.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* Same tokens as 214-investing.vercel.app/site.css */
+:root{
+  --bg:#F4F3F3; --paper:#FFFFFF; --ink:#111111; --muted:#5C5C5C; --line:rgba(17,17,17,.14);
+  --red:#C1102F; --redtext:#B00E2A; --redsoft:#FBE7EA; --black:#111111; --onblack:#FFFFFF;
+  --good:#1E7A3C; --goodsoft:#E7F4EB; --bad:#B3261E; --badsoft:#F8E1DE; --gray:#EDEDED;
+  --display:"Oswald","Arial Narrow",Impact,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",Consolas,ui-monospace,monospace;
+  --term:#0B0B0B; --termline:#262626; --termtext:#E9E9E9; --termmuted:#8E8E8E; --termgreen:#3FB86A;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){--bg:#121212; --paper:#1E1E1E; --ink:#F2F2F2; --muted:#A8A8A8; --line:rgba(242,242,242,.14); --redtext:#FF5C70; --redsoft:#3A1219; --black:#2B2B2B; --good:#3FB86A; --goodsoft:#123020; --bad:#F07A6E; --badsoft:#3A1A17; --gray:#2A2A2A; color-scheme:dark}
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 var(--body)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+
+/* ---- top bar: black with red rule, like the unit headers ---- */
+.topbar{background:#111;color:#fff;border-bottom:5px solid var(--red);position:relative;overflow:hidden}
+.topbar::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);background-size:28px 28px;pointer-events:none}
+.tb-in{position:relative;max-width:1320px;margin:0 auto;padding:14px clamp(16px,4vw,40px);display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.tb-in img{height:42px;width:auto;border-radius:3px;display:block}
+.sitename{font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.14em;text-transform:uppercase;line-height:1.1}
+.sitename small{display:block;font-family:var(--body);font-size:12px;letter-spacing:.14em;color:#8E8E8E;font-weight:700}
+.tb-in .back{margin-left:auto;color:#E9E9E9;text-decoration:none;font-weight:600;font-size:15px;border:2px solid #444;border-radius:8px;padding:5px 12px}
+.tb-in .back:hover{border-color:#fff}
+.hero{position:relative;max-width:1320px;margin:0 auto;padding:6px clamp(16px,4vw,40px) 26px}
+.eyebrow{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#FF5C70;font-family:var(--mono)}
+.eyebrow .cur{display:inline-block;width:9px;height:15px;background:#FF5C70;vertical-align:-2px;margin-left:4px;animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(38px,6vw,64px);line-height:1;margin:6px 0 10px;text-transform:uppercase;letter-spacing:.01em}
+h1 span{color:var(--red)}
+.lede{max-width:70ch;margin:0;color:#CFCFCF}
+
+/* ---- terminal stat strip ---- */
+.term{background:var(--term);border:1px solid var(--termline);border-radius:10px;font-family:var(--mono);color:var(--termtext)}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin-top:18px}
+.strip>div{padding:10px 14px;border-right:1px solid var(--termline)}
+.strip>div:last-child{border-right:0}
+.strip small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--termmuted)}
+.strip b{font-size:19px;font-weight:700;color:#fff}
+.strip .live{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--termmuted)}
+.strip .live::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px rgba(193,16,47,.35)}
+
+/* ---- tabs ---- */
+.tabsbar{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--line)}
+.tabs{max-width:1320px;margin:0 auto;padding:10px clamp(16px,4vw,40px);display:flex;gap:8px;overflow-x:auto}
+.tabs a{flex:none;display:flex;gap:8px;align-items:baseline;background:var(--paper);border:2px solid var(--line);border-radius:999px;padding:6px 16px;font-weight:600;font-size:15px;color:inherit;text-decoration:none;white-space:nowrap}
+.tabs a b{font-family:var(--mono);font-size:12px;color:var(--redtext)}
+.tabs a:hover{border-color:var(--red)}
+.tabs a.on{background:var(--black);border-color:var(--black);color:#fff}
+.tabs a.on b{color:#FF5C70}
+
+main{max-width:1320px;margin:0 auto;padding:26px clamp(16px,4vw,40px) 90px}
+section{display:none;scroll-margin-top:72px}
+section.on{display:block}
+.sechead{display:flex;align-items:baseline;justify-content:space-between;gap:6px 16px;flex-wrap:wrap;border-bottom:3px solid var(--ink);padding-bottom:8px;margin:0 0 8px}
+.sechead h2{font-family:var(--display);font-weight:600;font-size:30px;margin:0;line-height:1.1}
+.sechead h2 .idx{font-family:var(--mono);font-size:15px;color:var(--redtext);font-weight:700;margin-right:10px;vertical-align:4px}
+.sechead span{color:var(--muted);font-size:15px;font-weight:600}
+.intro{color:var(--muted);margin:10px 0 20px;max-width:78ch}
+
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.mt{margin-top:16px}
+
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.phead{background:#111;color:#fff;padding:12px 20px;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px}
+.phead .t{font-family:var(--display);font-weight:600;font-size:22px;line-height:1.1}
+.phead .tag{background:var(--red);color:#fff;border-radius:999px;padding:1px 10px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.phead .r{margin-left:auto;font-family:var(--mono);font-size:12px;color:#8E8E8E;letter-spacing:.08em}
+.pbody{padding:16px 20px 20px}
+.card{background:var(--paper);border:1px solid var(--line);border-top:4px solid var(--black);border-radius:8px;padding:16px 18px}
+.card h3{font-family:var(--display);font-weight:600;font-size:21px;line-height:1.15;margin:0 0 6px}
+.lbl{font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--redtext);margin-bottom:6px}
+
+label{display:block;font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:12px 0 4px}
+input,select,textarea{width:100%;background:var(--bg);border:2px solid var(--line);color:var(--ink);border-radius:8px;padding:8px 10px;font:500 16px var(--body)}
+input[type=number]{font-family:var(--mono);font-size:15px}
+input[type=range]{padding:0;border:0;background:transparent;accent-color:var(--red)}
+textarea{font-family:var(--mono);font-size:13px;resize:vertical}
+.row{display:flex;gap:12px}
+.row>*{flex:1;min-width:0}
+.rv{float:right;font-family:var(--mono);color:var(--ink);letter-spacing:0;text-transform:none}
+.btn{background:var(--red);color:#fff;border:0;border-radius:10px;padding:9px 18px;font-family:var(--display);font-weight:600;font-size:18px;letter-spacing:.02em}
+.btn.dark{background:var(--black);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line);padding:7px 14px;font-size:16px}
+.btn.ghost:hover:not(:disabled){border-color:var(--ink)}
+.btn.sm{font-size:15px;padding:6px 12px}
+.btn:disabled{opacity:.4;cursor:default}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.seg{display:inline-flex;flex-wrap:wrap;gap:6px}
+.seg button{background:var(--paper);border:2px solid var(--line);border-radius:999px;padding:5px 14px;font:600 15px var(--body)}
+.seg button:hover{border-color:var(--red)}
+.seg button.on{background:var(--black);border-color:var(--black);color:#fff}
+
+/* stat blocks */
+.kpi{background:var(--bg);border:1px solid var(--line);border-left:4px solid var(--black);border-radius:8px;padding:10px 14px}
+.kpi small{display:block;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.kpi b{display:block;font-family:var(--mono);font-size:21px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.kpi i{font-style:normal;color:var(--muted);font-size:14px}
+.pos{color:var(--good)} .neg{color:var(--bad)} .amb{color:var(--redtext)}
+
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:16px}
+th,td{border-bottom:1px solid var(--line);padding:7px 10px;text-align:left}
+th{background:#111;color:#fff;font-family:var(--display);font-weight:500;letter-spacing:.02em;border:0}
+td.n,th.n{text-align:right;font-family:var(--mono);font-size:15px}
+tr.tot td{font-weight:700;border-top:3px solid var(--red);border-bottom:0;font-size:17px}
+.note{font-size:14px;color:var(--muted);margin-top:10px}
+.check{padding-left:18px;margin:0}
+.check li{margin:7px 0}
+.check li::marker{color:var(--red)}
+
+/* timeline */
+.tl{position:relative;margin:34px 50px 8px;height:84px}
+.tl .bar{position:absolute;left:0;right:0;top:34px;height:6px;border-radius:3px;background:repeating-linear-gradient(90deg,var(--ink) 0 10px,transparent 10px 14px);opacity:.35}
+.tl .pt{position:absolute;top:24px;transform:translateX(-50%);text-align:center;width:120px}
+.tl .dot{width:18px;height:18px;border-radius:50%;margin:0 auto;border:3px solid var(--paper);box-shadow:0 0 0 1px var(--line)}
+.tl .lb{font-size:13px;margin-top:6px;color:var(--muted);line-height:1.25;font-family:var(--mono)}
+.tl .lb b{display:block;color:var(--ink);font-size:14px;font-family:var(--display);font-weight:600;letter-spacing:.02em}
+.chartbox{position:relative;height:330px}
+.chartbox.sm{height:270px}
+
+/* hash game: terminal blocks */
+.block{background:var(--term);color:var(--termtext);border:2px solid var(--termline);border-radius:12px;padding:12px 14px;transition:border-color .2s,box-shadow .2s}
+.block.ok{border-color:var(--termgreen);box-shadow:0 0 0 3px rgba(63,184,106,.18)}
+.block.bad{border-color:var(--red);box-shadow:0 0 0 3px rgba(193,16,47,.18)}
+.block .bh{display:flex;justify-content:space-between;align-items:center;font-family:var(--display);font-size:20px;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.block label{color:var(--termmuted)}
+.block input,.block textarea{background:#161616;border-color:var(--termline);color:#fff}
+.hash{font-family:var(--mono);font-size:12px;word-break:break-all;background:#000;border:1px solid var(--termline);border-radius:6px;padding:7px;color:#bdbdbd}
+.hash .z{color:var(--termgreen);font-weight:700}
+.status{font-weight:700;font-size:14px;margin-top:8px;font-family:var(--mono)}
+.block .pos{color:var(--termgreen)} .block .neg{color:#FF5C70} .block .amb{color:#FFB3BE}
+.why .card h3::before{counter-increment:w;content:"0" counter(w) " ";font-family:var(--mono);font-size:14px;color:var(--redtext);vertical-align:3px}
+.why{counter-reset:w}
+.bigfact{font-family:var(--mono);font-size:30px;font-weight:700;color:var(--redtext);line-height:1.2}
+.house{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;font-size:20px;line-height:1}
+.fb{border-left:6px solid var(--red);background:color-mix(in srgb,var(--redsoft) 55%,var(--paper));border-radius:0 10px 10px 0;padding:12px 16px;margin:10px 0}
+.fb b:first-child{font-family:var(--display);font-weight:600;font-size:19px;color:var(--redtext);margin-right:4px}
+.daygrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(11px,1fr));gap:2px;margin-top:12px}
+.daygrid i{display:block;height:11px;border-radius:2px;background:var(--gray)}
+.daygrid i.hit{background:var(--red)}
+.mstats{margin-top:14px;font-size:16px}
+.flash{animation:fl .9s}
+@keyframes fl{0%{background:var(--redsoft)}100%{background:transparent}}
+footer{max-width:1320px;margin:0 auto;padding:0 clamp(16px,4vw,40px) 40px;color:var(--muted);font-size:13px;font-family:var(--mono)}
+
+/* text size control, same as the class site */
+#tsz{position:fixed;left:14px;bottom:14px;z-index:9999;display:flex;align-items:center;gap:2px;background:#111;color:#fff;border-radius:999px;padding:4px;box-shadow:0 2px 10px rgba(0,0,0,.3);font:600 15px var(--body)}
+#tsz button{background:transparent;border:0;color:#fff;font:inherit;border-radius:999px;min-width:40px;height:36px;padding:0 10px}
+#tsz button:hover{background:rgba(255,255,255,.15)}
+#tsz button:disabled{opacity:.35;cursor:default}
+#tsz .big{font-size:20px}
+#tsz .pct{min-width:58px;font-variant-numeric:tabular-nums}
+@media (max-width:640px){.tl{margin:34px 30px 8px}.tl .pt{width:86px}.strip>div{border-right:0;border-bottom:1px solid var(--termline)}}
+@media (prefers-reduced-motion: reduce){.eyebrow .cur{animation:none}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="tb-in">
+    <a href="/"><img src="/logo-214.png" alt="High School District 214" onerror="this.remove()"></a>
+    <div class="sitename">Finance &amp; Investing<small>Cryptocurrency · Simulator</small></div>
+    <a class="back" href="/">← Class site</a>
+  </div>
+  <div class="hero">
+    <div class="eyebrow">&gt; ./mining-rig --network=bitcoin<span class="cur"></span></div>
+    <h1>The Mining <span>Rig</span></h1>
+    <p class="lede">Buy the hardware, plug it in, and find out if it ever pays for itself. Then mine a real block and see why the whole network depends on machines like yours.</p>
+    <div class="term strip">
+      <div><span class="live">Market snapshot · Mid-Nov 2026</span><small>All values editable</small></div>
+      <div><small>BTC price</small><b id="sPrice"></b></div>
+      <div><small>Network hashrate</small><b id="sHash"></b></div>
+      <div><small>Block reward</small><b id="sReward"></b></div>
+      <div><small>Hashprice $/PH/day</small><b id="sHashprice"></b></div>
+      <div><small>Next halving</small><b id="sHalving"></b></div>
+    </div>
+  </div>
+</div>
+
+<div class="tabsbar"><nav class="tabs" id="nav">
+  <a href="#build"><b>01</b>Build &amp; Buy</a>
+  <a href="#roi"><b>02</b>ROI Timeline</a>
+  <a href="#power"><b>03</b>Power &amp; Heat</a>
+  <a href="#how"><b>04</b>How Mining Works</a>
+  <a href="#lottery"><b>05</b>Solo Lottery &amp; Challenges</a>
+  <a href="#market"><b>⚙</b>Market Settings</a>
+</nav></div>
+
+<main>
+<!-- ============ BUILD ============ -->
+<section id="build">
+  <div class="sechead"><h2><span class="idx">01</span>Build &amp; buy your setup</h2><span>Pick a machine and add up the real cost</span></div>
+  <p class="intro">A Bitcoin miner is a single-purpose computer called an ASIC (application-specific integrated circuit). It does one thing: run the SHA-256 hash function trillions of times per second.</p>
+  <div class="grid g2">
+    <div class="panel"><div class="phead"><span class="t">The hardware</span><span class="tag">Step 1</span></div><div class="pbody">
+      <label>Miner model</label>
+      <select id="model"></select>
+      <div class="row">
+        <div><label>Hashrate (TH/s)</label><input id="th" type="number" step="any"></div>
+        <div><label>Power (watts)</label><input id="watts" type="number" step="any"></div>
+      </div>
+      <div class="row">
+        <div><label>Price per unit ($)</label><input id="unitPrice" type="number" step="any"></div>
+        <div><label>How many units</label><input id="qty" type="number" min="1" value="1"></div>
+      </div>
+      <div class="note" id="modelNote"></div>
+    </div></div>
+    <div class="panel"><div class="phead"><span class="t">Getting it running</span><span class="tag">Step 2</span></div><div class="pbody">
+      <div class="row">
+        <div><label>Shipping + tax (%)</label><input id="shipPct" type="number" value="8"></div>
+        <div><label>Days to arrive</label><input id="leadDays" type="number" value="21"></div>
+      </div>
+      <div class="row">
+        <div><label>Electrician, 240V ($)</label><input id="elec" type="number" value="600"></div>
+        <div><label>Ventilation ($)</label><input id="vent" type="number" value="300"></div>
+      </div>
+      <div class="row">
+        <div><label>Pool fee (%)</label><input id="poolFee" type="number" step="0.1" value="2"></div>
+        <div><label>Uptime (%)</label><input id="uptime" type="number" value="97"></div>
+      </div>
+      <label>Electricity price ($/kWh) <span class="rv" id="rateV"></span></label>
+      <input id="rate" type="range" min="0.01" max="0.30" step="0.005" value="0.16">
+      <div class="btns" id="ratePresets"></div>
+    </div></div>
+  </div>
+
+  <div class="grid g2 mt">
+    <div class="panel"><div class="phead"><span class="t">Upfront investment</span><span class="r">COST_BASIS</span></div><div class="pbody"><table id="costTable"></table></div></div>
+    <div class="panel"><div class="phead"><span class="t">Day one snapshot</span><span class="r">TODAY'S NUMBERS</span></div><div class="pbody">
+      <div class="grid g3" id="snap"></div>
+      <div class="note">The breakeven electricity price is the rate where revenue exactly covers the power bill. Below it you earn money every day. Above it, the machine loses money even though it "works."</div>
+    </div></div>
+  </div>
+
+  <div class="panel mt"><div class="phead"><span class="t">Setup checklist: what it actually takes</span></div><div class="pbody">
+    <div class="grid g2">
+      <ul class="check">
+        <li><b>The miner.</b> About the size of a large shoebox, roughly 30 lb. No screen or keyboard; you set it up from a web browser on the same network.</li>
+        <li><b>Power.</b> Big miners need a dedicated <b>240V</b> circuit (like a clothes dryer), not a wall outlet. A 3,500 W machine pulls about 15 amps at 240V, so it needs its own 20A or larger breaker and a cord rated for it.</li>
+        <li><b>Internet.</b> A wired Ethernet cable. It uses very little data; a reliable connection matters more than speed.</li>
+        <li><b>Airflow.</b> Almost every watt turns into heat, pushed out the back by fans. You need fresh air in and hot air ducted out (garage, basement, or a vented shed).</li>
+      </ul>
+      <ul class="check">
+        <li><b>Noise.</b> Air-cooled miners run around 75 dB, about as loud as a vacuum cleaner, 24 hours a day.</li>
+        <li><b>A mining pool account.</b> You point the miner at a pool (its web address and your username). The pool combines thousands of miners and pays you a share of every block it finds.</li>
+        <li><b>A Bitcoin wallet.</b> Where your payouts land. You control the keys; the pool only needs your receiving address.</li>
+        <li><b>Monitoring and taxes.</b> Watch temperatures and uptime. In the U.S., mined coins count as income at their value on the day you receive them, so keep records.</li>
+      </ul>
+    </div>
+  </div></div>
+</section>
+
+<!-- ============ ROI ============ -->
+<section id="roi">
+  <div class="sechead"><h2><span class="idx">02</span>Return on investment</h2><span>From the day you pay to the day it pays you back</span></div>
+  <p class="intro">Mining income is not fixed. The network keeps getting more competitive, the price of Bitcoin moves, and about every four years the reward is cut in half.</p>
+  <div class="panel"><div class="phead"><span class="t">Your timeline</span><span class="r">PROJECTION</span></div><div class="pbody">
+    <div class="tl" id="timeline"></div>
+    <div class="grid g4" id="roiKpis" style="margin-top:10px"></div>
+  </div></div>
+
+  <div class="grid g2 mt">
+    <div class="panel"><div class="phead"><span class="t">Scenario</span><span class="tag">Your call</span></div><div class="pbody">
+      <div class="seg" id="scen"><button data-s="bear">Bear market</button><button data-s="base" class="on">Base case</button><button data-s="bull">Bull market</button></div>
+      <label>BTC price change per year <span class="rv" id="pgV"></span></label>
+      <input id="pg" type="range" min="-60" max="150" step="5" value="0">
+      <label>Network hashrate growth per month <span class="rv" id="hgV"></span></label>
+      <input id="hg" type="range" min="-3" max="6" step="0.5" value="2">
+      <label>Time horizon <span class="rv" id="hzV"></span></label>
+      <input id="hz" type="range" min="12" max="60" step="6" value="36">
+      <label>What do you do with the Bitcoin you mine?</label>
+      <div class="seg" id="mode"><button data-m="sell" class="on">Sell every day</button><button data-m="hold">HODL (keep it all)</button></div>
+      <label style="display:flex;gap:10px;align-items:center;margin-top:14px;color:var(--ink);text-transform:none;letter-spacing:0;font-size:16px;font-weight:600"><input type="checkbox" id="smart" checked style="width:auto;accent-color:var(--red)"> Smart shutoff: turn the miner off on days it would lose money</label>
+    </div></div>
+    <div class="panel"><div class="phead"><span class="t">Cumulative profit</span><span class="r">AFTER HARDWARE</span></div><div class="pbody"><div class="chartbox"><canvas id="cumChart"></canvas></div></div></div>
+  </div>
+
+  <div class="panel mt"><div class="phead"><span class="t">Monthly revenue vs. electricity bill</span></div><div class="pbody">
+    <div class="chartbox sm"><canvas id="monChart"></canvas></div>
+    <div class="note">Watch for the cliff at the halving: revenue drops by about half overnight while the power bill stays the same.</div>
+  </div></div>
+</section>
+
+<!-- ============ POWER ============ -->
+<section id="power">
+  <div class="sechead"><h2><span class="idx">03</span>Power &amp; heat</h2><span>A miner never takes a break</span></div>
+  <p class="intro">Electricity is the biggest ongoing cost in mining. Here is what your setup uses, what it costs, and how it compares to everyday things.</p>
+  <div class="grid g4" id="powerKpis"></div>
+  <div class="grid g2 mt">
+    <div class="card"><h3>Compared to an average U.S. home</h3><div id="homesTxt"></div><div class="house" id="houses"></div><div class="note">An average U.S. home uses roughly 860 kWh per month (U.S. EIA ballpark).</div></div>
+    <div class="card"><h3>It is also a space heater</h3><div id="heatTxt"></div><div class="note">Nearly all of the electricity becomes heat. Some home miners use that heat to warm their house in winter, and companies sell miners built into space heaters and water heaters.</div></div>
+  </div>
+  <div class="grid g2 mt">
+    <div class="panel"><div class="phead"><span class="t">Efficiency: the number that matters most</span></div><div class="pbody">
+      <p style="margin-top:0">Efficiency is measured in <b>joules per terahash (J/TH)</b>: the energy it takes to try one trillion guesses. Lower is better. Two machines with the same speed can have very different power bills.</p>
+      <table id="effTable"></table>
+    </div></div>
+    <div class="panel"><div class="phead"><span class="t">The whole network</span><span class="r">ESTIMATE</span></div><div class="pbody">
+      <label>Average fleet efficiency (J/TH) <span class="rv" id="fleetV"></span></label>
+      <input id="fleet" type="range" min="12" max="35" step="1" value="20">
+      <div id="netPower" style="margin-top:14px"></div>
+      <div class="note">Network hashrate × average efficiency. Nobody knows the exact mix of machines running worldwide, so this is an estimate.</div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============ HOW ============ -->
+<section id="how">
+  <div class="sechead"><h2><span class="idx">04</span>How mining works</h2><span>Your iPad runs real SHA-256 below</span></div>
+  <p class="intro">Miners bundle new transactions into a block, then race to find a number (the <b>nonce</b>) that makes the block's SHA-256 fingerprint start with enough zeros. There is no shortcut: guess, check, and guess again.</p>
+  <div class="panel"><div class="phead"><span class="t">Mine a 3-block chain</span><span class="tag">Try it</span></div><div class="pbody">
+    <div style="max-width:520px"><label>Difficulty: hash must start with this many zeros</label>
+      <select id="diff"><option value="2">2 zeros (easy, ~256 guesses)</option><option value="3" selected>3 zeros (~4,096 guesses)</option><option value="4">4 zeros (~65,536 guesses)</option><option value="5">5 zeros (~1 million guesses, be patient)</option></select></div>
+    <div class="grid g3" id="chain" style="margin-top:14px"></div>
+    <div id="mineStats" class="mstats"></div>
+    <div class="fb"><b>Try this:</b> Mine all three blocks so they turn green. Then go back to Block 1 and change "Ana pays Ben 5 BTC" to "Ana pays Ben 500 BTC." Watch what happens to every block after it. That broken chain is why miners matter.</div>
+  </div></div>
+
+  <div class="sechead" style="margin-top:34px"><h2>Why mining is essential to the network</h2><span>Six jobs miners do</span></div>
+  <div class="grid g2 why mt">
+    <div class="card"><h3>It decides what is true without a bank</h3>Bitcoin has no central company keeping the official ledger. Miners compete to add the next page of transactions, and everyone accepts the chain with the most work behind it. That replaces the trusted middleman.</div>
+    <div class="card"><h3>It makes cheating very expensive</h3>To rewrite history (for example, to spend the same coin twice) an attacker would have to redo the work for that block and every block after it, faster than everyone else combined. <span id="attackTxt"></span></div>
+    <div class="card"><h3>It confirms and orders transactions</h3>A payment is not final until a miner includes it in a block. Miners also collect the transaction fees users attach, which is why fees rise when the network is busy.</div>
+    <div class="card"><h3>It issues new coins on a fixed schedule</h3>The block reward is the only way new Bitcoin is created. It halves about every four years (50, 25, 12.5, 6.25, now 3.125 BTC) until the total supply reaches 21 million around the year 2140.</div>
+    <div class="card"><h3>It adjusts itself to keep a steady pace</h3>Every 2,016 blocks (about two weeks) the network resets the difficulty so blocks keep arriving about every 10 minutes, no matter how many machines join or leave. More miners means harder puzzles, not faster blocks.</div>
+    <div class="card"><h3>The incentive keeps miners honest</h3>A miner who plays by the rules earns the reward. A miner who tries to cheat wastes huge amounts of electricity on blocks the network rejects. Honesty is simply the most profitable strategy.</div>
+  </div>
+</section>
+
+<!-- ============ LOTTERY ============ -->
+<section id="lottery">
+  <div class="sechead"><h2><span class="idx">05</span>Solo mining: the most expensive lottery ticket</h2><span>Your odds equal your share of the network</span></div>
+  <p class="intro">Instead of joining a pool, you could mine alone and keep the whole block reward if you find one. Every block is an independent drawing.</p>
+  <div class="grid g4" id="lotKpis"></div>
+  <div class="panel mt"><div class="phead"><span class="t">Simulate solo mining</span><span class="tag">Roll the dice</span></div><div class="pbody">
+    <div class="btns" style="margin-top:0"><button class="btn" id="simYear">Run one year</button><button class="btn ghost" id="sim100">Run 100 years</button></div>
+    <div id="simOut" style="margin-top:12px"></div>
+    <div class="daygrid" id="dayGrid"></div>
+    <div class="note">Each square is one day. Red means you found a block that day. Compare this to pool mining, where you get a small, steady payout every day.</div>
+  </div></div>
+
+  <div class="panel mt"><div class="phead"><span class="t">Class pool: what if everyone combined?</span></div><div class="pbody">
+    <div class="row" style="max-width:520px">
+      <div><label>Number of students</label><input id="students" type="number" value="28"></div>
+      <div><label>Miners per student</label><input id="perStudent" type="number" value="1"></div>
+    </div>
+    <div id="classOut" style="margin-top:12px"></div>
+  </div></div>
+
+  <div class="sechead" style="margin-top:34px"><h2>Challenges</h2><span>Show your numbers</span></div>
+  <div class="fb"><b>1. Find the line.</b> With an Antminer S21 Pro, what electricity price makes it break even exactly at the halving? (Use the electricity slider on Build &amp; Buy and watch the ROI timeline.)</div>
+  <div class="fb"><b>2. Old vs. new.</b> A used S19j Pro costs a fraction of an S21 XP. Which one has the better 3-year ROI at home electricity rates? At industrial rates? Why do the answers flip?</div>
+  <div class="fb"><b>3. HODL or sell?</b> In the bear scenario, is it better to sell daily or hold? What about the bull scenario? What risk are you taking by holding?</div>
+  <div class="fb"><b>4. Location, location, location.</b> Why do big mining companies build next to hydroelectric dams, natural gas wells, and wind farms in remote places? Use the breakeven electricity price to explain.</div>
+  <div class="fb"><b>5. The 51% question.</b> Using "Why mining is essential," estimate what it would cost to attack Bitcoin. Who could afford it, and why might they still not do it?</div>
+  <div class="fb"><b>6. Pitch it.</b> You have $10,000. Build the setup with the best 3-year return and defend your assumptions to the class like an investor pitch.</div>
+</section>
+
+<!-- ============ MARKET ============ -->
+<section id="market">
+  <div class="sechead"><h2><span class="idx">⚙</span>Market settings</h2><span>These drive every calculation</span></div>
+  <p class="intro">Defaults are approximate values for mid-November 2026. Update them with today's numbers from a site like mempool.space or a Bitcoin price tracker.</p>
+  <div class="grid g3">
+    <div class="card"><label style="margin-top:0">Bitcoin price ($)</label><input id="mPrice" type="number" value="74600"></div>
+    <div class="card"><label style="margin-top:0">Network hashrate (EH/s)</label><input id="mHash" type="number" value="1020"></div>
+    <div class="card"><label style="margin-top:0">Block reward (BTC)</label><input id="mReward" type="number" step="any" value="3.125"></div>
+    <div class="card"><label style="margin-top:0">Average fees per block (BTC)</label><input id="mFees" type="number" step="any" value="0.02"></div>
+    <div class="card"><label style="margin-top:0">Current block height</label><input id="mHeight" type="number" value="976450"></div>
+    <div class="card"><label style="margin-top:0">Next halving block</label><input id="mHalvBlock" type="number" value="1050000"></div>
+  </div>
+  <div class="btns"><button class="btn ghost" id="resetMkt">Reset to defaults</button></div>
+  <div class="note">1 EH/s = 1,000,000 TH/s. 1 ZH/s = 1,000 EH/s. About 144 blocks are found per day (one every ~10 minutes).</div>
+</section>
+</main>
+<footer>High School District 214 | Finance &amp; Investing · Simulator values are estimates for learning, not investment advice.</footer>
+
+<script>
+/* ---------- data ---------- */
+const MODELS=[
+ {id:'s21pro',name:'Antminer S21 Pro',th:234,w:3510,price:3083,note:'Top air-cooled efficiency (15 J/TH). Price is a mid-2026 retail listing.'},
+ {id:'s21',name:'Antminer S21',th:200,w:3500,price:2500,note:'Standard S21 (17.5 J/TH). Price is an estimate; enter a real quote.'},
+ {id:'s21xp',name:'Antminer S21 XP',th:270,w:3645,price:5000,note:'Most efficient S21 (13.5 J/TH) at a premium. Price is an estimate.'},
+ {id:'s19jpro',name:'Antminer S19j Pro (used)',th:104,w:3068,price:300,note:'Older generation, very cheap used, but about 29.5 J/TH. Price is an estimate.'},
+ {id:'bitaxe',name:'Bitaxe-style desktop miner',th:1.2,w:18,price:250,note:'Tiny open-source hobby miner. Quiet, runs on a USB-C style power brick. Mostly a solo-lottery toy.'},
+ {id:'custom',name:'Custom (type your own specs)',th:100,w:3000,price:2000,note:'Enter specs from any real listing.'}
+];
+const DEF={price:74600,hash:1020,reward:3.125,fees:0.02,height:976450,halv:1050000};
+const RATES=[['Home',0.16],['Commercial',0.10],['Industrial',0.06],['Hydro / stranded',0.03]];
+const $=id=>document.getElementById(id);
+const usd=(v,d=0)=>(v<0?'-$':'$')+Math.abs(v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const num=(v,d=0)=>v.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const big=v=>{const u=[[1e12,' trillion'],[1e9,' billion'],[1e6,' million']];for(const[k,s]of u)if(Math.abs(v)>=k)return num(v/k,1)+s;return num(v)};
+
+let scen='base',mode='sell';
+
+/* ---------- populate ---------- */
+MODELS.forEach(m=>{const o=document.createElement('option');o.value=m.id;o.textContent=m.name;$('model').appendChild(o)});
+function loadModel(){const m=MODELS.find(x=>x.id===$('model').value);$('th').value=m.th;$('watts').value=m.w;$('unitPrice').value=m.price;$('modelNote').textContent=m.note;
+  const big=m.w>500;$('elec').value=big?600:0;$('vent').value=big?300:0;}
+$('model').onchange=()=>{loadModel();calc()};
+RATES.forEach(([n,v])=>{const b=document.createElement('button');b.className='btn ghost sm';b.textContent=`${n} $${v.toFixed(2)}`;b.onclick=()=>{$('rate').value=v;calc()};$('ratePresets').appendChild(b)});
+
+/* ---------- state ---------- */
+function S(){
+  const g=id=>parseFloat($(id).value)||0;
+  const m={price:g('mPrice'),hash:g('mHash'),reward:g('mReward'),fees:g('mFees'),height:g('mHeight'),halv:g('mHalvBlock')};
+  const qty=Math.max(1,Math.round(g('qty')));
+  const s={...m,th:g('th'),w:g('watts'),unit:g('unitPrice'),qty,shipPct:g('shipPct'),lead:Math.max(0,Math.round(g('leadDays'))),
+    elec:g('elec'),vent:g('vent'),pool:g('poolFee')/100,up:Math.min(100,g('uptime'))/100,rate:g('rate'),
+    pg:g('pg')/100,hg:g('hg')/100,hz:g('hz'),smart:$('smart').checked};
+  s.hw=s.unit*qty; s.ship=s.hw*s.shipPct/100; s.upfront=s.hw+s.ship+s.elec+s.vent;
+  s.totTH=s.th*qty; s.kw=s.w*qty/1000;
+  s.daysToHalv=Math.max(0,(s.halv-s.height)/144);
+  return s;
+}
+function dayEcon(s,netEH,price,reward){
+  const btc=(s.totTH*s.up)/(netEH*1e6)*144*(reward+s.fees)*(1-s.pool);
+  const rev=btc*price, cost=s.kw*24*s.up*s.rate;
+  return {btc,rev,cost};
+}
+function project(s){
+  const days=Math.round(s.hz*30.44), out=[];
+  let cum=-s.upfront, btcHeld=0, powerPaid=0, be=null, cumRev=0, cumCost=0;
+  for(let d=0;d<=days;d++){
+    const t=d; const net=s.hash*Math.pow(1+s.hg,t/30.44); const price=s.price*Math.pow(1+s.pg,t/365);
+    const reward=t>=s.daysToHalv?s.reward/2:s.reward;
+    let e={btc:0,rev:0,cost:0},on=false;
+    if(d>=s.lead){e=dayEcon(s,net,price,reward);on=true;if(s.smart&&mode==='sell'&&e.rev<e.cost){e={btc:0,rev:0,cost:0};on=false}}
+    cumRev+=e.rev;cumCost+=e.cost;
+    let val;
+    if(mode==='sell'){cum+=e.rev-e.cost;val=cum}
+    else{btcHeld+=e.btc;powerPaid+=e.cost;val=btcHeld*price-powerPaid-s.upfront}
+    if(be===null&&val>=0&&d>=s.lead)be=d;
+    out.push({d,val,rev:e.rev,cost:e.cost,price,on,btcHeld});
+  }
+  return {out,be,cumRev,cumCost,final:out[out.length-1],btcHeld};
+}
+const addDays=n=>{const d=new Date();d.setDate(d.getDate()+Math.round(n));return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})};
+
+/* ---------- charts ---------- */
+const CSSV=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C={red:'#C1102F',ink:CSSV('--ink')||'#111',muted:CSSV('--muted')||'#5C5C5C',good:CSSV('--good')||'#1E7A3C',bad:CSSV('--bad')||'#B3261E',line:CSSV('--line')};
+Chart.defaults.color=C.muted;Chart.defaults.borderColor=C.line;Chart.defaults.font.family="'Barlow',sans-serif";Chart.defaults.font.size=13;
+const vlines={id:'vlines',afterDatasetsDraw(c,a,o){const lines=c.options.plugins.vlines?.lines||[];const{ctx,chartArea:ca,scales:{x}}=c;
+  lines.forEach(l=>{if(l.x==null||l.x<0||l.x>x.max)return;const px=x.getPixelForValue(l.x);ctx.save();ctx.strokeStyle=l.color;ctx.setLineDash([5,4]);ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(px,ca.top);ctx.lineTo(px,ca.bottom);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=l.color;ctx.font="600 12px 'JetBrains Mono'";ctx.textAlign=px>ca.right-80?'right':'left';ctx.fillText(l.label,px+(ctx.textAlign==='right'?-5:5),ca.top+12+(l.off||0));ctx.restore()})}};
+Chart.register(vlines);
+const cumChart=new Chart($('cumChart'),{type:'line',data:{datasets:[{data:[],borderColor:C.red,borderWidth:3,pointRadius:0,fill:{target:{value:0},above:'rgba(30,122,60,.16)',below:'rgba(179,38,30,.12)'},tension:.1}]},
+  options:{maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},
+  scales:{x:{type:'linear',title:{display:true,text:'Months after purchase'},ticks:{stepSize:6}},y:{ticks:{callback:v=>usd(v)}}},
+  plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>'Month '+num(i[0].parsed.x,1),label:i=>'Profit: '+usd(i.parsed.y)}},vlines:{lines:[]}}}});
+const monChart=new Chart($('monChart'),{type:'bar',data:{labels:[],datasets:[{label:'Mining revenue',data:[],backgroundColor:C.red},{label:'Electricity bill',data:[],backgroundColor:C.muted}]},
+  options:{maintainAspectRatio:false,animation:false,scales:{x:{title:{display:true,text:'Month'}},y:{ticks:{callback:v=>usd(v)}}},plugins:{tooltip:{callbacks:{label:i=>i.dataset.label+': '+usd(i.parsed.y)}}}}});
+
+/* ---------- main calc ---------- */
+function calc(){
+  const s=S();
+  $('rateV').textContent='$'+s.rate.toFixed(3);
+  $('pgV').textContent=(s.pg>=0?'+':'')+Math.round(s.pg*100)+'%';
+  $('hgV').textContent=(s.hg>=0?'+':'')+(s.hg*100).toFixed(1)+'%';
+  $('hzV').textContent=s.hz+' months';
+  // header strip
+  const hp=(1000/(s.hash*1e6))*144*(s.reward+s.fees)*s.price;
+  $('sPrice').textContent=usd(s.price);$('sHash').textContent=num(s.hash)+' EH/s';$('sReward').textContent=s.reward+' BTC';
+  $('sHashprice').textContent=usd(hp,2);$('sHalving').textContent=addDays(s.daysToHalv);
+
+  // cost table
+  $('costTable').innerHTML=`
+   <tr><td>${s.qty} × miner @ ${usd(s.unit)}</td><td class="n">${usd(s.hw)}</td></tr>
+   <tr><td>Shipping + sales tax (${s.shipPct}%)</td><td class="n">${usd(s.ship)}</td></tr>
+   <tr><td>Electrical work</td><td class="n">${usd(s.elec)}</td></tr>
+   <tr><td>Ventilation / cooling</td><td class="n">${usd(s.vent)}</td></tr>
+   <tr class="tot"><td>Total upfront</td><td class="n">${usd(s.upfront)}</td></tr>`;
+
+  // snapshot
+  const e=dayEcon(s,s.hash,s.price,s.reward);
+  const profit=e.rev-e.cost;
+  const beRate=e.rev/(s.kw*24*s.up||1);
+  const eff=s.w/s.th;
+  $('snap').innerHTML=[
+    ['Bitcoin mined / day',num(e.btc,6)+' BTC',`about ${num(e.btc*1e8)} satoshis`],
+    ['Revenue / day',usd(e.rev,2),''],
+    ['Electricity / day',usd(e.cost,2),num(s.kw*24*s.up,1)+' kWh'],
+    ['Profit / day',`<span class="${profit>=0?'pos':'neg'}">${usd(profit,2)}</span>`,profit>=0?'making money':'losing money'],
+    ['Breakeven electricity',`<span class="amb">$${beRate.toFixed(3)}</span>/kWh`,s.rate<beRate?'you are under it ✓':'you are over it ✗'],
+    ['Efficiency',num(eff,1)+' J/TH','lower is better']
+  ].map(([a,b,c])=>`<div class="kpi"><small>${a}</small><b>${b}</b><i>${c}</i></div>`).join('');
+
+  // projection
+  const P=project(s);
+  const pts=P.out.map(o=>({x:o.d/30.44,y:o.val}));
+  cumChart.data.datasets[0].data=pts;
+  cumChart.options.scales.x.max=s.hz;
+  cumChart.options.plugins.vlines.lines=[
+    {x:s.lead/30.44,color:C.muted,label:'Starts mining',off:0},
+    {x:s.daysToHalv/30.44,color:C.red,label:'Halving',off:16},
+    ...(P.be!=null?[{x:P.be/30.44,color:C.good,label:'Breakeven',off:32}]:[])];
+  cumChart.update();
+  // monthly
+  const months=Math.ceil(s.hz),lab=[],rv=[],cs=[];
+  for(let m=0;m<months;m++){let r=0,c=0;P.out.forEach(o=>{if(Math.floor(o.d/30.44)===m){r+=o.rev;c+=o.cost}});lab.push(m+1);rv.push(r);cs.push(c)}
+  monChart.data.labels=lab;monChart.data.datasets[0].data=rv;monChart.data.datasets[1].data=cs;monChart.update();
+
+  // timeline
+  const span=Math.max(s.hz*30.44,1);
+  const pts2=[{d:0,c:C.muted,t:'Order placed',s:'Today'},{d:s.lead,c:C.ink,t:'Mining starts',s:addDays(s.lead)}];
+  if(s.daysToHalv<=span)pts2.push({d:s.daysToHalv,c:C.red,t:'Halving',s:addDays(s.daysToHalv)});
+  if(P.be!=null)pts2.push({d:P.be,c:C.good,t:'Breakeven',s:addDays(P.be)});
+  pts2.push({d:span,c:C.muted,t:'End of horizon',s:addDays(span)});
+  pts2.sort((a,b)=>a.d-b.d);
+  $('timeline').innerHTML='<div class="bar"></div>'+pts2.map((p,i)=>`<div class="pt" style="left:${Math.min(100,p.d/span*100)}%;${i%2?'top:-6px':''}"><div class="dot" style="background:${p.c}"></div><div class="lb"><b>${p.t}</b>${p.s}</div></div>`).join('');
+  // fix alternating labels above bar
+  $('timeline').querySelectorAll('.pt').forEach((el,i)=>{if(i%2){el.style.top='-8px';el.style.display='flex';el.style.flexDirection='column-reverse';el.style.alignItems='center';el.querySelector('.dot').style.marginTop='0';el.style.top='-10px';el.querySelector('.lb').style.marginTop='0';el.querySelector('.lb').style.marginBottom='6px';el.style.transform='translateX(-50%) translateY(-0px)';el.style.top='-20px'}});
+
+  const f=P.final, roi=(f.val)/s.upfront*100;
+  const daysOn=P.out.filter(o=>o.on).length;
+  $('roiKpis').innerHTML=[
+    ['Payback time',P.be!=null?`<span class="pos">${num(P.be/30.44,1)} months</span>`:'<span class="neg">Not reached</span>',P.be!=null?addDays(P.be):'within '+s.hz+' months'],
+    ['Profit at end',`<span class="${f.val>=0?'pos':'neg'}">${usd(f.val)}</span>`,'after paying back '+usd(s.upfront)],
+    ['Return on investment',`<span class="${roi>=0?'pos':'neg'}">${num(roi,0)}%</span>`,'over '+s.hz+' months'],
+    [mode==='hold'?'Bitcoin held at end':'Days actually mining',mode==='hold'?num(P.btcHeld,5)+' BTC':num(daysOn),mode==='hold'?'worth '+usd(P.btcHeld*f.price):(s.smart?'smart shutoff on':'always on')]
+  ].map(([a,b,c])=>`<div class="kpi"><small>${a}</small><b>${b}</b><i>${c}</i></div>`).join('');
+
+  // power
+  const kwh=s.kw*24*s.up;
+  $('powerKpis').innerHTML=[
+    ['Power draw',num(s.kw,2)+' kW',num(s.w*s.qty)+' watts, nonstop'],
+    ['Per day',num(kwh,1)+' kWh',usd(kwh*s.rate,2)],
+    ['Per month',num(kwh*30.44)+' kWh',usd(kwh*30.44*s.rate)],
+    ['Per year',num(kwh*365)+' kWh',usd(kwh*365*s.rate)]
+  ].map(([a,b,c])=>`<div class="kpi"><small>${a}</small><b>${b}</b><i>${c}</i></div>`).join('');
+  const homes=kwh*30.44/860;
+  $('homesTxt').innerHTML=`<div class="bigfact">${num(homes,homes<10?1:0)}×</div>Your setup uses as much electricity as about <b>${num(homes,1)}</b> average American homes.`;
+  $('houses').innerHTML='🏠'.repeat(Math.min(60,Math.max(homes>=0.5?1:0,Math.round(homes))))+(homes>60?' …':'');
+  const btu=s.w*s.qty*3.412, heaters=s.w*s.qty/1500;
+  $('heatTxt').innerHTML=`<div class="bigfact">${num(btu)} BTU/hr</div>That is the heat of about <b>${num(heaters,1)}</b> plug-in space heaters (1,500 W each) running all day and night.`;
+  $('effTable').innerHTML='<tr><th>Machine</th><th class="n">J/TH</th><th class="n">Power $/day per 100 TH</th></tr>'+MODELS.filter(m=>m.id!=='custom').map(m=>{const j=m.w/m.th;return `<tr><td>${m.name}</td><td class="n">${num(j,1)}</td><td class="n">${usd(j*100/1000*24*s.rate,2)}</td></tr>`}).join('');
+  const fleet=+$('fleet').value;$('fleetV').textContent=fleet+' J/TH';
+  const gw=s.hash*1e6*fleet/1e9;
+  $('netPower').innerHTML=`<div class="bigfact">~${num(gw,1)} GW</div>Estimated continuous draw of all Bitcoin miners worldwide, or roughly <b>${num(gw*8760/1000,0)} TWh per year</b>. That is about the output of ${num(gw,0)} large power plants (1 GW each), running constantly.`;
+
+  // attack cost
+  const units=s.hash*1e6/234, cost=units*3083;
+  $('attackTxt').innerHTML=`Matching today's network would take about <b>${big(units)}</b> S21 Pro machines (about <b>${usd(cost/1e9,1)} billion</b> of hardware) plus around <b>${num(s.hash*1e6*15/1e9,0)} GW</b> of power, the output of a small country's grid.`;
+
+  // lottery
+  const p=(s.totTH)/(s.hash*1e6), pDay=1-Math.pow(1-p,144), expDays=1/(144*p);
+  const blockUSD=(s.reward+s.fees)*s.price;
+  $('lotKpis').innerHTML=[
+    ['Your share of the network','1 in '+big(1/p),num(s.totTH,1)+' TH/s vs '+num(s.hash)+' EH/s'],
+    ['Chance of a block today',pDay<1e-6?(pDay*100).toExponential(2)+'%':num(pDay*100,4)+'%','144 drawings per day'],
+    ['Expected wait for 1 block',expDays>365?num(expDays/365,expDays>36500?0:1)+' years':num(expDays,0)+' days','on average, could be today, could be never'],
+    ['Jackpot if you win',usd(blockUSD),num(s.reward+s.fees,3)+' BTC']
+  ].map(([a,b,c])=>`<div class="kpi"><small>${a}</small><b>${b}</b><i>${c}</i></div>`).join('');
+  const st=+$('students').value||0, ps=+$('perStudent').value||0;
+  const cTH=s.th*st*ps, cp=cTH/(s.hash*1e6), cExp=1/(144*cp||1e-30);
+  const ce=dayEcon({...s,totTH:cTH,kw:s.w*st*ps/1000},s.hash,s.price,s.reward);
+  $('classOut').innerHTML=`Combined: <b>${num(cTH,1)} TH/s</b> from ${num(st*ps)} machines. Solo, the class would expect one block every <b>${cExp>365?num(cExp/365,1)+' years':num(cExp,0)+' days'}</b>. In a pool, the class would earn about <b>${usd(ce.rev,2)}/day</b> and pay <b>${usd(ce.cost,2)}/day</b> for power at $${s.rate.toFixed(3)}/kWh, using about <b>${num(ce.cost/s.rate/24,1)} kW</b>. That is still only 1 in ${big(1/cp)} of the network.`;
+  window._lot={p,blockUSD,pool:e.rev*s.up/s.up};
+}
+
+/* ---------- inputs ---------- */
+document.querySelectorAll('input,select').forEach(el=>{if(!['diff','students','perStudent'].includes(el.id))el.addEventListener('input',calc)});
+['students','perStudent'].forEach(id=>$(id).addEventListener('input',calc));
+const SC={bear:{pg:-40,hg:1},base:{pg:0,hg:2},bull:{pg:60,hg:3}};
+$('scen').onclick=ev=>{const b=ev.target.closest('button');if(!b)return;scen=b.dataset.s;[...$('scen').children].forEach(x=>x.classList.toggle('on',x===b));$('pg').value=SC[scen].pg;$('hg').value=SC[scen].hg;calc()};
+$('mode').onclick=ev=>{const b=ev.target.closest('button');if(!b)return;mode=b.dataset.m;[...$('mode').children].forEach(x=>x.classList.toggle('on',x===b));calc()};
+$('resetMkt').onclick=()=>{$('mPrice').value=DEF.price;$('mHash').value=DEF.hash;$('mReward').value=DEF.reward;$('mFees').value=DEF.fees;$('mHeight').value=DEF.height;$('mHalvBlock').value=DEF.halv;calc()};
+
+/* ---------- lottery sim ---------- */
+function simYears(n){const{p}=window._lot;const pDay=1-Math.pow(1-p,144);let tot=0,grid=[];for(let y=0;y<n;y++)for(let d=0;d<365;d++){const hit=Math.random()<pDay;if(hit)tot++;if(y===0)grid.push(hit)}return{tot,grid}}
+$('simYear').onclick=()=>{const r=simYears(1),{blockUSD}=window._lot;$('dayGrid').innerHTML=r.grid.map(h=>`<i class="${h?'hit':''}"></i>`).join('');
+  $('simOut').innerHTML=r.tot?`🎉 You found <b>${r.tot}</b> block${r.tot>1?'s':''} and won <b class="pos">${usd(r.tot*blockUSD)}</b>!`:`No blocks found. You paid the full electric bill for a year and earned <b class="neg">$0</b>. In a pool, you would have earned small daily payouts instead.`};
+$('sim100').onclick=()=>{const r=simYears(100),{blockUSD}=window._lot;$('dayGrid').innerHTML='';$('simOut').innerHTML=`Over 100 simulated years: <b>${r.tot}</b> block${r.tot===1?'':'s'} found, worth <b>${usd(r.tot*blockUSD)}</b> at today's price.`};
+
+/* ---------- hash game ---------- */
+const enc=new TextEncoder();
+async function sha(t){const b=await crypto.subtle.digest('SHA-256',enc.encode(t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+const blocks=[
+ {data:'Ana pays Ben 5 BTC\nBen pays Cara 2 BTC\nCara pays Dev 0.5 BTC',nonce:0},
+ {data:'Dev pays Eli 0.2 BTC\nEli pays Ana 1 BTC',nonce:0},
+ {data:'Fay pays Gus 3 BTC\nGus pays Hal 0.75 BTC\nHal pays Ana 0.1 BTC',nonce:0}
+];
+const ZERO='0'.repeat(64);
+function bstr(i,prev){return `${i+1}|${prev}|${blocks[i].data}|${blocks[i].nonce}`}
+function renderChain(){
+  $('chain').innerHTML=blocks.map((b,i)=>`<div class="block" id="blk${i}">
+    <div class="bh"><span>Block #${i+1}</span><span style="font-family:var(--mono);font-size:12px;color:var(--termmuted);text-transform:none;letter-spacing:0">nonce <input id="nn${i}" type="number" value="${b.nonce}" style="width:110px;display:inline-block;padding:4px 6px"></span></div>
+    <label>Previous block's hash</label><div class="hash" id="pv${i}"></div>
+    <label>Transactions</label><textarea id="tx${i}" rows="3">${b.data}</textarea>
+    <label>This block's hash</label><div class="hash" id="hs${i}"></div>
+    <div class="status" id="st${i}"></div>
+    <button class="btn sm" style="margin-top:8px" id="mb${i}">⛏ Mine this block</button></div>`).join('');
+  blocks.forEach((b,i)=>{
+    $('tx'+i).oninput=e=>{b.data=e.target.value;refresh()};
+    $('nn'+i).oninput=e=>{b.nonce=parseInt(e.target.value)||0;refresh()};
+    $('mb'+i).onclick=()=>mine(i);
+  });
+}
+async function refresh(){
+  const z=+$('diff').value;let prev=ZERO,chainOK=true;
+  for(let i=0;i<blocks.length;i++){
+    const h=await sha(bstr(i,prev));
+    $('pv'+i).textContent=prev;
+    const ok=h.startsWith('0'.repeat(z));
+    $('hs'+i).innerHTML=`<span class="z">${h.slice(0,z).replace(/[^0]/g,'')===('0'.repeat(z))&&ok?h.slice(0,z):''}</span>${ok?h.slice(z):h}`;
+    const valid=ok&&chainOK;
+    $('blk'+i).className='block '+(valid?'ok':'bad');
+    $('st'+i).innerHTML=valid?'<span class="pos">✓ Valid: proof of work found</span>':(ok?'<span class="neg">✗ Broken: an earlier block changed</span>':'<span class="neg">✗ Not mined: hash needs '+z+' leading zeros</span>');
+    if(!valid)chainOK=false;
+    prev=h;
+  }
+}
+let mining=false;
+async function mine(i){
+  if(mining)return;mining=true;document.querySelectorAll('[id^=mb]').forEach(b=>b.disabled=true);
+  const z=+$('diff').value,target='0'.repeat(z);
+  let prev=ZERO;for(let k=0;k<i;k++)prev=await sha(bstr(k,prev));
+  const t0=performance.now();let n=0,found=null;const B=2000;
+  while(found===null){
+    const tries=[];for(let k=0;k<B;k++){const nonce=n+k;tries.push(sha(`${i+1}|${prev}|${blocks[i].data}|${nonce}`).then(h=>[nonce,h]))}
+    const res=await Promise.all(tries);
+    for(const[nonce,h]of res)if(h.startsWith(target)){found=nonce;break}
+    n+=B;$('nn'+i).value=n;$('st'+i).innerHTML=`<span class="amb">Guessing… ${num(n)} tries</span>`;
+    await new Promise(r=>setTimeout(r,0));
+  }
+  const secs=(performance.now()-t0)/1000, tries=found+1, rate=tries/secs;
+  blocks[i].nonce=found;$('nn'+i).value=found;await refresh();
+  const s=S(), asic=s.th*1e12, net=s.hash*1e18;
+  const ttfNet=Math.pow(16,z)/net;
+  $('mineStats').innerHTML=`Block ${i+1} took <b>${num(tries)}</b> guesses in <b>${num(secs,2)} s</b>. Your browser mined at about <b>${num(rate)}</b> hashes per second.<br>
+   An ${$('model').selectedOptions[0].text} does <b>${big(asic)}</b> per second, about <b>${big(asic/rate)}×</b> faster than your computer. The whole network does about <b>${num(s.hash/1000,2)} ZH/s</b> (${big(net/1e12)} trillion guesses per second).<br>
+   The real Bitcoin puzzle currently needs roughly <b>19 to 20</b> leading zeros, not ${z}. Each extra zero makes it 16 times harder.`;
+  $('mineStats').classList.remove('flash');void $('mineStats').offsetWidth;$('mineStats').classList.add('flash');
+  mining=false;document.querySelectorAll('[id^=mb]').forEach(b=>b.disabled=false);
+}
+$('diff').onchange=refresh;
+
+/* ---------- routing ---------- */
+const TABS=['build','roi','power','how','lottery','market'];
+function route(){const h=location.hash.slice(1);const t=TABS.includes(h)?h:'build';
+  TABS.forEach(x=>$(x).classList.toggle('on',x===t));document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+t));
+  if(t==='roi'){cumChart.resize();monChart.resize()}}
+window.addEventListener('hashchange',route);
+
+loadModel();calc();renderChain();refresh();route();
+
+/* ---------- text size (same as class site) ---------- */
+(function(){document.body.insertAdjacentHTML('beforeend','<div id="tsz" role="group" aria-label="Text size"><button type="button" data-d="-1" aria-label="Smaller text">A−</button><button type="button" data-d="0" class="pct" aria-label="Reset text size">100%</button><button type="button" data-d="1" class="big" aria-label="Bigger text">A+</button></div>');
+var STEPS=[0.8,0.9,1,1.1,1.25,1.4,1.6],KEY='d214-fin-text-size',box=document.getElementById('tsz'),t=document.querySelector('main'),i=2;
+try{var j=STEPS.indexOf(parseFloat(localStorage.getItem(KEY)));if(j>=0)i=j}catch(e){}
+function apply(){var z=STEPS[i];t.style.zoom=z;box.children[1].textContent=Math.round(z*100)+'%';box.children[0].disabled=i===0;box.children[2].disabled=i===STEPS.length-1;try{localStorage.setItem(KEY,z)}catch(e){}}
+box.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;var d=+b.dataset.d;i=d===0?2:Math.max(0,Math.min(STEPS.length-1,i+d));apply();b.blur()});apply();})();
+
+</script>
+</body>
+</html>
