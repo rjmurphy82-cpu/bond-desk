@@ -2,6 +2,8 @@
 // To add a page to the menu, add it to NAV below. The page's <body data-page="..."> marks it as current.
 (function () {
   var NAV = [
+    { group: "Current Events" },
+    { href: "/ipo-live", ch: "★", label: "IPO Live: Anthropic & Nvidia", page: "ipo-live" },
     { group: "Unit 5: Derivatives" },
     { sub: "Live class games" },
     { href: "/deriv", ch: "5", label: "Derivatives Live", page: "deriv" },
