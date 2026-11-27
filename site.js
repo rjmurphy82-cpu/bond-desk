@@ -4,6 +4,8 @@
   var NAV = [
     { group: "Current Events" },
     { href: "/ipo-live", ch: "★", label: "IPO Live: Anthropic & Nvidia", page: "ipo-live" },
+    { group: "Unit 7: Investment Theory" },
+    { href: "/htl", ch: "7", label: "Hold the Line", page: "htl" },
     { group: "Unit 5: Derivatives" },
     { sub: "Live class games" },
     { href: "/deriv", ch: "5", label: "Derivatives Live", page: "deriv" },

@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hold the Line · Host</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<style>
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:1000px){.hero{grid-template-columns:1fr}}
+.joinbox{display:flex;gap:22px;align-items:center}
+.qr{width:230px;height:230px;flex:none;border-radius:10px;overflow:hidden;border:6px solid #fff}
+.qr svg{width:100%;height:100%;display:block}
+.code{font-family:Oswald,Arial,sans-serif;font-size:96px;font-weight:700;color:#fff;letter-spacing:.06em;line-height:1}
+.url{font-size:24px;color:#F4F4F4;margin-bottom:6px}.url b{color:var(--light)}
+#menuBtn{display:none;background:transparent;border:2px solid #CFCFCF;color:#CFCFCF;border-radius:8px;padding:5px 12px;font-size:14px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.tile{background:var(--card);border:2px solid var(--rule);border-radius:10px;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;text-transform:none;color:var(--brown)}
+.tile .nm{font-family:Oswald,Arial,sans-serif;font-size:19px;text-transform:uppercase;line-height:1.1;overflow:hidden;text-overflow:ellipsis}
+.tile .st{font-family:Oswald,Arial,sans-serif;font-size:13px;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.tile.done{background:var(--brown);border-color:var(--brown);color:#fff}.tile.done .st{color:var(--light)}
+.tile .x{background:none;border:0;color:var(--muted);font-size:20px;padding:0 4px}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.yr h2{font-size:44px;color:var(--brown);line-height:1}
+.yr .sub{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;color:var(--rust);font-size:19px}
+.timer{font-family:Oswald,Arial,sans-serif;font-size:64px;color:var(--brown);min-width:150px;text-align:center;line-height:1}
+.timer.low{color:var(--red)}
+.codechip{font-family:Oswald,Arial,sans-serif;background:var(--sand);color:var(--brown);border-radius:8px;padding:6px 12px;font-size:16px}
+.codechip b{font-size:22px;color:var(--orange)}
+.board{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:1100px){.board{grid-template-columns:1fr}}
+.tabs2{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tabs2 button{background:var(--card);border:2px solid var(--rule);border-radius:8px;padding:8px 16px;font-size:18px;color:var(--brown)}
+.tabs2 button.on{background:var(--brown);border-color:var(--brown);color:#fff}
+.lb td{font-size:19px}.lb td.nm{font-family:Oswald,Arial,sans-serif;text-transform:uppercase;color:var(--brown)}
+.lb td.pl{font-family:Oswald,Arial,sans-serif;color:var(--rust);font-size:22px;width:44px}
+.lb tr.ghost td{background:var(--redbg);color:var(--red)}
+.mkt{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.mkt div{background:var(--card);border:1px solid var(--rule);border-radius:8px;padding:6px 10px;display:flex;justify-content:space-between;align-items:baseline}
+.mkt div b{font-family:Oswald,Arial,sans-serif;font-size:20px;color:var(--brown)}
+.mkt div span{font-family:Consolas,monospace;font-size:16px}
+.flag{display:inline-block;background:var(--orange);color:#fff;border-radius:8px;padding:6px 12px;font-family:Oswald,Arial,sans-serif;text-transform:uppercase;font-size:17px;margin:4px 6px 0 0}
+#offlineTag{display:none}
+</style>
+</head>
+<body>
+<header>
+  <div><div class="kicker">District 214 | Finance &amp; Investing | Investment Theory</div><h1>🛡️ Hold the Line</h1></div>
+  <div style="display:flex;gap:12px;align-items:center"><span id="offlineTag"></span><button id="menuBtn" title="Resume or start a new game">☰ Menu</button></div>
+</header>
+<main id="view"></main>
+<script type="module" src="/htl-host.js"></script>
+</body>
+</html>
